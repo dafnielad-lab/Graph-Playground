@@ -3,7 +3,7 @@ const $=s=>document.querySelector(s);
 const fmt=x=>x===Infinity?'∞':Number(x).toLocaleString('en-US');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const S={type:'general',labeled:false,n:6,mode:'explore',nextId:1,conds:[],sel:null,showComp:false,showMatch:true,showLabels:false,layout:'auto',sample:false,
-  guess:{val:'',revealed:false},target:null,tool:'subset',subset:0,matching:[],augPath:null,manual:null,manualPick:-1,menuOpen:false};
+  guess:{val:'',revealed:false},target:null,tool:'subset',subset:0,matching:[],augPath:null,manual:null,manualPick:-1,menuOpen:false,condsOpen:true};
 function mkCond(kind,over){
   const K=KIND[kind],n=S.n,c={id:S.nextId++,kind,on:true,target:'G'};
   if(K.type==='bool'){c.op='eq';c.value=1}
@@ -128,7 +128,7 @@ function selGraph(){if(S.mode==='manual')return{a:manualGraph(),idx:-1};if(S.sel
 /* ----- render: top bar ----- */
 const seg=(act,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" aria-pressed="${v===cur}">${l}</button>`).join('')}</div>`;
 function renderTop(){
-  $('#top').innerHTML=`<div class="brand">מגרש גרפים</div>
+  $('#top').innerHTML=`<div class="grp"><div class="brand">מגרש גרפים</div><button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
   <div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
   <div class="grp"><span class="lab">ספירה</span>${seg('lab',[['0','לא מתויג'],['1','מתויג']],S.labeled?'1':'0')}</div>
   <div class="grp"><span class="lab">צמתים</span><div class="seg step"><button data-act="n" data-v="-1" aria-label="הפחת צומת" ${S.n<=1?'disabled':''}>−</button><b class="num" aria-live="polite">${S.n}</b><button data-act="n" data-v="1" aria-label="הוסף צומת" ${S.n>=maxN()?'disabled':''}>+</button></div><span class="lab">עד <span class="num">${maxN()}</span></span></div>
@@ -344,6 +344,7 @@ document.addEventListener('click',ev=>{
     case'sel':S.sel=Number(v);resetSel();renderMain();renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;
+    case'conds':S.condsOpen=!S.condsOpen;$('.cols').classList.toggle('noconds',!S.condsOpen);t.setAttribute('aria-pressed',String(S.condsOpen));break;
     case'help':{const h=$('#help');h.hidden=!h.hidden;t.setAttribute('aria-expanded',String(!h.hidden));break}
     case'newtarget':newTarget();renderMain();break;
     case'tool':S.tool=v;S.augPath=null;renderCard();break;

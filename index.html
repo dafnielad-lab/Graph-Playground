@@ -86,7 +86,48 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .toolbox{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:10px}
 .kv{display:flex;justify-content:space-between;gap:10px;font-size:14px}.kv span{color:var(--muted)}.kv b{font-weight:500}
 .props{display:flex;flex-direction:column}.props .kv{padding:7px 0;border-bottom:1px solid var(--track)}.props .kv:last-child{border-bottom:0}
-@media (max-width:520px){.gi.two{grid-column:auto}.grp.end{margin-inline-start:0}.n1{font-size:40px}}
+.side{display:contents}
+[data-act="conds"]{display:none}
+@media (max-width:760px),(max-height:520px){
+[data-act="conds"]{display:inline-block}
+.cols.noconds #conds{display:none}
+body{font-size:13px;padding-inline:8px;padding-block:8px}
+.app{height:calc(100vh - 16px);height:calc(100dvh - 16px);gap:8px}
+h2{font-size:14px}.lab{font-size:11px}
+#top{padding:8px 10px;gap:6px 8px;border-radius:12px}
+#top .lab{display:none}
+.brand{font-size:16px}
+.seg{border-radius:8px;padding:2px}
+.seg button{padding:4px 9px;min-height:32px;font-size:12px;white-space:nowrap;border-radius:6px}
+.seg.step button{width:32px;font-size:16px}.seg.step b{width:26px;font-size:16px}
+.grp{gap:6px}.grp.end{margin-inline-start:0;max-width:100%;flex-wrap:nowrap}
+.grp.end .seg{flex-wrap:nowrap;overflow-x:auto;min-width:0}
+.btn{min-height:32px;padding:0 10px;font-size:12px}.btn.sm{min-height:30px;padding:0 8px;font-size:12px}
+#help{padding:10px 12px;max-height:38vh;overflow-y:auto;border-radius:12px}.hgrid p{font-size:12px}.hgrid h3{font-size:13px}
+.cols{flex:1;min-height:0;flex-wrap:nowrap;gap:8px;align-items:stretch}
+#conds{flex:0 0 53%;max-width:340px;overflow-y:auto;gap:6px}
+.side{display:flex;flex-direction:column;gap:8px;flex:1 1 0;min-width:0;overflow-y:auto}
+#main{flex:none;gap:8px}#card{flex:none;padding:10px;border-radius:12px;gap:8px}
+.colhead{flex-wrap:wrap;gap:2px 8px}
+.basec{padding:6px 10px;border-radius:10px}.basec b{font-size:15px}
+.cond{padding:8px 9px;gap:6px;border-radius:10px}
+.chead{gap:6px}.cname{font-size:13px}.ccount{font-size:15px}
+.tog{width:34px;height:20px;padding:2px}.tog span{width:16px;height:16px}
+.row{gap:5px}.row label{font-size:11px}.row input[type=range]{min-width:56px}.row .val{width:20px;font-size:13px}
+select,button,input{font-size:12px}select{padding:4px 5px}
+.hint,.note{font-size:11px}.ib{width:26px;height:26px;font-size:13px}
+.add{min-height:36px;font-size:13px;border-radius:10px}.menu{padding:8px;gap:8px}.chip{padding:4px 9px;font-size:12px}
+.hero{position:sticky;top:0;z-index:2;padding:8px 12px;gap:4px 14px;border-radius:12px}
+.big{gap:6px}.n1{font-size:26px}.n2{font-size:17px}.big .t{font-size:11px}
+.pill{font-size:11px;margin-inline-start:0;padding:3px 8px}
+.bar{gap:5px}.game{padding:8px 10px;gap:6px;border-radius:12px}.game input{width:80px;padding:5px}.tnum{font-size:18px}
+.gal{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.gi{padding:5px;border-width:2px;border-radius:10px}.gi.two{grid-column:auto}.meta{font-size:11px}
+.kv{font-size:12px}.props .kv{padding:5px 0}.toolbox{padding:8px}.tag{font-size:11px}
+.sig{font-size:11px;padding-block:0}
+.prseq select{font-size:13px;min-height:32px}
+}
+
 </style>
 </head>
 <body>
@@ -104,7 +145,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>
 </div>
 </section>
-<div class="cols"><aside id="conds" aria-label="תנאים"></aside><section id="main" aria-label="תוצאות"><div class="game" id="boot"><p class="hint" style="font-size:15px">הקוד לא רץ בחלון הזה. אם הקובץ נפתח בתצוגה מקדימה (וואטסאפ, מייל, אפליקציית קבצים), צריך לפתוח אותו בדפדפן עצמו, למשל Chrome או Safari.</p><p class="hint" id="booterr" dir="ltr"></p></div></section><aside id="card" aria-label="כרטיס הגרף"></aside></div>
+<div class="cols"><aside id="conds" aria-label="תנאים"></aside><div class="side"><section id="main" aria-label="תוצאות"><div class="game" id="boot"><p class="hint" style="font-size:15px">הקוד לא רץ בחלון הזה. אם הקובץ נפתח בתצוגה מקדימה (וואטסאפ, מייל, אפליקציית קבצים), צריך לפתוח אותו בדפדפן עצמו, למשל Chrome או Safari.</p><p class="hint" id="booterr" dir="ltr"></p></div></section><aside id="card" aria-label="כרטיס הגרף"></aside></div></div>
 <footer class="sig">יוצרים: אלעד דפני ו-Claude</footer>
 </div>
 <script>
@@ -246,7 +287,7 @@ const $=s=>document.querySelector(s);
 const fmt=x=>x===Infinity?'∞':Number(x).toLocaleString('en-US');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const S={type:'general',labeled:false,n:6,mode:'explore',nextId:1,conds:[],sel:null,showComp:false,showMatch:true,showLabels:false,layout:'auto',sample:false,
-  guess:{val:'',revealed:false},target:null,tool:'subset',subset:0,matching:[],augPath:null,manual:null,manualPick:-1,menuOpen:false};
+  guess:{val:'',revealed:false},target:null,tool:'subset',subset:0,matching:[],augPath:null,manual:null,manualPick:-1,menuOpen:false,condsOpen:true};
 function mkCond(kind,over){
   const K=KIND[kind],n=S.n,c={id:S.nextId++,kind,on:true,target:'G'};
   if(K.type==='bool'){c.op='eq';c.value=1}
@@ -371,7 +412,7 @@ function selGraph(){if(S.mode==='manual')return{a:manualGraph(),idx:-1};if(S.sel
 /* ----- render: top bar ----- */
 const seg=(act,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" aria-pressed="${v===cur}">${l}</button>`).join('')}</div>`;
 function renderTop(){
-  $('#top').innerHTML=`<div class="brand">מגרש גרפים</div>
+  $('#top').innerHTML=`<div class="grp"><div class="brand">מגרש גרפים</div><button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
   <div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
   <div class="grp"><span class="lab">ספירה</span>${seg('lab',[['0','לא מתויג'],['1','מתויג']],S.labeled?'1':'0')}</div>
   <div class="grp"><span class="lab">צמתים</span><div class="seg step"><button data-act="n" data-v="-1" aria-label="הפחת צומת" ${S.n<=1?'disabled':''}>−</button><b class="num" aria-live="polite">${S.n}</b><button data-act="n" data-v="1" aria-label="הוסף צומת" ${S.n>=maxN()?'disabled':''}>+</button></div><span class="lab">עד <span class="num">${maxN()}</span></span></div>
@@ -587,6 +628,7 @@ document.addEventListener('click',ev=>{
     case'sel':S.sel=Number(v);resetSel();renderMain();renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;
+    case'conds':S.condsOpen=!S.condsOpen;$('.cols').classList.toggle('noconds',!S.condsOpen);t.setAttribute('aria-pressed',String(S.condsOpen));break;
     case'help':{const h=$('#help');h.hidden=!h.hidden;t.setAttribute('aria-expanded',String(!h.hidden));break}
     case'newtarget':newTarget();renderMain();break;
     case'tool':S.tool=v;S.augPath=null;renderCard();break;
