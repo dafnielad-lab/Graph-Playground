@@ -1,4 +1,5 @@
 /* ---------- UI ---------- */
+const SHOW=50;
 const $=s=>document.querySelector(s);
 const fmt=x=>x===Infinity?'∞':Number(x).toLocaleString('en-US');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -96,13 +97,13 @@ function compute(){
   // gallery items
   const idx=[];for(let i=0;i<r.alive.length;i++)if(r.alive[i])idx.push(i);
   ITEMS=[];R.galleryKind='none';
-  if(S.labeled&&r.fin.l<=20&&r.fin.l>0){
+  if(S.labeled&&r.fin.l<=SHOW&&r.fin.l>0){
     let tot=0;for(const i of idx)tot+=fact(U.n)/U.aut[i];
     if(tot<=60000){R.galleryKind='labeled';for(const i of idx)for(const g of orbit(U.graphs[i],U.n)){let ok=true;for(const [v,d] of r.dem)if(pc(g[v-1])!==d)ok=false;if(ok)ITEMS.push({a:g,idx:i,w:1})}}
   }
   if(R.galleryKind==='none'){
-    if(idx.length<=20){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
-    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,20))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    if(idx.length<=SHOW){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,SHOW))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
   }
   if(S.sel!==null&&S.sel>=ITEMS.length)S.sel=ITEMS.length?0:null;
   if(S.sel===null&&ITEMS.length)S.sel=0;
@@ -231,7 +232,7 @@ function renderMain(){
     <button class="btn" data-act="newtarget">יעד חדש</button>${hit?'<span class="res ok">הגעת ליעד</span>':''}</div>`;
   }
   const gk=R.galleryKind;
-  const pill=hid?'':gk==='labeled'?'כל הגרפים המתויגים מוצגים':gk==='all'?(ITEMS.length?'מוצגים כל הגרפים':'אין גרף שמקיים את כל התנאים'):'יותר מעשרים גרפים, אין ציור מלא';
+  const pill=hid?'':gk==='labeled'?'כל הגרפים המתויגים מוצגים':gk==='all'?(ITEMS.length?'מוצגים כל הגרפים':'אין גרף שמקיים את כל התנאים'):'יותר מחמישים גרפים, אין ציור מלא';
   m.innerHTML=`${top}<div class="hero">
     <div class="big"><b class="num n1">${hid?'?':fmt(f.u)}</b><span class="t">לא מתויגים</span></div>
     <div class="big"><b class="num n2">${hid?'?':fmt(f.l)}</b><span class="t">מתויגים</span></div>
@@ -241,7 +242,7 @@ function renderMain(){
     <button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>
     <button class="btn" data-act="opt" data-v="showLabels" aria-pressed="${S.showLabels}">תוויות צמתים</button>
     <button class="btn" data-act="lay" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button>
-    ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג עשרים לדוגמה</button>`:''}
+    ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג חמישים לדוגמה</button>`:''}
   </div>
   <div class="gal" ${hid?'hidden':''}>${ITEMS.map((it,i)=>galItem(it,i)).join('')}</div>`;
 }

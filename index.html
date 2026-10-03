@@ -144,7 +144,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div class="hgrid">
 <div><h3>בוחרים מה חוקרים</h3><p>בפס העליון קובעים את סוג הגרף, אם הספירה מתויגת או לא, ואת מספר הצמתים.</p></div>
 <div><h3>מוסיפים תנאים</h3><p>לוחצים על "הוסף תנאי" ובוחרים תכונה. מחוון קובע את הערך, והמתג מכבה ומדליק את התנאי. המספר ליד כל תנאי הוא כמה גרפים נשארו אחריו. החיצים משנים את סדר התנאים.</p></div>
-<div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש עשרים או פחות, כולם מצוירים.</p></div>
+<div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש חמישים או פחות, כולם מצוירים.</p></div>
 <div><h3>כשאין תוצאות</h3><p>התנאי שרוקן את הרשימה מסומן באדום. שורה כחולה מראה איזה שינוי בתנאי אחד מחזיר תוצאות, או אילו שני תנאים צריך לשנות יחד.</p></div>
 <div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
@@ -289,6 +289,7 @@ const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשיר�
 if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount};
 
 /* ---------- UI ---------- */
+const SHOW=50;
 const $=s=>document.querySelector(s);
 const fmt=x=>x===Infinity?'∞':Number(x).toLocaleString('en-US');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -386,13 +387,13 @@ function compute(){
   // gallery items
   const idx=[];for(let i=0;i<r.alive.length;i++)if(r.alive[i])idx.push(i);
   ITEMS=[];R.galleryKind='none';
-  if(S.labeled&&r.fin.l<=20&&r.fin.l>0){
+  if(S.labeled&&r.fin.l<=SHOW&&r.fin.l>0){
     let tot=0;for(const i of idx)tot+=fact(U.n)/U.aut[i];
     if(tot<=60000){R.galleryKind='labeled';for(const i of idx)for(const g of orbit(U.graphs[i],U.n)){let ok=true;for(const [v,d] of r.dem)if(pc(g[v-1])!==d)ok=false;if(ok)ITEMS.push({a:g,idx:i,w:1})}}
   }
   if(R.galleryKind==='none'){
-    if(idx.length<=20){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
-    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,20))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    if(idx.length<=SHOW){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,SHOW))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
   }
   if(S.sel!==null&&S.sel>=ITEMS.length)S.sel=ITEMS.length?0:null;
   if(S.sel===null&&ITEMS.length)S.sel=0;
@@ -521,7 +522,7 @@ function renderMain(){
     <button class="btn" data-act="newtarget">יעד חדש</button>${hit?'<span class="res ok">הגעת ליעד</span>':''}</div>`;
   }
   const gk=R.galleryKind;
-  const pill=hid?'':gk==='labeled'?'כל הגרפים המתויגים מוצגים':gk==='all'?(ITEMS.length?'מוצגים כל הגרפים':'אין גרף שמקיים את כל התנאים'):'יותר מעשרים גרפים, אין ציור מלא';
+  const pill=hid?'':gk==='labeled'?'כל הגרפים המתויגים מוצגים':gk==='all'?(ITEMS.length?'מוצגים כל הגרפים':'אין גרף שמקיים את כל התנאים'):'יותר מחמישים גרפים, אין ציור מלא';
   m.innerHTML=`${top}<div class="hero">
     <div class="big"><b class="num n1">${hid?'?':fmt(f.u)}</b><span class="t">לא מתויגים</span></div>
     <div class="big"><b class="num n2">${hid?'?':fmt(f.l)}</b><span class="t">מתויגים</span></div>
@@ -531,7 +532,7 @@ function renderMain(){
     <button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>
     <button class="btn" data-act="opt" data-v="showLabels" aria-pressed="${S.showLabels}">תוויות צמתים</button>
     <button class="btn" data-act="lay" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button>
-    ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג עשרים לדוגמה</button>`:''}
+    ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג חמישים לדוגמה</button>`:''}
   </div>
   <div class="gal" ${hid?'hidden':''}>${ITEMS.map((it,i)=>galItem(it,i)).join('')}</div>`;
 }
