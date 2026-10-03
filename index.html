@@ -87,6 +87,11 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .kv{display:flex;justify-content:space-between;gap:10px;font-size:14px}.kv span{color:var(--muted)}.kv b{font-weight:500}
 .props{display:flex;flex-direction:column}.props .kv{padding:7px 0;border-bottom:1px solid var(--track)}.props .kv:last-child{border-bottom:0}
 .side{display:contents}
+.cols.wide #card{order:1;flex:999 1 460px}.cols.wide #main{order:2;flex:1 1 300px}
+.cols.wide #card .duo svg{max-height:62vh}
+.cols.wide #card .props{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));column-gap:28px}.cols.wide #card .props .kv{border-bottom:1px solid var(--track)}
+.cols.wide #main .gi.two{grid-column:auto}.cols.wide #main .n1{font-size:36px}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 [data-act="conds"]{display:none}
 @media (max-width:760px),(max-height:520px){
 [data-act="conds"]{display:inline-block}
@@ -108,6 +113,7 @@ h2{font-size:14px}.lab{font-size:11px}
 #conds{flex:0 0 53%;max-width:340px;overflow-y:auto;gap:6px}
 .side{display:flex;flex-direction:column;gap:8px;flex:1 1 0;min-width:0;overflow-y:auto}
 #main{flex:none;gap:8px}#card{flex:none;padding:10px;border-radius:12px;gap:8px}
+.cols.wide #card{order:-1;flex:none}.cols.wide #main{order:0;flex:none}.cols.wide #card .duo{grid-template-columns:minmax(0,1fr)}.cols.wide #card .duo svg{max-height:none}.cols.wide #main .n1{font-size:26px}
 .colhead{flex-wrap:wrap;gap:2px 8px}
 .basec{padding:6px 10px;border-radius:10px}.basec b{font-size:15px}
 .cond{padding:8px 9px;gap:6px;border-radius:10px}
@@ -140,7 +146,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>מוסיפים תנאים</h3><p>לוחצים על "הוסף תנאי" ובוחרים תכונה. מחוון קובע את הערך, והמתג מכבה ומדליק את התנאי. המספר ליד כל תנאי הוא כמה גרפים נשארו אחריו. החיצים משנים את סדר התנאים.</p></div>
 <div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש עשרים או פחות, כולם מצוירים.</p></div>
 <div><h3>כשאין תוצאות</h3><p>התנאי שרוקן את הרשימה מסומן באדום. שורה כחולה מראה איזה שינוי בתנאי אחד מחזיר תוצאות, או אילו שני תנאים צריך לשנות יחד.</p></div>
-<div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. לחיצה על צמתים בוחרת תת-קבוצה. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
+<div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>
 </div>
@@ -555,9 +561,10 @@ function census(a,n){const reps=[];const full=(1<<n)-1;
   for(let Sx=1;Sx<full;Sx++){const vs=[];for(let i=0;i<n;i++)if(Sx>>i&1)vs.push(i);const k=vs.length;const b=vs.map(v=>{let m=0;vs.forEach((u,j)=>{if(a[v]>>u&1)m|=1<<j});return m});
     const sig=k+':'+b.map(pc).sort().join('');let ok=false;for(const r of reps)if(r.sig===sig&&isoCount(r.b,b,k,true)){ok=true;break}if(!ok)reps.push({sig,b})}
   return reps.length}
+function cardHead(){return `<div class="cardhead"><h2>כרטיס הגרף</h2><button class="btn sm" data-act="wide" aria-pressed="${!!S.wide}">${S.wide?'החזר לצד':'הרחב למרכז'}</button></div>`}
 function renderCard(){
   const el=$('#card'),sg=selGraph();
-  if(!sg||hidden()){el.innerHTML=`<h2>כרטיס הגרף</h2><p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
+  if(!sg||hidden()){el.innerHTML=`${cardHead()}<p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
   const a=sg.a,n=S.n,man=S.mode==='manual',lab=man||R.galleryKind==='labeled';
   const pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
   const co=compl(a,n),M=new Set(S.matching),path=S.augPath?new Set(S.augPath.slice(1).map((v,i)=>ekey(v,S.augPath[i]))):null;
@@ -583,7 +590,7 @@ function renderCard(){
     <div class="chips"><span class="tag ${isMax?'ok':''}">${isMax?'הזיווג מקסימלי, אין מסלול שיפור':'קיים מסלול שיפור'}</span></div>
     <div class="bar"><button class="btn sm" data-act="showaug" ${ap?'':'disabled'}>הראה מסלול שיפור</button><button class="btn sm" data-act="applyaug" ${S.augPath?'':'disabled'}>בצע שיפור</button><button class="btn sm" data-act="clrmatch">נקה</button></div>`;
   }
-  el.innerHTML=`<h2>כרטיס הגרף</h2>
+  el.innerHTML=`${cardHead()}
   <div class="duo"><figure>${g}<figcaption>הגרף</figcaption></figure><figure>${c}<figcaption class="cc">המשלים</figcaption></figure></div>
   <div class="grp"><span class="lab">כלי</span>${seg('tool',[['subset','תת-קבוצת צמתים'],['match','זיווג ומסלול שיפור']],S.tool)}</div>
   <div class="toolbox">${tool}</div>
@@ -628,6 +635,7 @@ document.addEventListener('click',ev=>{
     case'sel':S.sel=Number(v);resetSel();renderMain();renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;
+    case'wide':S.wide=!S.wide;$('.cols').classList.toggle('wide',S.wide);renderCard();break;
     case'conds':S.condsOpen=!S.condsOpen;$('.cols').classList.toggle('noconds',!S.condsOpen);t.setAttribute('aria-pressed',String(S.condsOpen));break;
     case'help':{const h=$('#help');h.hidden=!h.hidden;t.setAttribute('aria-expanded',String(!h.hidden));break}
     case'newtarget':newTarget();renderMain();break;

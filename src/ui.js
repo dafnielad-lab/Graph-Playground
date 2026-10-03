@@ -271,9 +271,10 @@ function census(a,n){const reps=[];const full=(1<<n)-1;
   for(let Sx=1;Sx<full;Sx++){const vs=[];for(let i=0;i<n;i++)if(Sx>>i&1)vs.push(i);const k=vs.length;const b=vs.map(v=>{let m=0;vs.forEach((u,j)=>{if(a[v]>>u&1)m|=1<<j});return m});
     const sig=k+':'+b.map(pc).sort().join('');let ok=false;for(const r of reps)if(r.sig===sig&&isoCount(r.b,b,k,true)){ok=true;break}if(!ok)reps.push({sig,b})}
   return reps.length}
+function cardHead(){return `<div class="cardhead"><h2>כרטיס הגרף</h2><button class="btn sm" data-act="wide" aria-pressed="${!!S.wide}">${S.wide?'החזר לצד':'הרחב למרכז'}</button></div>`}
 function renderCard(){
   const el=$('#card'),sg=selGraph();
-  if(!sg||hidden()){el.innerHTML=`<h2>כרטיס הגרף</h2><p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
+  if(!sg||hidden()){el.innerHTML=`${cardHead()}<p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
   const a=sg.a,n=S.n,man=S.mode==='manual',lab=man||R.galleryKind==='labeled';
   const pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
   const co=compl(a,n),M=new Set(S.matching),path=S.augPath?new Set(S.augPath.slice(1).map((v,i)=>ekey(v,S.augPath[i]))):null;
@@ -299,7 +300,7 @@ function renderCard(){
     <div class="chips"><span class="tag ${isMax?'ok':''}">${isMax?'הזיווג מקסימלי, אין מסלול שיפור':'קיים מסלול שיפור'}</span></div>
     <div class="bar"><button class="btn sm" data-act="showaug" ${ap?'':'disabled'}>הראה מסלול שיפור</button><button class="btn sm" data-act="applyaug" ${S.augPath?'':'disabled'}>בצע שיפור</button><button class="btn sm" data-act="clrmatch">נקה</button></div>`;
   }
-  el.innerHTML=`<h2>כרטיס הגרף</h2>
+  el.innerHTML=`${cardHead()}
   <div class="duo"><figure>${g}<figcaption>הגרף</figcaption></figure><figure>${c}<figcaption class="cc">המשלים</figcaption></figure></div>
   <div class="grp"><span class="lab">כלי</span>${seg('tool',[['subset','תת-קבוצת צמתים'],['match','זיווג ומסלול שיפור']],S.tool)}</div>
   <div class="toolbox">${tool}</div>
@@ -344,6 +345,7 @@ document.addEventListener('click',ev=>{
     case'sel':S.sel=Number(v);resetSel();renderMain();renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;
+    case'wide':S.wide=!S.wide;$('.cols').classList.toggle('wide',S.wide);renderCard();break;
     case'conds':S.condsOpen=!S.condsOpen;$('.cols').classList.toggle('noconds',!S.condsOpen);t.setAttribute('aria-pressed',String(S.condsOpen));break;
     case'help':{const h=$('#help');h.hidden=!h.hidden;t.setAttribute('aria-expanded',String(!h.hidden));break}
     case'newtarget':newTarget();renderMain();break;
