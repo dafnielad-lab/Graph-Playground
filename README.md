@@ -1,7 +1,7 @@
 # Graph Playground · מגרש גרפים
 
 An interactive playground for exploring small graphs, built for learning discrete mathematics.
-Stack conditions and watch how many graphs survive each one; when fifty or fewer remain, all of them are drawn.
+Stack conditions and watch how many graphs survive each one; when fifty or fewer remain, all of them are drawn (the limit can be raised up to 1000).
 
 **Open it:** https://dafnielad-lab.github.io/Graph-Playground/
 

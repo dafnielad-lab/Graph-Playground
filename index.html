@@ -63,6 +63,9 @@ select{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background
 .game{background:var(--surface);border-radius:16px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;border:2px solid transparent}
 .game.won{border-color:var(--good)}.game input{width:110px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
 .meta.pr{flex-direction:column;gap:2px;align-items:flex-end}.meta.pr .num{white-space:nowrap}.meta.pr span.num{white-space:normal;text-align:left}#help{background:var(--surface);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 24px}.hgrid h3{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--accent)}.hgrid p{margin:0;font-size:14px;line-height:1.55;max-width:60ch}.sig{text-align:center;font-size:13px;color:var(--muted);padding-block:4px}.prseq{display:flex;flex-wrap:wrap;gap:6px}.prseq select{font-size:16px;font-weight:500;min-height:40px}.tnum{font-size:26px}.res{font-weight:700}.res.ok{color:var(--good)}.res.no{color:var(--bad)}
+.showsel{margin-inline-start:auto}.slow{color:var(--accent)}
+.galload{grid-column:1/-1;display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:12px;padding:12px 14px;font-weight:500}
+.spin{width:18px;height:18px;border-radius:50%;border:3px solid var(--track);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}@keyframes spin{to{transform:rotate(360deg)}}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .gi{border:3px solid transparent;background:var(--surface);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;text-align:start;min-width:0}
 .gi.two{grid-column:span 2}.gi[aria-pressed="true"]{border-color:var(--accent)}
@@ -147,7 +150,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div class="hgrid">
 <div><h3>בוחרים מה חוקרים</h3><p>בפס העליון קובעים את סוג הגרף, אם הספירה מתויגת או לא, ואת מספר הצמתים.</p></div>
 <div><h3>מוסיפים תנאים</h3><p>לוחצים על "הוסף תנאי" ובוחרים תכונה. מחוון קובע את הערך, והמתג מכבה ומדליק את התנאי. המספר ליד כל תנאי הוא כמה גרפים נשארו אחריו. החיצים משנים את סדר התנאים.</p></div>
-<div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש חמישים או פחות, כולם מצוירים.</p></div>
+<div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש חמישים או פחות, כולם מצוירים. הבורר "גרפים להצגה" משנה את המגבלה, עד אלף. מעל חמישים הציורים נטענים בהשהיה קצרה, ולא תוך כדי גרירת מחוון.</p></div>
 <div><h3>כשאין תוצאות</h3><p>התנאי שרוקן את הרשימה מסומן באדום. שורה כחולה מראה איזה שינוי בתנאי אחד מחזיר תוצאות, או אילו שני תנאים צריך לשנות יחד.</p></div>
 <div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה, ואז התכונות של התת-גרף המושרה מוצגות לצד התכונות של הגרף. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
 <div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי צלעות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
@@ -360,11 +363,11 @@ const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשיר�
 if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList};
 
 /* ---------- UI ---------- */
-const SHOW=50;
+const SHOWS=[20,50,100,200,500,1000],LIVE=50;
 const $=s=>document.querySelector(s);
 const fmt=x=>x===Infinity?'∞':Number(x).toLocaleString('en-US');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const S={type:'general',labeled:false,n:6,mode:'explore',nextId:1,conds:[],sel:null,showComp:false,showMatch:true,showLabels:false,layout:'auto',sample:false,
+const S={type:'general',labeled:false,n:6,mode:'explore',nextId:1,conds:[],sel:null,showComp:false,showMatch:true,showLabels:false,layout:'auto',sample:false,show:50,
   guess:{val:'',revealed:false},target:null,tool:'subset',subset:0,matching:[],augPath:null,manual:null,manualPick:-1,menuOpen:false,condsOpen:true};
 function mkCond(kind,over){
   const K=KIND[kind],n=S.n,c={id:S.nextId++,kind,on:true,target:'G'};
@@ -531,13 +534,13 @@ function compute(){
   // gallery items
   const idx=[];for(let i=0;i<r.alive.length;i++)if(r.alive[i])idx.push(i);
   ITEMS=[];R.galleryKind='none';
-  if(S.labeled&&r.fin.l<=SHOW&&r.fin.l>0){
+  if(S.labeled&&r.fin.l<=S.show&&r.fin.l>0){
     let tot=0;for(const i of idx)tot+=fact(U.n)/U.aut[i];
     if(tot<=60000){R.galleryKind='labeled';for(const i of idx)for(const g of orbit(U.graphs[i],U.n)){let ok=true;for(const [v,d] of r.dem)if(pc(g[v-1])!==d)ok=false;if(ok)ITEMS.push({a:g,idx:i,w:1})}}
   }
   if(R.galleryKind==='none'){
-    if(idx.length<=SHOW){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
-    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,SHOW))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    if(idx.length<=S.show){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,S.show))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
   }
   if(S.sel!==null&&S.sel>=ITEMS.length)S.sel=ITEMS.length?0:null;
   if(S.sel===null&&ITEMS.length)S.sel=0;
@@ -649,8 +652,8 @@ function renderMain(){
     <div class="game"><span class="lab">סדרת פרופר</span><div class="prseq" dir="ltr">${S.prufer.length?S.prufer.map((t,i)=>`<select id="pr${i}" data-inp="pr" data-i="${i}" aria-label="מקום ${i+1} בסדרה">${opts(t)}</select>`).join(''):'<span class="hint">סדרה ריקה</span>'}</div>
     <button class="btn sm" data-act="prand">סדרה אקראית</button></div>
     <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button></div>
-    <div class="gal">${ITEMS.map((it,i)=>galItem(it,i)).join('')}</div>`;
-    return;
+    <div class="gal"></div>`;
+    fillGal();return;
   }
   const f=R.r.fin,hid=hidden();
   let top='';
@@ -666,7 +669,7 @@ function renderMain(){
     <button class="btn" data-act="newtarget">יעד חדש</button>${hit?'<span class="res ok">הגעת ליעד</span>':''}</div>`;
   }
   const gk=R.galleryKind;
-  const pill=hid?'':gk==='labeled'?'כל הגרפים המתויגים מוצגים':gk==='all'?(ITEMS.length?'מוצגים כל הגרפים':'אין גרף שמקיים את כל התנאים'):'יותר מחמישים גרפים, אין ציור מלא';
+  const pill=hid?'':gk==='labeled'?'כל הגרפים המתויגים מוצגים':gk==='all'?(ITEMS.length?'מוצגים כל הגרפים':'אין גרף שמקיים את כל התנאים'):`יותר מ־<b class="num">${S.show}</b> גרפים, אין ציור מלא`;
   m.innerHTML=`${top}<div class="hero">
     <div class="big"><b class="num n1">${hid?'?':fmt(f.u)}</b><span class="t">לא מתויגים</span></div>
     <div class="big"><b class="num n2">${hid?'?':fmt(f.l)}</b><span class="t">מתויגים</span></div>
@@ -677,9 +680,25 @@ function renderMain(){
     <button class="btn" data-act="opt" data-v="showLabels" aria-pressed="${S.showLabels}">תוויות צמתים</button>
     <button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button>
     <button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>
-    ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג חמישים לדוגמה</button>`:''}
+    ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג <b class="num">${S.show}</b> לדוגמה</button>`:''}
+    ${showSel()}
   </div>
-  <div class="gal" ${hid?'hidden':''}>${ITEMS.map((it,i)=>galItem(it,i)).join('')}</div>`;
+  ${S.show>LIVE?'<p class="hint slow">בבחירה של יותר מחמישים גרפים להצגה, הציורים נטענים בהשהיה קצרה ולא מתעדכנים תוך כדי גרירת מחוון.</p>':''}
+  <div class="gal" ${hid?'hidden':''}></div>`;
+  fillGal();
+}
+const showSel=()=>`<span class="grp showsel"><label class="lab" for="showsel">גרפים להצגה</label><select id="showsel" data-inp="show">${SHOWS.map(v=>`<option value="${v}" ${S.show===v?'selected':''}>${v}</option>`).join('')}</select></span>`;
+/* small galleries are drawn at once; large ones wait for input to settle, then load in chunks with a progress line */
+let GALTOK=0;
+function fillGal(){
+  const el=$('.gal'),tok=++GALTOK,N=ITEMS.length;if(!el||el.hidden)return;
+  if(N<=LIVE){el.innerHTML=ITEMS.map((it,i)=>galItem(it,i)).join('');return}
+  el.innerHTML=`<div class="galload" role="status"><span class="spin"></span><span>טוען <b class="num" id="galn">0</b> מתוך <b class="num">${N}</b> גרפים</span></div>`;
+  let i=0;const step=()=>{if(tok!==GALTOK||!el.isConnected)return;const t=performance.now();let h='';
+    while(i<N&&performance.now()-t<30){h+=galItem(ITEMS[i],i);i++}
+    el.insertAdjacentHTML('beforeend',h);const g=$('#galn');if(g)g.textContent=i;
+    if(i<N)setTimeout(step,0);else{const l=el.querySelector('.galload');if(l)l.remove()}};
+  setTimeout(step,300);
 }
 function galItem(it,i){
   const n=R.U.n,pr=R.galleryKind==='prufer',lab=R.galleryKind==='labeled',mode=lab||S.layout==='circle'?'circle':'auto';
@@ -805,7 +824,7 @@ document.addEventListener('click',ev=>{
     case'emb':{const e=embInfo(selGraph().a,S.n),L=e.list.length;S.emb=((S.emb||0)+Number(v)+L)%L;S.outer=0;renderCard();break}
     case'outer':S.outer=Math.max(0,(S.outer||0)+Number(v));renderCard();break;
     case'kur':S.kur=!S.kur;renderCard();break;
-    case'sel':S.sel=Number(v);resetSel();renderMain();renderCard();break;
+    case'sel':S.sel=Number(v);resetSel();document.querySelectorAll('.gi').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===S.sel)));renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;
     case'wide':S.wide=!S.wide;$('.cols').classList.toggle('wide',S.wide);renderCard();break;
@@ -829,6 +848,7 @@ document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev
 function onInput(ev,commit){
   const t=ev.target,f=t.dataset.inp;if(!f)return;
   if(f==='guess'){S.guess.val=t.value;return}
+  if(f==='show'){S.show=Number(t.value);changed();refresh(false);return}
   if(f==='pr'){S.prufer[Number(t.dataset.i)]=/^\d+$/.test(t.value)?Number(t.value):t.value;changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   const c=S.conds.find(x=>x.id===Number(t.dataset.id));if(!c)return;
   const isNum=['value','extra','d','v','k'].includes(f);c[f]=isNum?Number(t.value):t.value;
