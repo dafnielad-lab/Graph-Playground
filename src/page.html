@@ -29,6 +29,7 @@ h2{font-size:16px;margin:0;font-weight:700}
 .colhead{display:flex;justify-content:space-between;align-items:baseline;padding-inline:4px;gap:8px}
 .basec{display:flex;justify-content:space-between;align-items:center;background:var(--track);border-radius:12px;padding:10px 14px}.basec b{font-size:20px}
 .cond{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.cond.cut{border:2px solid var(--accent)}.cond.below{margin-inline-start:14px;border-inline-start:4px solid var(--accent)}
 .cond.off .row,.cond.off .cname{opacity:.55}
 .chead{display:flex;align-items:center;gap:10px}.cname{flex:1;font-weight:500;min-width:0}
 .ccount{font-size:20px}.rngl:empty{display:none}.rngl.fix{color:var(--accent);font-weight:500}.ccount.dim{color:var(--muted)}.note.warn{color:var(--bad)}.ccount.ok{color:var(--good)}.ccount.no{color:var(--bad)}
@@ -146,6 +147,8 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש חמישים או פחות, כולם מצוירים. הבורר "גרפים להצגה" משנה את המגבלה, עד אלף. מעל חמישים הציורים נטענים בהשהיה קצרה, ולא תוך כדי גרירת מחוון.</p></div>
 <div><h3>כשאין תוצאות</h3><p>התנאי שרוקן את הרשימה מסומן באדום. שורה כחולה מראה איזה שינוי בתנאי אחד מחזיר תוצאות, או אילו שני תנאים צריך לשנות יחד.</p></div>
 <div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה, ואז התכונות של התת-גרף המושרה מוצגות לצד התכונות של הגרף. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
+<div><h3>טווח צמתים</h3><p>הכפתור "טווח" ליד מספר הצמתים פותח שדה שני. הספירה והגלריה כוללות אז את כל הגרפים מכל מספר צמתים בטווח.</p></div>
+<div><h3>תנאים מדרגה שנייה</h3><p>התנאי "אחרי הסרת צלעות או צמתים" מחלק את הרשימה. התנאים שמעליו נבדקים על הגרף, והתנאים שמתחתיו נבדקים על מה שנשאר אחרי הסרת צלעות או צמתים. בוחרים כמה מסירים, ואם מספיק שקיימת הסרה מתאימה או שנדרש שכל הסרה תתאים. בכרטיס הגרף מסומנת באדום הסרה לדוגמה.</p></div>
 <div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי צלעות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>

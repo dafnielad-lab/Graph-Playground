@@ -101,6 +101,14 @@ function kuratowski(a,n){const b=a.slice();
   for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(b[i]>>j&1){b[i]&=~(1<<j);b[j]&=~(1<<i);if(isPlanar(b,n)){b[i]|=1<<j;b[j]|=1<<i}}
   let branch=0,k=0;for(let i=0;i<n;i++)if(pc(b[i])>=3){branch|=1<<i;k++}
   return{b,branch,type:k===5?'K5':'K33'}}
+/* cut vertices: removing the vertex leaves more components than before */
+function nCutV(a,n){if(n<3)return 0;const c=nComps(a,n);let k=0;for(let v=0;v<n;v++)if(pc(a[v])>1&&nComps(delVertex(a,n,v),n-1)>c)k++;return k}
+/* number of cycles as subgraphs: paths from the lowest vertex of the cycle, by subsets; each cycle is found twice */
+function nCycles(a,n){if(nEdges(a)===n-nComps(a,n))return 0;let tot=0;
+  for(let s=0;s<n-2;s++){const m=n-s-1,nb=a[s]>>>(s+1);if(pc(nb)<2)continue;const cnt=new Float64Array((1<<m)*m);let t=nb;while(t){const u=low(t);t&=t-1;cnt[(1<<u)*m+u]=1}
+    for(let mask=1;mask<1<<m;mask++){let vs=mask;const big=(mask&(mask-1))!==0;while(vs){const v=low(vs);vs&=vs-1;const c=cnt[mask*m+v];if(!c)continue;if(big&&(nb>>v&1))tot+=c;let ext=(a[v+s+1]>>>(s+1))&~mask;while(ext){const u=low(ext);ext&=ext-1;cnt[(mask|1<<u)*m+u]+=c}}}}
+  return tot/2}
+const maxCycles=n=>{if(n>8)return 0;let t=0;for(let k=3;k<=n;k++)t+=choose(n,k)*fact(k-1)/2;return t};
 const PROP={
   edges:(a,n)=>nEdges(a),
   maxdeg:(a,n)=>Math.max(0,...degs(a)),
@@ -118,7 +126,7 @@ const PROP={
   leaves:(a,n)=>degs(a).filter(d=>d===1).length,
   degcount:(a,n,d)=>degs(a).filter(x=>x===d).length,
   selfc:(a,n)=>isoCount(a,compl(a,n),n,true)?1:0,
-  planar:isPlanar
+  planar:isPlanar,cutv:nCutV,cycles:nCycles
 };
 const IND={
   indep:(a,S,k)=>{let t=S;while(t){const v=low(t);t&=t-1;if(a[v]&S)return false}return true},
@@ -129,6 +137,41 @@ const IND={
   path:(a,S,k)=>{let e=0,t=S;while(t){const v=low(t);t&=t-1;const d=pc(a[v]&S);if(d>2)return false;e+=d}return e/2===k-1&&flood(a,low(S),S)===S}
 };
 function indCount(a,n,prop,k){const full=(1<<n)-1,f=IND[prop];let c=0;for(let S=1;S<full;S++){const sz=pc(S);if(k&&sz!==k)continue;if(f(a,S,sz))c++}return c}
+/* ---------- second-order conditions: what remains after removing edges or vertices ---------- */
+/* index of a graph in its universe, by an isomorphism invariant and then an explicit check */
+function invKey(a,n){const d=a.map(pc),t=new Array(n);for(let v=0;v<n;v++){let s1=0,s2=0,tr=0,nb=a[v];while(nb){const u=low(nb);nb&=nb-1;s1+=d[u];s2+=d[u]*d[u];tr+=pc(a[v]&a[u])}t[v]=((d[v]*64+s1)*512+s2)*64+tr}return t.sort((x,y)=>x-y).join(',')}
+function gIndex(a,n){const U=universe('G',n);if(!U.inv){U.inv=new Map();U.graphs.forEach((g,i)=>{const k=invKey(g,n),l=U.inv.get(k);if(l)l.push(i);else U.inv.set(k,[i])})}
+  const l=U.inv.get(invKey(a,n));if(!l)return -1;if(l.length===1)return l[0];for(const i of l)if(isoCount(a,U.graphs[i],n,true))return i;return -1}
+const delVertex=(a,n,v)=>{const lo=(1<<v)-1,b=[];for(let i=0;i<n;i++)if(i!==v)b.push((a[i]&lo)|((a[i]>>(v+1))<<v));return b};
+/* the graphs reached from graph i by removing one edge ('e') or one vertex ('v'), as indices, without repeats */
+function deck(U,what,i){const key='deck'+what,D=U[key]||(U[key]=[]);if(D[i])return D[i];const a=U.graphs[i],n=U.n,set=new Set();
+  if(what==='e'){for(let x=0;x<n;x++)for(let y=x+1;y<n;y++)if(a[x]>>y&1){const b=a.slice();b[x]&=~(1<<y);b[y]&=~(1<<x);set.add(gIndex(b,n))}}
+  else if(n>1)for(let v=0;v<n;v++)set.add(gIndex(delVertex(a,n,v),n-1));
+  return D[i]=[...set]}
+/* for every graph still needed: does some / every removal of cut.k edges or vertices leave a graph meeting the conditions in `below`? */
+function cutEval(U,cut,below,need){
+  const N=U.graphs.length,n=U.n,k=cut.k,ex=cut.q!=='all',out=new Uint8Array(N);
+  if(U.kind!=='G'){out.set(need);return out}
+  const n0=cut.what==='v'?n-k:n;
+  if(n0<1){if(!ex)out.set(need);return out}
+  const U0=universe('G',n0),P=new Uint8Array(U0.graphs.length).fill(1);
+  for(const c of below){const arr=values(U0,c);for(let j=0;j<P.length;j++)if(P[j]&&!cmp(arr[j],c.op,c.value))P[j]=0}
+  const lev=[U0],memo=[null];for(let t=1;t<=k;t++){const Ut=cut.what==='v'?universe('G',n0+t):U;lev.push(Ut);memo.push(new Int8Array(Ut.graphs.length).fill(-1))}
+  const f=(t,i)=>{if(!t)return P[i];const m=memo[t];if(m[i]>=0)return m[i];const d=deck(lev[t],cut.what,i);let r=ex?0:1;for(const j of d)if(f(t-1,j)===(ex?1:0)){r=ex?1:0;break}return m[i]=r};
+  for(let i=0;i<N;i++)if(need[i])out[i]=f(k,i);
+  return out}
+/* one concrete removal that works (for "some") or fails (for "every"): list of removed edges [x,y] or vertices, in the labels of a */
+function cutWitness(a,n,cut,below){
+  if(n>8)return null;const k=cut.k,ex=cut.q!=='all',n0=cut.what==='v'?n-k:n;if(n0<1)return null;
+  const U0=universe('G',n0),P=new Uint8Array(U0.graphs.length).fill(1);
+  for(const c of below){const arr=values(U0,c);for(let j=0;j<P.length;j++)if(P[j]&&!cmp(arr[j],c.op,c.value))P[j]=0}
+  const want=ex?1:0,ev=(b,m,t)=>{const U=universe('G',m),need=new Uint8Array(U.graphs.length),i=gIndex(b,m);need[i]=1;return t?cutEval(U,{...cut,k:t},below,need)[i]:P[i]};
+  let b=a.slice(),m=n,lab=Array.from({length:n},(_,i)=>i);const rem=[];
+  for(let t=k;t>0;t--){let found=false;
+    if(cut.what==='e'){for(let x=0;x<m&&!found;x++)for(let y=x+1;y<m&&!found;y++)if(b[x]>>y&1){const c=b.slice();c[x]&=~(1<<y);c[y]&=~(1<<x);if(ev(c,m,t-1)===want){b=c;rem.push([x,y]);found=true}}}
+    else for(let v=0;v<m&&!found;v++){const c=delVertex(b,m,v);if(ev(c,m-1,t-1)===want){b=c;rem.push(lab[v]);lab.splice(v,1);m--;found=true}}
+    if(!found)return null}
+  return rem}
 function condValue(a,n,c){
   if(c.kind==='ind')return indCount(a,n,c.prop,c.k);
   const K=KIND[c.kind];const g=c.target==='C'?compl(a,n):a;return PROP[K.prop](g,n,c.extra);
@@ -147,9 +190,14 @@ function run(U,type,conds){
   if(U.kind==='G'&&type!=='general'){const arr=values(U,{kind:type==='tree'?'tree':'bip',target:'G'});for(let i=0;i<N;i++)if(!arr[i])alive[i]=0}
   const dem=new Map();let dead=false;const nf=fact(n);
   const count=()=>{let u=0,l=0;if(!dead){const den=falling(n,dem.size);for(let i=0;i<N;i++)if(alive[i]){u++;l+=nf/U.aut[i]*tuples(U.degc[i],dem)/den}}return{u,l:Math.round(l)}};
-  const base=count(),steps=[];
+  const base=count(),steps=[];let cut=null,above=null;const below=[];
   for(const c of conds){
+    if(cut||c.kind==='cut'){
+      if(!cut){cut=c;above=alive.slice()}else if(c.kind!=='vdeg'&&c.kind!=='cut')below.push(c);
+      if(!dead)alive.set(cutEval(U,cut,below,above));
+      steps.push(count());continue}
     if(c.kind==='vdeg'){
+      if(c.v>n)dead=true;
       if(dem.has(c.v)&&dem.get(c.v)!==c.d)dead=true;else dem.set(c.v,c.d);
       if(!dead)for(let i=0;i<N;i++)if(alive[i]&&!tuples(U.degc[i],dem))alive[i]=0;
     }else{const arr=values(U,c);for(let i=0;i<N;i++)if(alive[i]&&!cmp(arr[i],c.op,c.value))alive[i]=0}
@@ -173,6 +221,8 @@ const KIND={
   girth:{cat:'מבנה',label:'אורך המעגל הקצר ביותר',type:'num',prop:'girth',min:3,max:n=>Math.max(3,n),def:n=>3,op:'eq'},
   tri:{cat:'מבנה',label:'מספר משולשים',type:'num',prop:'tri',max:n=>choose(n,3),def:n=>0,op:'eq'},
   planar:{cat:'מבנה',label:'מישורי',type:'bool',prop:'planar'},
+  cutv:{cat:'מבנה',label:'מספר צמתים מפרידים',type:'num',prop:'cutv',max:n=>Math.max(0,n-2),def:n=>1,op:'ge',hint:'צומת מפריד: הסרתו מגדילה את מספר רכיבי הקשירות'},
+  cycles:{cat:'מבנה',label:'מספר מעגלים',type:'num',prop:'cycles',max:maxCycles,def:n=>1,op:'eq',hint:'שני מעגלים שנבדלים בצלע אחת לפחות נספרים בנפרד'},
   euler:{cat:'מבנה',label:'יש מעגל אוילר',type:'bool',prop:'euler'},
   ham:{cat:'מבנה',label:'יש מעגל המילטון',type:'bool',prop:'ham'},
   chi:{cat:'מבנה',label:'מספר צביעה',type:'num',prop:'chi',min:1,max:n=>n,def:n=>2,op:'eq'},
@@ -189,7 +239,8 @@ const KIND={
   pmc:{cat:'זיווגים',label:'מספר זיווגים מושלמים',type:'num',prop:'pmc',max:n=>n%2?0:[1,1,3,15,105,945,10395][n/2],def:n=>1,op:'eq'},
   stuck:{cat:'זיווגים',label:'קיים זיווג תקוע עם מסלול שיפור',type:'bool',prop:'stuck',hint:'זיווג שאי אפשר להוסיף לו צלע, אבל הוא לא מקסימלי'},
   selfc:{cat:'משלים',label:'איזומורפי למשלים שלו',type:'bool',prop:'selfc',noTarget:true},
-  ind:{cat:'תת-גרפים מושרים',label:'תת-קבוצות צמתים עם תכונה',type:'ind',noTarget:true}
+  ind:{cat:'תת-גרפים מושרים',label:'תת-קבוצות צמתים עם תכונה',type:'ind',noTarget:true},
+  cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת צלעות או צמתים',type:'cut',noTarget:true}
 };
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
-if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList};
+if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV};

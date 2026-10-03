@@ -6,22 +6,25 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const S={type:'general',labeled:false,n:6,mode:'explore',nextId:1,conds:[],sel:null,showComp:false,showMatch:true,showLabels:false,layout:'auto',sample:false,show:50,
   guess:{val:'',revealed:false},target:null,tool:'subset',subset:0,matching:[],augPath:null,manual:null,manualPick:-1,menuOpen:false,condsOpen:true};
 function mkCond(kind,over){
-  const K=KIND[kind],n=S.n,c={id:S.nextId++,kind,on:true,target:'G'};
+  const K=KIND[kind],n=nHi(),c={id:S.nextId++,kind,on:true,target:'G'};
   if(K.type==='bool'){c.op='eq';c.value=1}
   else if(K.type==='num'){c.op=K.op;c.value=K.def(n);if(K.extra)c.extra=K.extra.def(n)}
   else if(K.type==='vdeg'){c.v=1;c.d=1}
+  else if(K.type==='cut'){c.what='e';c.k=1;c.q='ex'}
   else if(K.type==='ind'){c.prop='indep';c.k=Math.min(2,n-1);c.op='ge';c.value=1}
   return Object.assign(c,over||{});
 }
-S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
 const single=()=>S.mode==='manual'||S.mode==='prufer';
+const ranged=()=>!!S.rng&&!single(),nHi=()=>ranged()?Math.max(S.n,S.n2||S.n):S.n,Ns=()=>{const r=[];for(let n=S.n;n<=nHi();n++)r.push(n);return r};
+S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
 const maxN=()=>S.mode==='prufer'?12:S.mode==='manual'?8:(S.type==='tree'?12:8);
-const curU=()=>S.type==='tree'&&S.n>8?universe('T',S.n):universe('G',S.n);
-const numMin=c=>KIND[c.kind].min||0;
-const numMax=c=>c.kind==='ind'?(c.k?choose(S.n,c.k):(1<<S.n)-2):KIND[c.kind].max(S.n);
-function clampConds(){const n=S.n;for(const c of S.conds){const K=KIND[c.kind];
+const curU=n=>S.type==='tree'&&n>8?universe('T',n):universe('G',n);
+const numMin=c=>c.kind==='cut'?1:KIND[c.kind].min||0;
+const numMax=c=>{const n=nHi();return c.kind==='cut'?Math.max(1,c.what==='e'?n*(n-1)/2:n-1):c.kind==='ind'?(c.k?choose(n,c.k):(1<<n)-2):KIND[c.kind].max(n)};
+function clampConds(){const n=nHi();for(const c of S.conds){const K=KIND[c.kind];
   if(K.type==='num'){c.value=Math.max(numMin(c),Math.min(numMax(c),c.value));if(K.extra)c.extra=Math.min(K.extra.max(n),c.extra)}
   if(K.type==='vdeg'){c.v=Math.min(n,c.v);c.d=Math.min(n-1,c.d)}
+  if(K.type==='cut')c.k=Math.max(1,Math.min(numMax(c),c.k));
   if(K.type==='ind'){c.k=Math.min(Math.max(n-1,0),c.k);c.value=Math.min(numMax(c),c.value)}}}
 
 /* ----- layout & drawing ----- */
@@ -148,64 +151,74 @@ function pruferTree(seq,n){const deg=new Array(n).fill(1),a=new Array(n).fill(0)
   const rest=[];for(let i=0;i<n;i++)if(deg[i]===1)rest.push(i);if(rest.length===2)link(rest[0],rest[1]);return a}
 function syncPrufer(){const n=S.n,L=Math.max(0,n-2);if(!S.prufer){S.prufer=Array.from({length:L},(_,i)=>(i*2)%n+1);if(L>=3)S.prufer[2]='x'}
   S.prufer=Array.from({length:L},(_,i)=>{const t=S.prufer[i];return t===undefined?1:typeof t==='number'?Math.min(n,t):t})}
+function runAll(conds){const parts=Ns().map(n=>{const U=curU(n);return{U,r:run(U,S.type,conds)}}),z={u:0,l:0},add=(x,y)=>({u:x.u+y.u,l:x.l+y.l});
+  return{parts,base:parts.reduce((t,p)=>add(t,p.r.base),z),steps:conds.map((_,i)=>parts.reduce((t,p)=>add(t,p.r.steps[i]),z)),fin:parts.reduce((t,p)=>add(t,p.r.fin),z)}}
+const cutOf=list=>list.find(c=>c.kind==='cut'),isBelow=(c,list)=>{const k=cutOf(list);return !!k&&list.indexOf(c)>list.indexOf(k)};
 function compute(){
   if(S.mode==='prufer'){const n=S.n,vars=['x','y'].filter(v=>S.prufer.includes(v));ITEMS=[];
     const rg=k=>vars.length>k?Array.from({length:n},(_,i)=>i+1):[0];
     for(const x of rg(0))for(const y of rg(1)){const val={};if(vars[0])val[vars[0]]=x;if(vars[1])val[vars[1]]=y;const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
-      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')})}
-    R={U:{n},r:null,info:{},galleryKind:'prufer'};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
-  const U=curU(),on=S.conds.filter(c=>c.on);
-  const r=run(U,S.type,on);
+      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')})}
+    R={r:null,info:{},galleryKind:'prufer'};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
+  const on=S.conds.filter(c=>c.on),r=runAll(on);
   const stepOf={};on.forEach((c,i)=>stepOf[c.id]=r.steps[i]);
   const info={};const key=x=>x.u+'/'+x.l;
   for(const c of S.conds){
-    if(c.on){const w=run(U,S.type,on.filter(x=>x!==c)),wo=w.fin;info[c.id]={step:stepOf[c.id],redundant:key(wo)===key(r.fin),woN:wo.u,ok:okValues(U,c,w,on)}}
-    else info[c.id]={ifOn:run(U,S.type,[...on,c]).fin};
+    if(c.on){const w=runAll(on.filter(x=>x!==c)),wo=w.fin;info[c.id]={step:stepOf[c.id],redundant:key(wo)===key(r.fin),woN:wo.u,ok:okValues(c,w,on)}}
+    else info[c.id]={ifOn:runAll(S.conds.filter(y=>y.on||y===c)).fin};
   }
   if(r.fin.u===0&&on.length>1&&!on.some(c=>info[c.id].woN>0)){
-    for(let i=0;i<on.length;i++)for(let j=i+1;j<on.length;j++)if(run(U,S.type,on.filter(x=>x!==on[i]&&x!==on[j])).fin.u>0){
+    for(let i=0;i<on.length;i++)for(let j=i+1;j<on.length;j++)if(runAll(on.filter(x=>x!==on[i]&&x!==on[j])).fin.u>0){
       (info[on[i].id].partners=info[on[i].id].partners||[]).push(KIND[on[j].kind].label);(info[on[j].id].partners=info[on[j].id].partners||[]).push(KIND[on[i].kind].label)}
   }
-  R={U,r,info};
-  // gallery items
-  const idx=[];for(let i=0;i<r.alive.length;i++)if(r.alive[i])idx.push(i);
+  R={r,info};
+  // gallery items, over every vertex count in the range
+  const idx=[];for(const p of r.parts)for(let i=0;i<p.r.alive.length;i++)if(p.r.alive[i])idx.push([p,i]);
+  const item=([p,i])=>({a:p.U.graphs[i],idx:i,w:p.r.weight(i),n:p.U.n,U:p.U});
   ITEMS=[];R.galleryKind='none';
   if(S.labeled&&r.fin.l<=S.show&&r.fin.l>0){
-    let tot=0;for(const i of idx)tot+=fact(U.n)/U.aut[i];
-    if(tot<=60000){R.galleryKind='labeled';for(const i of idx)for(const g of orbit(U.graphs[i],U.n)){let ok=true;for(const [v,d] of r.dem)if(pc(g[v-1])!==d)ok=false;if(ok)ITEMS.push({a:g,idx:i,w:1})}}
+    let tot=0;for(const [p,i] of idx)tot+=fact(p.U.n)/p.U.aut[i];
+    if(tot<=60000){R.galleryKind='labeled';for(const [p,i] of idx)for(const g of orbit(p.U.graphs[i],p.U.n)){let ok=true;for(const [v,d] of p.r.dem)if(pc(g[v-1])!==d)ok=false;if(ok)ITEMS.push({a:g,idx:i,w:1,n:p.U.n,U:p.U})}}
   }
   if(R.galleryKind==='none'){
-    if(idx.length<=S.show){R.galleryKind='all';for(const i of idx)ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
-    else{R.galleryKind='many';if(S.sample)for(const i of idx.slice(0,S.show))ITEMS.push({a:U.graphs[i],idx:i,w:r.weight(i)})}
+    if(idx.length<=S.show){R.galleryKind='all';ITEMS=idx.map(item)}
+    else{R.galleryKind='many';if(S.sample)ITEMS=idx.slice(0,S.show).map(item)}
   }
   if(S.sel!==null&&S.sel>=ITEMS.length)S.sel=ITEMS.length?0:null;
   if(S.sel===null&&ITEMS.length)S.sel=0;
 }
-const runsTxt=vals=>{const out=[];for(let i=0;i<vals.length;i++){let j=i;while(j+1<vals.length&&vals[j+1]===vals[j]+1)j++;out.push(j>i?`<b class="num">${vals[i]}</b> עד <b class="num">${vals[j]}</b>`:`<b class="num">${vals[i]}</b>`);i=j}return out.join(', ')};
+const runsTxt=vals=>{const out=[];for(let i=0;i<vals.length;i++){let j=i;while(j+1<vals.length&&vals[j+1]===vals[j]+1)j++;out.push(j>i?`<b class="num">${vals[i]}</b> עד <b class="num">${vals[j]}</b>`:`<b class="num">${vals[i]}</b>`);i=j}return out.length>10?out.slice(0,10).join(', ')+' ועוד':out.join(', ')};
 /* values of this condition alone (others fixed) that leave at least one graph */
-function okValues(U,c,wo,on){
-  const K=KIND[c.kind];
+function okValues(c,wo,on){
+  const K=KIND[c.kind],below=isBelow(c,on),alt=o=>runAll(on.map(x=>x===c?{...c,...o}:x)).fin.u>0;
   if(K.type==='bool')return null;
-  if(K.type==='vdeg'){const r=[];for(let d=0;d<U.n;d++)if(run(U,S.type,on.map(x=>x===c?{...c,d}:x)).fin.u>0)r.push(d);return r}
-  const arr=values(U,c),lo=K.type==='ind'?0:numMin(c),hi=numMax(c);let mn=Infinity,mx=-Infinity;const set=new Set();
-  for(let i=0;i<arr.length;i++)if(wo.alive[i]){const v=arr[i];set.add(v);if(v<mn)mn=v;if(v>mx)mx=v}
+  if(K.type==='vdeg'){if(below)return null;const r=[];for(let d=0;d<nHi();d++)if(alt({d}))r.push(d);return r}
+  const lo=K.type==='ind'?0:numMin(c),hi=numMax(c);
+  if(K.type==='cut'){const r=[];for(let k=lo;k<=hi;k++)if(alt({k}))r.push(k);return r}
+  if(below){if(hi-lo>40)return null;const r=[];for(let v=lo;v<=hi;v++)if(alt({value:v}))r.push(v);return r}
+  let mn=Infinity,mx=-Infinity;const set=new Set();
+  for(const p of wo.parts){const arr=values(p.U,c);for(let i=0;i<arr.length;i++)if(p.r.alive[i]){const v=arr[i];set.add(v);if(v<mn)mn=v;if(v>mx)mx=v}}
   const r=[];for(let v=lo;v<=hi;v++)if(c.op==='eq'?set.has(v):c.op==='le'?v>=mn:v<=mx)r.push(v);return r;
 }
 function orbit(a,n){const seen=new Map(),q=[a];seen.set(a.join(','),a);for(let h=0;h<q.length;h++){const g=q[h];for(let i=0;i<n-1;i++){const j=i+1,sw=x=>{const bi=x>>i&1,bj=x>>j&1;return (x&~(1<<i)&~(1<<j))|(bj<<i)|(bi<<j)};const b=g.map(sw);const t=b[i];b[i]=b[j];b[j]=t;const k=b.join(',');if(!seen.has(k)){seen.set(k,b);q.push(b)}}}return q}
 function evalSingle(a,n,c){
+  if(c.kind==='cut'){if(n>8)return null;const U=universe('G',n),need=new Uint8Array(U.graphs.length),i=gIndex(a,n);need[i]=1;return !!cutEval(U,c,belowOf(c),need)[i]}
+  if(isBelow(c,S.conds))return null;
   if(c.kind==='vdeg')return pc(a[c.v-1])===c.d;
   return cmp(condValue(a,n,c),c.op,c.value);
 }
+const belowOf=cut=>S.conds.slice(S.conds.indexOf(cut)+1).filter(c=>c.on&&c.kind!=='vdeg'&&c.kind!=='cut');
 function manualGraph(){if(!S.manual||S.manual.length!==S.n)S.manual=new Array(S.n).fill(0);return S.manual}
-function selGraph(){if(S.mode==='manual')return{a:manualGraph(),idx:-1};if(S.sel===null||!ITEMS[S.sel])return null;return ITEMS[S.sel]}
+function selGraph(){if(S.mode==='manual')return{a:manualGraph(),idx:-1,n:S.n};if(S.sel===null||!ITEMS[S.sel])return null;return ITEMS[S.sel]}
 
 /* ----- render: top bar ----- */
 const seg=(act,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" aria-pressed="${v===cur}">${l}</button>`).join('')}</div>`;
+const nStep=(w,val,lo,hi)=>`<div class="seg step"><button data-act="n" data-w="${w}" data-v="-1" aria-label="הפחת צומת" ${val<=lo?'disabled':''}>−</button><b class="num" aria-live="polite">${val}</b><button data-act="n" data-w="${w}" data-v="1" aria-label="הוסף צומת" ${val>=hi?'disabled':''}>+</button></div>`;
 function renderTop(){
   $('#top').innerHTML=`<div class="grp"><div class="brand">מגרש גרפים</div><button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
   <div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
   <div class="grp"><span class="lab">ספירה</span>${seg('lab',[['0','לא מתויג'],['1','מתויג']],S.labeled?'1':'0')}</div>
-  <div class="grp"><span class="lab">צמתים</span><div class="seg step"><button data-act="n" data-v="-1" aria-label="הפחת צומת" ${S.n<=1?'disabled':''}>−</button><b class="num" aria-live="polite">${S.n}</b><button data-act="n" data-v="1" aria-label="הוסף צומת" ${S.n>=maxN()?'disabled':''}>+</button></div><span class="lab">עד <span class="num">${maxN()}</span></span></div>
+  <div class="grp"><span class="lab">צמתים</span>${nStep('lo',S.n,1,ranged()?S.n2:maxN())}${ranged()?`<span class="lab">עד</span>${nStep('hi',S.n2,S.n,maxN())}`:''}${single()?'':`<button class="btn sm" data-act="rng" aria-pressed="${!!S.rng}">טווח</button>`}<span class="lab">לכל היותר <span class="num">${maxN()}</span></span></div>
   <div class="grp end"><span class="lab">מצב</span>${seg('mode',[['explore','חקירה חופשית'],['guess','ניחוש'],['target','יעד'],['manual','גרף ידני'],['prufer','סדרת פרופר']],S.mode)}<button class="btn" data-act="help" aria-expanded="${!$('#help').hidden}" aria-controls="help">הוראות</button></div>`;
 }
 
@@ -213,7 +226,9 @@ function renderTop(){
 const opSel=(c)=>`<select id="c${c.id}-op" data-inp="op" data-id="${c.id}" aria-label="יחס">${[['eq','בדיוק'],['le','לכל היותר'],['ge','לפחות']].map(([v,l])=>`<option value="${v}" ${c.op===v?'selected':''}>${l}</option>`).join('')}</select>`;
 const rng=(c,f,min,max,val)=>`<input type="range" id="c${c.id}-${f}" data-inp="${f}" data-id="${c.id}" min="${min}" max="${Math.max(min,max)}" step="1" value="${val}" aria-label="ערך"><b class="num val" id="c${c.id}-${f}-o">${val}</b>`;
 function condBody(c){
-  const K=KIND[c.kind],n=S.n;let h='';
+  const K=KIND[c.kind],n=nHi();let h='';
+  if(K.type==='cut'){const sel=(f,opts)=>`<select id="c${c.id}-${f}" data-inp="${f}" data-id="${c.id}" aria-label="${f==='q'?'כמת':'מה מסירים'}">${opts.map(([v,l])=>`<option value="${v}" ${c[f]===v?'selected':''}>${l}</option>`).join('')}</select>`;
+    h+=`<div class="row">${sel('q',[['ex','קיימת הסרה של'],['all','לכל הסרה של']])}${rng(c,'k',1,numMax(c),c.k)}${sel('what',[['e','צלעות'],['v','צמתים']])}</div><div class="hint">התנאים שמעל נבדקים על הגרף עצמו. התנאים שמתחת נבדקים על מה שנשאר אחרי ההסרה.</div>`}
   if(K.type==='bool')h+=`<div class="row">${seg('bool',[['1','מתקיים'],['0','לא מתקיים']],String(c.value)).replace(/data-act="bool"/g,`data-act="bool" data-id="${c.id}"`)}</div>`;
   if(K.type==='num'){
     if(K.extra)h+=`<div class="row"><label for="c${c.id}-extra">${K.extra.label}</label>${rng(c,'extra',0,K.extra.max(n),c.extra)}</div>`;
@@ -233,10 +248,10 @@ function condBody(c){
   return h;
 }
 function renderConds(){
-  const cats={};for(const [k,K] of Object.entries(KIND))(cats[K.cat]=cats[K.cat]||[]).push([k,K.label]);
+  const cats={};for(const [k,K] of Object.entries(KIND))if(k!=='cut'||!cutOf(S.conds))(cats[K.cat]=cats[K.cat]||[]).push([k,K.label]);
   $('#conds').innerHTML=`<div class="colhead"><h2>תנאים</h2><span class="lab" id="condsub"></span></div>
   <div class="basec"><span id="baselabel"></span><b class="num" id="basecount"></b></div>
-  ${S.conds.map((c,i)=>`<div class="cond${c.on?'':' off'}" id="cond${c.id}">
+  ${S.conds.map((c,i)=>`<div class="cond${c.on?'':' off'}${c.kind==='cut'?' cut':isBelow(c,S.conds)?' below':''}" id="cond${c.id}">
     <div class="chead"><button class="tog" data-act="toggle" data-id="${c.id}" role="switch" aria-checked="${c.on}" aria-label="הפעל או כבה את התנאי"><span></span></button>
     <div class="cname">${KIND[c.kind].label}</div><b class="num ccount" id="cnt${c.id}"></b></div>
     ${condBody(c)}
@@ -256,11 +271,13 @@ function updateCounts(){
   for(const c of S.conds){
     const cn=$('#cnt'+c.id),nt=$('#note'+c.id),inf=R.info[c.id];if(!cn)continue;
     const rg=$('#rng'+c.id);rg.className='hint rngl';rg.innerHTML='';cn.className='num ccount';nt.className='note';nt.textContent='';
-    if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok?'✓':'✗';cn.classList.add(ok?'ok':'no');continue}
+    if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok===null?'—':ok?'✓':'✗';if(ok!==null)cn.classList.add(ok?'ok':'no');if(ok===null)nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':'נבדק על מה שנשאר אחרי ההסרה';continue}
     if(hidden()){cn.textContent=c.on?'?':'';continue}
     if(c.on){const now=lab?inf.step.l:inf.step.u;cn.textContent=pick(inf.step);
       if(prev===0){nt.textContent='הרשימה כבר התרוקנה בתנאי קודם';cn.classList.add('dim')}
       else if(now===0){nt.textContent='התנאי הזה מרוקן את הרשימה: אין גרף שמקיים אותו יחד עם הקודמים';nt.classList.add('warn');cn.classList.add('no')}
+      else if(c.kind==='vdeg'&&isBelow(c,S.conds.filter(x=>x.on)))nt.textContent='לא נבדק מתחת לתנאי ההסרה: אחרי הסרה אין משמעות למספור הצמתים';
+      else if(c.kind==='cut'&&R.r.parts.some(p=>p.U.kind!=='G'))nt.textContent='תנאי ההסרה פועל רק עד שמונה צמתים, מעל זה הוא לא מסנן';
       else if(inf.redundant&&R.r.fin.u>0)nt.textContent='לא משפיע כרגע: נובע משאר התנאים';
       prev=now;
       const empty=R.r.fin.u===0,ok=inf.ok;
@@ -337,7 +354,7 @@ function fillGal(){
   setTimeout(step,300);
 }
 function galItem(it,i){
-  const n=R.U.n,pr=R.galleryKind==='prufer',lab=R.galleryKind==='labeled',mode=lab||S.layout==='circle'?'circle':'auto';
+  const n=it.n,pr=R.galleryKind==='prufer',lab=R.galleryKind==='labeled',mode=lab||S.layout==='circle'?'circle':'auto';
   const pos=lab?layout(new Array(n).fill(0),n,'circle'):(S.layout==='planar'&&planarPos(it.a,n))||layout(it.a,n,mode);
   const match=S.showMatch?new Set(maxMatchEdges(it.a,n).map(([x,y])=>ekey(x,y))):null;
   const g=svgGraph(it.a,n,{pos,match,labels:lab||pr||S.showLabels,aria:'גרף '+(i+1)});
@@ -368,14 +385,14 @@ function propRows(a,n,aut){
   const co=compl(a,n),d=degs(a).sort((x,y)=>y-x),nc=nComps(a,n),pl=isPlanar(a,n),gi=girth(a,n);
   const rows=[['צמתים',n],['צלעות',fmt(nEdges(a))],['צלעות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
     ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
-    ['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
+    ['צמתים מפרידים',nCutV(a,n)],['מעגלים',n<=8?fmt(nCycles(a,n)):nEdges(a)===n-nc?0:'—'],['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
   if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
   if(n<=8)rows.push(['תת-גרפים מושרים שונים',fmt(census(a,n))]);
   return rows}
 function renderCard(){
   const el=$('#card'),sg=selGraph();
   if(!sg||hidden()){el.innerHTML=`${cardHead()}<p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
-  const a=sg.a,n=S.n,man=S.mode==='manual',lab=man||R.galleryKind==='labeled';
+  const a=sg.a,n=sg.n,man=S.mode==='manual',lab=man||R.galleryKind==='labeled';
   let pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
   const E=embInfo(a,n),kur=!E&&S.kur?kuratowski(a,n):null,nc=nComps(a,n),stepper=(act,i,L)=>`<span class="stp"><button class="ib" data-act="${act}" data-v="-1" aria-label="הקודם" ${L>1?'':'disabled'}>›</button><b class="num">${i+1} / ${L}</b><button class="ib" data-act="${act}" data-v="1" aria-label="הבא" ${L>1?'':'disabled'}>‹</button></span>`;
   let pl=`<button class="btn sm" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>`;
@@ -392,11 +409,16 @@ function renderCard(){
     <div class="kv"><span>אורכי הפאות, החיצונית ראשונה</span><b class="num">${lens.map(x=>x[0]).join(', ')}</b></div>
     <p class="hint">${E.capped?'יש יותר מדי שיכונים כדי לעבור על כולם, מוצג אחד.':L>1?'שיכונים שנבדלים רק בסימטריה של הגרף או בשיקוף נספרים פעם אחת.':'לגרף הזה שיכון אחד בלבד, עד כדי סימטריה ושיקוף.'+(nc===1&&oc.reps.length>1?' בחירת הפאה החיצונית משנה רק את הציור במישור.':'')}</p>`;
   }
+  const cut=S.mode==='prufer'?null:S.conds.find(c=>c.kind==='cut'&&(man||c.on));let cw='',mark=kur;
+  if(cut&&n<=8){const w=cutWitness(a,n,cut,belowOf(cut)),ex=cut.q!=='all';
+    if(w){if(!mark){mark={b:new Array(n).fill(0),branch:0};for(const x of w){if(cut.what==='e'){mark.b[x[0]]|=1<<x[1];mark.b[x[1]]|=1<<x[0]}else mark.branch|=1<<x}}
+      cw=`<div class="toolbox"><p class="hint">${ex?'מסומנת באדום הסרה לדוגמה שאחריה מתקיימים התנאים שמתחת לתנאי ההסרה':'מסומנת באדום הסרה שאחריה התנאים שמתחת לתנאי ההסרה לא מתקיימים'}: <b class="num">${w.map(x=>cut.what==='e'?(x[0]+1)+'–'+(x[1]+1):x+1).join(', ')}</b></p></div>`}
+    else if(man)cw=`<div class="toolbox"><p class="hint">${ex?'אין הסרה שאחריה מתקיימים התנאים שמתחת לתנאי ההסרה.':'כל הסרה משאירה גרף שמקיים את התנאים שמתחת לתנאי ההסרה.'}</p></div>`}
   const co=compl(a,n),M=new Set(S.matching),path=S.augPath?new Set(S.augPath.slice(1).map((v,i)=>ekey(v,S.augPath[i]))):null;
   const subset=S.tool==='subset'?S.subset:0;
-  const g=svgGraph(a,n,{pos,labels:true,match:S.tool==='match'?M:null,path,subset,hit:S.tool==='match'?'edge':'vertex',r:9,kur,aria:'הגרף הנבחר'});
+  const g=svgGraph(a,n,{pos,labels:true,match:S.tool==='match'?M:null,path,subset,hit:S.tool==='match'?'edge':'vertex',r:9,kur:mark,aria:'הגרף הנבחר'});
   const c=svgGraph(co,n,{pos,labels:true,subset,cls:'comp',r:9,aria:'המשלים'});
-  const aut=sg.idx>=0?R.U.aut[sg.idx]:(n<=8?isoCount(a,a,n,false):null),mm=maxMatch(a,n);
+  const aut=sg.idx>=0?sg.U.aut[sg.idx]:(n<=8?isoCount(a,a,n,false):null),mm=maxMatch(a,n);
   const rows=propRows(a,n,aut);
   if(subset){const vs=[];for(let i=0;i<n;i++)if(subset>>i&1)vs.push(i);const k=vs.length,b=vs.map(v=>{let m=0;vs.forEach((u,j)=>{if(a[v]>>u&1)m|=1<<j});return m});
     const sub=new Map(propRows(b,k,k<=8?isoCount(b,b,k,false):null));for(const r of rows)r.push(sub.has(r[0])?sub.get(r[0]):'—')}
@@ -415,7 +437,7 @@ function renderCard(){
   }
   el.innerHTML=`${cardHead()}
   <div class="duo"><figure>${g}<figcaption>הגרף</figcaption></figure><figure>${c}<figcaption class="cc">המשלים</figcaption></figure></div>
-  <div class="toolbox">${pl}</div>
+  ${cw}<div class="toolbox">${pl}</div>
   <div class="grp"><span class="lab">כלי</span>${seg('tool',[['subset','תת-קבוצת צמתים'],['match','זיווג ומסלול שיפור']],S.tool)}</div>
   <div class="toolbox">${tool}</div>
   ${subset?'<p class="hint subhint">בכל שורה: הערך של הגרף, ולצידו בכחול הערך של התת-גרף המושרה על הצמתים שנבחרו.</p>':''}
@@ -424,12 +446,12 @@ function renderCard(){
 
 /* ----- game: target ----- */
 function newTarget(){
-  const U=curU(),pool=Object.keys(KIND).filter(k=>['bool','num'].includes(KIND[k].type)&&k!=='ham');
-  const base=run(U,S.type,[]).base.u;let t=1;
+  const pool=Object.keys(KIND).filter(k=>['bool','num'].includes(KIND[k].type)&&k!=='ham');
+  const base=runAll([]).base.u;let t=1;
   for(let tries=0;tries<60;tries++){
     const cs=[];const m=2+(Math.random()*2|0);
     for(let i=0;i<m;i++){const k=pool[Math.random()*pool.length|0],c=mkCond(k);if(KIND[k].type==='num'){const lo=numMin(c),hi=numMax(c);c.value=lo+(Math.random()*(hi-lo+1)|0);c.op=['eq','le','ge'][Math.random()*3|0]}cs.push(c)}
-    const u=run(U,S.type,cs).fin.u;if(u>=1&&u<base&&u<=40){t=u;break}
+    const u=runAll(cs).fin.u;if(u>=1&&u<base&&u<=40){t=u;break}
   }
   S.target=t;
 }
@@ -437,7 +459,7 @@ function newTarget(){
 /* ----- wiring ----- */
 function resetSel(){S.subset=0;S.matching=[];S.augPath=null;S.emb=0;S.outer=0;S.kur=false}
 function refresh(full){
-  if(S.n>maxN())S.n=maxN();if(S.mode==='prufer'){if(S.n<2)S.n=2;syncPrufer()}
+  if(S.n>maxN())S.n=maxN();S.n2=Math.max(S.n,Math.min(maxN(),S.n2||S.n));if(S.mode==='prufer'){if(S.n<2)S.n=2;syncPrufer()}
   if(full){clampConds();renderTop();renderConds()}
   compute();updateCounts();renderMain();renderCard();
 }
@@ -447,7 +469,8 @@ document.addEventListener('click',ev=>{
   switch(act){
     case'type':S.type=v;changed();S.target=null;refresh(true);if(S.mode==='target'){newTarget();renderMain()}break;
     case'lab':S.labeled=v==='1';changed();refresh(true);break;
-    case'n':S.n=Math.max(1,Math.min(maxN(),S.n+Number(v)));changed();S.manual=null;S.manualPick=-1;refresh(true);if(S.mode==='target'){newTarget();renderMain()}break;
+    case'rng':S.rng=!S.rng;changed();refresh(true);if(S.mode==='target'){newTarget();renderMain()}break;
+    case'n':if(t.dataset.w==='hi')S.n2=Math.max(S.n,Math.min(maxN(),S.n2+Number(v)));else{S.n=Math.max(1,Math.min(ranged()?S.n2:maxN(),S.n+Number(v)))}changed();S.manual=null;S.manualPick=-1;refresh(true);if(S.mode==='target'){newTarget();renderMain()}break;
     case'mode':S.mode=v;if(v==='prufer'){S.type='tree';S.labeled=true}changed();S.manualPick=-1;if(v==='target')newTarget();refresh(true);break;
     case'toggle':c.on=!c.on;changed();refresh(true);break;
     case'bool':c.value=Number(v);changed();refresh(true);break;
@@ -457,7 +480,7 @@ document.addEventListener('click',ev=>{
     case'add':S.conds.push(mkCond(v));S.menuOpen=false;changed();refresh(true);break;
     case'opt':S[v]=!S[v];if(v==='sample'){compute()}renderMain();renderCard();break;
     case'lay':S.layout=S.layout===v?'auto':v;renderMain();renderCard();break;
-    case'emb':{const e=embInfo(selGraph().a,S.n),L=e.list.length;S.emb=((S.emb||0)+Number(v)+L)%L;S.outer=0;renderCard();break}
+    case'emb':{const sg=selGraph(),e=embInfo(sg.a,sg.n),L=e.list.length;S.emb=((S.emb||0)+Number(v)+L)%L;S.outer=0;renderCard();break}
     case'outer':S.outer=Math.max(0,(S.outer||0)+Number(v));renderCard();break;
     case'kur':S.kur=!S.kur;renderCard();break;
     case'sel':S.sel=Number(v);resetSel();document.querySelectorAll('.gi').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===S.sel)));renderCard();break;
@@ -470,7 +493,7 @@ document.addEventListener('click',ev=>{
     case'tool':S.tool=v;S.augPath=null;renderCard();break;
     case'clrsub':S.subset=0;renderCard();break;
     case'clrmatch':S.matching=[];S.augPath=null;renderCard();break;
-    case'showaug':{const sg=selGraph();S.augPath=augmenting(sg.a,S.n,new Set(S.matching));renderCard();break}
+    case'showaug':{const sg=selGraph();S.augPath=augmenting(sg.a,sg.n,new Set(S.matching));renderCard();break}
     case'applyaug':{const M=new Set(S.matching),p=S.augPath;for(let i=1;i<p.length;i++){const k=ekey(p[i-1],p[i]);if(M.has(k))M.delete(k);else M.add(k)}S.matching=[...M];S.augPath=null;renderCard();break}
     case'edge':{const k=t.dataset.e,[x,y]=k.split('-').map(Number);let M=S.matching;if(M.includes(k))M=M.filter(e=>e!==k);else{M=M.filter(e=>{const [p,q]=e.split('-').map(Number);return p!==x&&p!==y&&q!==x&&q!==y});M.push(k)}S.matching=M;S.augPath=null;renderCard();break}
     case'vertex':{const i=Number(v);
@@ -490,7 +513,7 @@ function onInput(ev,commit){
   const isNum=['value','extra','d','v','k'].includes(f);c[f]=isNum?Number(t.value):t.value;
   const o=$('#'+t.id+'-o');if(o)o.textContent=t.value;
   changed();
-  if(t.tagName==='SELECT'&&(f==='k'||f==='v')){refresh(true)}else{compute();updateCounts();renderMain();renderCard()}
+  if(t.tagName==='SELECT'&&(f==='k'||f==='v'||f==='what')){refresh(true)}else{compute();updateCounts();renderMain();renderCard()}
 }
 document.addEventListener('input',onInput);
 refresh(true);
