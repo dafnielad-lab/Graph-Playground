@@ -43,26 +43,99 @@ function layout(a,n,mode){
     }
     for(let i=0;i<n;i++)P[i]=Q[i];
   }
+  return LAY[key]=fit(P);
+}
+function fit(P){
   let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;for(const p of P){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])}
   const w=Math.max(x1-x0,0.001),h=Math.max(y1-y0,0.001),sc=Math.min(160/w,116/h,80);
-  const out=P.map(p=>[100+(p[0]-(x0+x1)/2)*sc,75+(p[1]-(y0+y1)/2)*sc]);
-  return LAY[key]=out;
+  return P.map(p=>[100+(p[0]-(x0+x1)/2)*sc,75+(p[1]-(y0+y1)/2)*sc]);
+}
+/* ----- planar straight-line drawing of one component: helper vertices triangulate every face,
+   Tutte barycentres give a crossing-free start, then a relaxation that never flips a triangle ----- */
+function drawComp(rot,verts,faces,outer){
+  const nv=verts.length;if(nv===1)return[[0,0]];if(nv===2)return[[-.5,0],[.5,0]];
+  const id=new Map();verts.forEach((v,i)=>id.set(v,i));let N=nv;const nb=[],T=[],fix=new Map();
+  const add=(x,y)=>{(nb[x]=nb[x]||new Set()).add(y);(nb[y]=nb[y]||new Set()).add(x)};
+  for(const v of verts)for(const u of rot[v])add(id.get(v),id.get(u));
+  faces.forEach((w,fi)=>{const k=w.length,L=w.map(v=>id.get(v));
+    if(fi!==outer&&k===3){T.push(L);return}
+    const d0=N;N+=k;
+    for(let i=0;i<k;i++){const d=d0+i,d2=d0+(i+1)%k,x=L[i],y=L[(i+1)%k];add(d,x);add(d,y);add(d,d2);T.push([x,y,d],[d,y,d2])}
+    if(fi===outer)for(let i=0;i<k;i++){const t=-Math.PI/2+2*Math.PI*(i+.5)/k;fix.set(d0+i,[1.35*Math.cos(t),Math.sin(t)])}
+    else{const c=N++;for(let i=0;i<k;i++){add(c,d0+i);T.push([d0+i,d0+(i+1)%k,c])}}
+  });
+  const free=[],at=new Int16Array(N).fill(-1);for(let i=0;i<N;i++)if(!fix.has(i)){at[i]=free.length;free.push(i)}
+  const U=free.length,M=free.map(()=>new Float64Array(U+2));
+  free.forEach((i,r)=>{M[r][r]=nb[i].size;for(const j of nb[i]){if(at[j]>=0)M[r][at[j]]-=1;else{const f=fix.get(j);M[r][U]+=f[0];M[r][U+1]+=f[1]}}});
+  for(let c=0;c<U;c++){const pv=M[c][c];for(let r=c+1;r<U;r++){const f=M[r][c]/pv;if(f){const Mr=M[r],Mc=M[c];for(let k=c;k<U+2;k++)Mr[k]-=f*Mc[k]}}}
+  const P=new Array(N);for(const [i,f] of fix)P[i]=f;
+  for(let r=U-1;r>=0;r--){let x=M[r][U],y=M[r][U+1];for(let k=r+1;k<U;k++){x-=M[r][k]*P[free[k]][0];y-=M[r][k]*P[free[k]][1]}P[free[r]]=[x/M[r][r],y/M[r][r]]}
+  /* spread the vertices: forces move one vertex at a time, and a move is kept only if it creates
+     no crossing and leaves the cyclic order of neighbours unchanged, so the embedding is preserved */
+  const Q=P.slice(0,nv),R=verts.map(v=>rot[v].map(u=>id.get(u))),E=[];for(let i=0;i<nv;i++)for(const j of R[i])if(i<j)E.push([i,j]);
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;for(const q of Q){x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])}
+  const sc=Math.sqrt(nv)/Math.max(x1-x0,y1-y0,1e-9);for(const q of Q){q[0]=(q[0]-x0)*sc;q[1]=(q[1]-y0)*sc}
+  const o=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+  const order=x=>{const r=R[x],k=r.length;if(k<3)return 0;const s=r.map(u=>[Math.atan2(Q[u][1]-Q[x][1],Q[u][0]-Q[x][0]),u]).sort((a,b)=>a[0]-b[0]).map(t=>t[1]),i0=s.indexOf(r[0]);
+    let f=1,b=1;for(let j=1;j<k;j++){if(s[(i0+j)%k]!==r[j])f=0;if(s[(i0-j+k)%k]!==r[j])b=0}return f?1:b?-1:2};
+  let hand=0;for(let i=0;i<nv&&!hand;i++){const h=order(i);if(h===1||h===-1)hand=h}
+  const okAt=x=>R[x].length<3||order(x)===hand;
+  const valid=v=>{for(const u of R[v])for(const e of E){const c=e[0],d=e[1];if(c===v||d===v)continue;
+      if(c===u||d===u){const w=c===u?d:c;if(Math.abs(o(Q[u],Q[v],Q[w]))<1e-9&&(Q[v][0]-Q[u][0])*(Q[w][0]-Q[u][0])+(Q[v][1]-Q[u][1])*(Q[w][1]-Q[u][1])>0)return false;continue}
+      if(o(Q[v],Q[u],Q[c])*o(Q[v],Q[u],Q[d])<=0&&o(Q[c],Q[d],Q[v])*o(Q[c],Q[d],Q[u])<=0)return false}
+    if(!okAt(v))return false;for(const u of R[v])if(!okAt(u))return false;return true};
+  const D=Q.map(()=>[0,0]);let temp=.3;
+  for(let it=0;it<140;it++){
+    for(const d of D){d[0]=0;d[1]=0}
+    for(let i=0;i<nv;i++)for(let j=i+1;j<nv;j++){const ex=Q[i][0]-Q[j][0],ey=Q[i][1]-Q[j][1],d=Math.hypot(ex,ey)||1e-4;let f=.6/d;if(R[i].includes(j))f-=d*d;const fx=ex/d*f,fy=ey/d*f;D[i][0]+=fx;D[i][1]+=fy;D[j][0]-=fx;D[j][1]-=fy}
+    for(let v=0;v<nv;v++)for(const e of E){const c=e[0],b=e[1];if(c===v||b===v)continue;const A=Q[c],dx=Q[b][0]-A[0],dy=Q[b][1]-A[1];let t=((Q[v][0]-A[0])*dx+(Q[v][1]-A[1])*dy)/(dx*dx+dy*dy||1e-9);t=Math.max(0,Math.min(1,t));
+      const ex=Q[v][0]-A[0]-t*dx,ey=Q[v][1]-A[1]-t*dy,d=Math.hypot(ex,ey)||1e-4;if(d<.9){const f=(.9-d)*(.9-d)/d*1.6,fx=ex/d*f,fy=ey/d*f;D[v][0]+=fx;D[v][1]+=fy;D[c][0]-=fx*(1-t);D[c][1]-=fy*(1-t);D[b][0]-=fx*t;D[b][1]-=fy*t}}
+    for(let v=0;v<nv;v++){const d=Math.hypot(D[v][0],D[v][1]);if(d<1e-7)continue;let s=Math.min(d,temp)/d;const ox=Q[v][0],oy=Q[v][1];
+      let done=false;for(let tr=0;tr<5&&!done;tr++,s/=2){Q[v][0]=ox+D[v][0]*s;Q[v][1]=oy+D[v][1]*s;if(valid(v))done=true;else{Q[v][0]=ox;Q[v][1]=oy}}
+      for(let tr=0;tr<4&&!done;tr++){const g=(tr&1?-1:1)*temp/d/(tr<2?2:8);Q[v][0]=ox-D[v][1]*g;Q[v][1]=oy+D[v][0]*g;if(valid(v))done=true;else{Q[v][0]=ox;Q[v][1]=oy}}}
+    temp=Math.max(.02,temp*.975);
+  }
+  return Q;
+}
+/* rot: rotation system; outerSel: index of the outer face in faceWalks (connected graphs only) */
+function planarLayout(a,n,rot,outerSel){
+  const F=faceWalks(rot,n),comps=[];let rem=(1<<n)-1;while(rem){const c=flood(a,low(rem),rem);rem&=~c;comps.push(c)}
+  const boxes=comps.map(c=>{const verts=[];for(let i=0;i<n;i++)if(c>>i&1)verts.push(i);
+    const fs=F.filter(w=>c>>w[0]&1);let outer=0;fs.forEach((w,i)=>{if(w.length>fs[outer].length)outer=i});
+    if(comps.length===1&&outerSel!==undefined)outer=outerSel;
+    const Q=drawComp(rot,verts,fs,outer);let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;for(const q of Q){x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])}
+    const s=verts.length===1?.5:Math.sqrt(verts.length),sc=Math.min(1.35*s/Math.max(x1-x0,.01),s/Math.max(y1-y0,.01));
+    return{verts,Q:Q.map(q=>[(q[0]-x0)*sc,(q[1]-y0)*sc]),w:Math.max((x1-x0)*sc,.3),h:Math.max((y1-y0)*sc,.3)}});
+  const P=new Array(n);
+  if(boxes.length===1){boxes[0].verts.forEach((v,i)=>P[v]=boxes[0].Q[i])}
+  else{boxes.sort((x,y)=>y.h-x.h||y.w-x.w);let A=0;for(const b of boxes)A+=(b.w+.5)*(b.h+.5);const W=Math.max(Math.sqrt(A*1.5),boxes[0].w+.5);
+    let x=0,y=0,rowH=0;for(const b of boxes){if(x>0&&x+b.w>W){x=0;y+=rowH+.6;rowH=0}b.verts.forEach((v,i)=>P[v]=[x+b.Q[i][0],y+(b.h<rowH?(rowH-b.h)/2:0)+b.Q[i][1]]);x+=b.w+.6;rowH=Math.max(rowH,b.h)}}
+  return fit(P);
+}
+const EMB=new Map();
+function embInfo(a,n){const key=n+':'+a.join(',');let e=EMB.get(key);if(e===undefined){if(EMB.size>300)EMB.clear();e=isPlanar(a,n)?embeddings(a,n):null;EMB.set(key,e)}return e}
+/* default planar picture for the gallery: first embedding, longest face outside; falls back when not planar */
+function planarPos(a,n){
+  const key='planar'+n+':'+a.join(',');if(key in LAY)return LAY[key];
+  let rot=null;if(isPlanar(a,n))embedAll(a,n,1,r=>{rot=r.map(x=>x.slice())});
+  return LAY[key]=rot?planarLayout(a,n,rot):null;
 }
 const ekey=(i,j)=>i<j?i+'-'+j:j+'-'+i;
 /* o: {cls, pos, match:Set, path:Set, subset:mask, labels, hit, r} */
-function svgGraph(a,n,o){
+function svgGraph(a,n,o){const kb=o.kur?o.kur.b:null;
   const P=o.pos,r=o.r||7;let e='',hit='',v='';
   for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(a[i]>>j&1){
     const k=ekey(i,j);let cls='e';
     if(o.match&&o.match.has(k))cls+=' m';
     if(o.path&&o.path.has(k))cls+=' p';
     if(o.subset&&(o.subset>>i&1)&&(o.subset>>j&1))cls+=' s';
+    if(kb&&kb[i]>>j&1)cls+=' k';
     const L=`x1="${P[i][0].toFixed(1)}" y1="${P[i][1].toFixed(1)}" x2="${P[j][0].toFixed(1)}" y2="${P[j][1].toFixed(1)}"`;
     e+=`<line class="${cls}" ${L}/>`;if(o.hit==='edge')hit+=`<line class="hit" data-act="edge" data-e="${k}" ${L}/>`;
   }
   for(let i=0;i<n;i++){
     const sel=o.subset&&(o.subset>>i&1)||o.pick===i;
-    v+=`<g ${o.hit==='vertex'?`class="vh" data-act="vertex" data-v="${i}" tabindex="0" role="button" aria-label="צומת ${i+1}"`:''}><circle class="v${sel?' sel':''}" cx="${P[i][0].toFixed(1)}" cy="${P[i][1].toFixed(1)}" r="${r}"/>${o.labels?`<text class="vl${sel?' sel':''}" x="${P[i][0].toFixed(1)}" y="${(P[i][1]+3.2).toFixed(1)}">${i+1}</text>`:''}</g>`;
+    v+=`<g ${o.hit==='vertex'?`class="vh" data-act="vertex" data-v="${i}" tabindex="0" role="button" aria-label="צומת ${i+1}"`:''}><circle class="v${sel?' sel':''}${o.kur&&o.kur.branch>>i&1?' kb':''}" cx="${P[i][0].toFixed(1)}" cy="${P[i][1].toFixed(1)}" r="${r}"/>${o.labels?`<text class="vl${sel?' sel':''}" x="${P[i][0].toFixed(1)}" y="${(P[i][1]+3.2).toFixed(1)}">${i+1}</text>`:''}</g>`;
   }
   return `<svg class="g ${o.cls||''}" viewBox="0 0 200 150" role="img" aria-label="${esc(o.aria||'גרף')}">${e}${hit}${v}</svg>`;
 }
@@ -214,7 +287,7 @@ function renderMain(){
     m.innerHTML=`<div class="hero"><div class="big"><b class="num n1">${fmt(ITEMS.length)}</b><span class="t">${ITEMS.length===1?'עץ מתויג מתאים לסדרה':'עצים מתויגים מתאימים לסדרה'}</span></div><div class="pill">בכל מקום בסדרה בוחרים מספר צומת או משתנה</div></div>
     <div class="game"><span class="lab">סדרת פרופר</span><div class="prseq" dir="ltr">${S.prufer.length?S.prufer.map((t,i)=>`<select id="pr${i}" data-inp="pr" data-i="${i}" aria-label="מקום ${i+1} בסדרה">${opts(t)}</select>`).join(''):'<span class="hint">סדרה ריקה</span>'}</div>
     <button class="btn sm" data-act="prand">סדרה אקראית</button></div>
-    <div class="bar"><button class="btn" data-act="lay" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button></div>
+    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button></div>
     <div class="gal">${ITEMS.map((it,i)=>galItem(it,i)).join('')}</div>`;
     return;
   }
@@ -241,14 +314,15 @@ function renderMain(){
     <button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל גרף</button>
     <button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>
     <button class="btn" data-act="opt" data-v="showLabels" aria-pressed="${S.showLabels}">תוויות צמתים</button>
-    <button class="btn" data-act="lay" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button>
+    <button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button>
+    <button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>
     ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג חמישים לדוגמה</button>`:''}
   </div>
   <div class="gal" ${hid?'hidden':''}>${ITEMS.map((it,i)=>galItem(it,i)).join('')}</div>`;
 }
 function galItem(it,i){
   const n=R.U.n,pr=R.galleryKind==='prufer',lab=R.galleryKind==='labeled',mode=lab||S.layout==='circle'?'circle':'auto';
-  const pos=lab?layout(new Array(n).fill(0),n,'circle'):layout(it.a,n,mode);
+  const pos=lab?layout(new Array(n).fill(0),n,'circle'):(S.layout==='planar'&&planarPos(it.a,n))||layout(it.a,n,mode);
   const match=S.showMatch?new Set(maxMatchEdges(it.a,n).map(([x,y])=>ekey(x,y))):null;
   const g=svgGraph(it.a,n,{pos,match,labels:lab||pr||S.showLabels,aria:'גרף '+(i+1)});
   const c=S.showComp?svgGraph(compl(it.a,n),n,{pos,labels:lab||pr||S.showLabels,cls:'comp',aria:'המשלים של גרף '+(i+1)}):'';
@@ -273,21 +347,43 @@ function census(a,n){const reps=[];const full=(1<<n)-1;
     const sig=k+':'+b.map(pc).sort().join('');let ok=false;for(const r of reps)if(r.sig===sig&&isoCount(r.b,b,k,true)){ok=true;break}if(!ok)reps.push({sig,b})}
   return reps.length}
 function cardHead(){return `<div class="cardhead"><h2>כרטיס הגרף</h2><button class="btn sm" data-act="wide" aria-pressed="${!!S.wide}">${S.wide?'החזר לצד':'הרחב למרכז'}</button></div>`}
+const yn=b=>b?'כן':'לא';
+function propRows(a,n,aut){
+  const co=compl(a,n),d=degs(a).sort((x,y)=>y-x),nc=nComps(a,n),pl=isPlanar(a,n),gi=girth(a,n);
+  const rows=[['צמתים',n],['צלעות',fmt(nEdges(a))],['צלעות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
+    ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
+    ['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
+  if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
+  if(n<=8)rows.push(['תת-גרפים מושרים שונים',fmt(census(a,n))]);
+  return rows}
 function renderCard(){
   const el=$('#card'),sg=selGraph();
   if(!sg||hidden()){el.innerHTML=`${cardHead()}<p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
   const a=sg.a,n=S.n,man=S.mode==='manual',lab=man||R.galleryKind==='labeled';
-  const pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
+  let pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
+  const E=embInfo(a,n),kur=!E&&S.kur?kuratowski(a,n):null,nc=nComps(a,n),stepper=(act,i,L)=>`<span class="stp"><button class="ib" data-act="${act}" data-v="-1" aria-label="הקודם" ${L>1?'':'disabled'}>›</button><b class="num">${i+1} / ${L}</b><button class="ib" data-act="${act}" data-v="1" aria-label="הבא" ${L>1?'':'disabled'}>‹</button></span>`;
+  let pl=`<button class="btn sm" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>`;
+  if(!E)pl=`<div class="chips"><span class="tag no">הגרף לא מישורי</span></div><button class="btn sm" data-act="kur" aria-pressed="${!!S.kur}">הראה תת-גרף שמונע שיכון</button>${kur?`<p class="hint">הצלעות המסומנות הן חלוקה של <b class="num">${kur.type==='K5'?'K₅':'K₃,₃'}</b>, ולפי משפט קורטובסקי גרף שמכיל חלוקה כזו אינו מישורי.</p>`:''}`;
+  else if(S.layout==='planar'){
+    const L=E.list.length,ei=Math.min(S.emb||0,L-1),rot=E.list[ei],oc=outerChoices(rot,n,E.auts),oi=nc===1?(S.outer||0)%oc.reps.length:0,of=oc.reps[oi];
+    pos=planarLayout(a,n,rot,nc===1?of:undefined);
+    let lens;
+    if(nc===1)lens=oc.F.map((w,i)=>[w.length,i===of]);
+    else{lens=[];let out=0,rem=(1<<n)-1;while(rem){const c=flood(a,low(rem),rem);rem&=~c;const fs=oc.F.filter(w=>c>>w[0]&1).map(w=>w.length).sort((x,y)=>y-x);if(fs.length){out+=fs[0];for(const x of fs.slice(1))lens.push([x,false])}}lens.push([out,true])}
+    lens.sort((x,y)=>y[1]-x[1]||y[0]-x[0]);
+    pl+=`<div class="kv"><span>שיכון</span>${E.capped?'<b>לא נספרו</b>':stepper('emb',ei,L)}</div>
+    ${nc===1?`<div class="kv"><span>פאה חיצונית</span>${stepper('outer',oi,oc.reps.length)}</div>`:''}
+    <div class="kv"><span>אורכי הפאות, החיצונית ראשונה</span><b class="num">${lens.map(x=>x[0]).join(', ')}</b></div>
+    <p class="hint">${E.capped?'יש יותר מדי שיכונים כדי לעבור על כולם, מוצג אחד.':L>1?'שיכונים שנבדלים רק בסימטריה של הגרף או בשיקוף נספרים פעם אחת.':'לגרף הזה שיכון אחד בלבד, עד כדי סימטריה ושיקוף.'+(nc===1&&oc.reps.length>1?' בחירת הפאה החיצונית משנה רק את הציור במישור.':'')}</p>`;
+  }
   const co=compl(a,n),M=new Set(S.matching),path=S.augPath?new Set(S.augPath.slice(1).map((v,i)=>ekey(v,S.augPath[i]))):null;
   const subset=S.tool==='subset'?S.subset:0;
-  const g=svgGraph(a,n,{pos,labels:true,match:S.tool==='match'?M:null,path,subset,hit:S.tool==='match'?'edge':'vertex',r:9,aria:'הגרף הנבחר'});
+  const g=svgGraph(a,n,{pos,labels:true,match:S.tool==='match'?M:null,path,subset,hit:S.tool==='match'?'edge':'vertex',r:9,kur,aria:'הגרף הנבחר'});
   const c=svgGraph(co,n,{pos,labels:true,subset,cls:'comp',r:9,aria:'המשלים'});
-  const d=degs(a).sort((x,y)=>y-x),aut=sg.idx>=0?R.U.aut[sg.idx]:(n<=8?isoCount(a,a,n,false):null),mm=maxMatch(a,n),pm=pmCount(a,n);
-  const yn=b=>b?'כן':'לא';
-  const rows=[['צלעות',fmt(nEdges(a))],['צלעות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nComps(a,n)],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',girth(a,n)===Infinity?'אין':girth(a,n)],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
-    ['זיווג מקסימלי',mm],['זיווגים מושלמים',fmt(pm)],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
-    ['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
-  if(n<=8)rows.push(['תת-גרפים מושרים שונים',fmt(census(a,n))]);
+  const aut=sg.idx>=0?R.U.aut[sg.idx]:(n<=8?isoCount(a,a,n,false):null),mm=maxMatch(a,n);
+  const rows=propRows(a,n,aut);
+  if(subset){const vs=[];for(let i=0;i<n;i++)if(subset>>i&1)vs.push(i);const k=vs.length,b=vs.map(v=>{let m=0;vs.forEach((u,j)=>{if(a[v]>>u&1)m|=1<<j});return m});
+    const sub=new Map(propRows(b,k,k<=8?isoCount(b,b,k,false):null));for(const r of rows)r.push(sub.has(r[0])?sub.get(r[0]):'—')}
   let tool='';
   if(S.tool==='subset'){
     const k=pc(S.subset);
@@ -303,9 +399,11 @@ function renderCard(){
   }
   el.innerHTML=`${cardHead()}
   <div class="duo"><figure>${g}<figcaption>הגרף</figcaption></figure><figure>${c}<figcaption class="cc">המשלים</figcaption></figure></div>
+  <div class="toolbox">${pl}</div>
   <div class="grp"><span class="lab">כלי</span>${seg('tool',[['subset','תת-קבוצת צמתים'],['match','זיווג ומסלול שיפור']],S.tool)}</div>
   <div class="toolbox">${tool}</div>
-  <div class="props">${rows.map(([k,v])=>`<div class="kv"><span>${k}</span><b class="num">${v}</b></div>`).join('')}</div>`;
+  ${subset?'<p class="hint subhint">בכל שורה: הערך של הגרף, ולצידו בכחול הערך של התת-גרף המושרה על הצמתים שנבחרו.</p>':''}
+  <div class="props">${rows.map(([k,v,w])=>`<div class="kv"><span>${k}</span><b class="num">${v}</b>${w===undefined?'':`<b class="num sub">${w}</b>`}</div>`).join('')}</div>`;
 }
 
 /* ----- game: target ----- */
@@ -321,7 +419,7 @@ function newTarget(){
 }
 
 /* ----- wiring ----- */
-function resetSel(){S.subset=0;S.matching=[];S.augPath=null}
+function resetSel(){S.subset=0;S.matching=[];S.augPath=null;S.emb=0;S.outer=0;S.kur=false}
 function refresh(full){
   if(S.n>maxN())S.n=maxN();if(S.mode==='prufer'){if(S.n<2)S.n=2;syncPrufer()}
   if(full){clampConds();renderTop();renderConds()}
@@ -342,7 +440,10 @@ document.addEventListener('click',ev=>{
     case'menu':S.menuOpen=!S.menuOpen;renderConds();updateCounts();break;
     case'add':S.conds.push(mkCond(v));S.menuOpen=false;changed();refresh(true);break;
     case'opt':S[v]=!S[v];if(v==='sample'){compute()}renderMain();renderCard();break;
-    case'lay':S.layout=S.layout==='circle'?'auto':'circle';renderMain();renderCard();break;
+    case'lay':S.layout=S.layout===v?'auto':v;renderMain();renderCard();break;
+    case'emb':{const e=embInfo(selGraph().a,S.n),L=e.list.length;S.emb=((S.emb||0)+Number(v)+L)%L;S.outer=0;renderCard();break}
+    case'outer':S.outer=Math.max(0,(S.outer||0)+Number(v));renderCard();break;
+    case'kur':S.kur=!S.kur;renderCard();break;
     case'sel':S.sel=Number(v);resetSel();renderMain();renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;

@@ -72,6 +72,8 @@ svg.g .e.m{stroke:var(--hi);stroke-width:5}
 svg.g .e.p{stroke-dasharray:3 5;stroke:var(--accent);stroke-width:5}
 svg.g .e.m.p{stroke:var(--hi)}
 svg.g .hit{stroke:transparent;stroke-width:16;cursor:pointer}
+svg.g .e.k{stroke:var(--bad);stroke-width:4.5}svg.g .v.kb{fill:var(--bad)}
+.stp{display:flex;align-items:center;gap:6px}.stp .ib{width:28px;height:28px}.tag.no{color:var(--bad)}
 svg.g .v{fill:var(--ink)}svg.g .v.sel{fill:var(--accent)}
 svg.g .vl{fill:var(--surface);font-size:9px;font-weight:700;text-anchor:middle;font-family:var(--font);pointer-events:none}svg.g .vl.sel{fill:var(--accent-ink)}
 svg.g .vh{cursor:pointer}
@@ -80,6 +82,7 @@ figure{margin:0;background:var(--bg);border-radius:12px;padding:6px;display:flex
 figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .toolbox{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:10px}
 .kv{display:flex;justify-content:space-between;gap:10px;font-size:14px}.kv span{color:var(--muted)}.kv b{font-weight:500}
+.props .kv span{flex:1}.kv .sub{color:var(--accent);min-width:4.5em;text-align:end;border-inline-start:1px solid var(--track);padding-inline-start:8px}.subhint{color:var(--accent)}
 .props{display:flex;flex-direction:column}.props .kv{padding:7px 0;border-bottom:1px solid var(--track)}.props .kv:last-child{border-bottom:0}
 .side{display:contents}
 .cols.wide #card{order:1;flex:999 1 460px}.cols.wide #main{order:2;flex:1 1 300px}
@@ -139,7 +142,8 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>מוסיפים תנאים</h3><p>לוחצים על "הוסף תנאי" ובוחרים תכונה. מחוון קובע את הערך, והמתג מכבה ומדליק את התנאי. המספר ליד כל תנאי הוא כמה גרפים נשארו אחריו. החיצים משנים את סדר התנאים.</p></div>
 <div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש חמישים או פחות, כולם מצוירים.</p></div>
 <div><h3>כשאין תוצאות</h3><p>התנאי שרוקן את הרשימה מסומן באדום. שורה כחולה מראה איזה שינוי בתנאי אחד מחזיר תוצאות, או אילו שני תנאים צריך לשנות יחד.</p></div>
-<div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
+<div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה, ואז התכונות של התת-גרף המושרה מוצגות לצד התכונות של הגרף. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
+<div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי צלעות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>
 </div>

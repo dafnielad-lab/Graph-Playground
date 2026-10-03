@@ -36,6 +36,71 @@ function chi(a,n){if(isBip(a,n))return nEdges(a)?2:1;for(let k=3;;k++){const col
 function isHam(a,n){if(n<3)return 0;const reach=new Uint16Array(1<<n);reach[1]=1;const full=(1<<n)-1;for(let m=1;m<=full;m+=2){let e=reach[m];while(e){const v=low(e);e&=e-1;let nb=a[v]&~m;while(nb){const u=low(nb);nb&=nb-1;reach[m|(1<<u)]|=1<<u}}}return (reach[full]&a[0])?1:0}
 function isEuler(a,n){if(nComps(a,n)!==1)return 0;for(const x of a)if(pc(x)&1)return 0;return 1}
 function isoCount(a,b,n,stopAtOne){const da=degs(a),db=degs(b);const sa=[...da].sort(),sb=[...db].sort();for(let i=0;i<n;i++)if(sa[i]!==sb[i])return 0;const map=new Int8Array(n).fill(-1);let used=0,cnt=0;const go=i=>{if(i===n){cnt++;return}for(let v=0;v<n;v++){if(used>>v&1||db[v]!==da[i])continue;let ok=true;for(let j=0;j<i;j++){if(((a[i]>>j)&1)!==((b[v]>>map[j])&1)){ok=false;break}}if(!ok)continue;map[i]=v;used|=1<<v;go(i+1);used&=~(1<<v);map[i]=-1;if(stopAtOne&&cnt)return}};go(0);return cnt}
+/* ---------- planarity: rotation systems, embeddings up to symmetry, Kuratowski witness ---------- */
+/* edge order: every vertex is joined to earlier ones, most back-edges first, so cycles close early */
+function edgeOrder(a,n){const E=[],full=(1<<n)-1;let done=0;
+  while(done!==full){let best=-1,bd=-1,bg=-1;for(let v=0;v<n;v++)if(!(done>>v&1)){const d=pc(a[v]&done),g=pc(a[v]);if(d>bd||(d===bd&&g>bg)){bd=d;bg=g;best=v}}
+    let nb=a[best]&done;while(nb){const u=low(nb);nb&=nb-1;E.push([u,best])}done|=1<<best}
+  return E}
+function faceIds(rot,n){const id=new Int16Array(256).fill(-1);let f=0;
+  for(let u=0;u<n;u++)for(const v of rot[u]){if(id[u*16+v]>=0)continue;let x=u,y=v;do{id[x*16+y]=f;const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);f++}
+  return id}
+function faceWalks(rot,n){const seen=new Uint8Array(256),F=[];
+  for(let u=0;u<n;u++)for(const v of rot[u]){if(seen[u*16+v])continue;const w=[];let x=u,y=v;do{seen[x*16+y]=1;w.push(x);const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);F.push(w)}
+  return F}
+/* enumerate planar rotation systems: a new vertex enters as a leaf in any corner, a chord joins two corners of one face */
+function embedAll(a,n,limit,cb){
+  const E=edgeOrder(a,n),rot=Array.from({length:n},()=>[]);let cnt=0;
+  const go=k=>{
+    if(cnt>=limit)return;
+    if(k===E.length){cnt++;if(cb)cb(rot);return}
+    const u=E[k][0],v=E[k][1],ru=rot[u],rv=rot[v];
+    if(!rv.length){rv.push(u);
+      if(!ru.length){ru.push(v);go(k+1);ru.pop()}
+      else{const du=ru.length;for(let i=0;i<du&&cnt<limit;i++){ru.splice(i+1,0,v);go(k+1);ru.splice(i+1,1)}}
+      rv.pop();return}
+    const id=faceIds(rot,n),du=ru.length,dv=rv.length;
+    for(let i=0;i<du;i++){const fu=id[ru[i]*16+u];for(let j=0;j<dv&&cnt<limit;j++)if(id[rv[j]*16+v]===fu){ru.splice(i+1,0,v);rv.splice(j+1,0,u);go(k+1);ru.splice(i+1,1);rv.splice(j+1,1)}}
+  };
+  go(0);return cnt}
+function isPlanar(a,n){
+  const b=a.slice();let ch=true;
+  while(ch){ch=false;for(let v=0;v<n;v++){const d=pc(b[v]);
+    if(d===1){b[low(b[v])]&=~(1<<v);b[v]=0;ch=true}
+    else if(d===2){const u=low(b[v]),w=low(b[v]&~(1<<u));b[u]=(b[u]&~(1<<v))|(1<<w);b[w]=(b[w]&~(1<<v))|(1<<u);b[v]=0;ch=true}}}
+  let nv=0,m=0;for(const x of b)if(x){nv++;m+=pc(x)}m/=2;
+  return nv<5?1:m>3*nv-6?0:embedAll(b,n,1)?1:0}
+function autList(a,n,cap){const d=degs(a),map=new Int8Array(n).fill(-1),out=[];let used=0;
+  const go=i=>{if(out.length>cap)return;if(i===n){out.push(Array.from(map));return}
+    for(let v=0;v<n;v++){if(used>>v&1||d[v]!==d[i]||(!d[i]&&v!==i))continue;let ok=true;for(let j=0;j<i;j++)if(((a[i]>>j)&1)!==((a[v]>>map[j])&1)){ok=false;break}if(!ok)continue;map[i]=v;used|=1<<v;go(i+1);used&=~(1<<v);map[i]=-1}};
+  go(0);return out}
+function rotKey(rot,n,p,mir){const out=new Array(n);
+  for(let v=0;v<n;v++){const r=p?rot[v].map(x=>p[x]):rot[v].slice();if(mir)r.reverse();let mi=0;for(let i=1;i<r.length;i++)if(r[i]<r[mi])mi=i;out[p?p[v]:v]=r.slice(mi).concat(r.slice(0,mi)).join('.')}
+  return out.join('|')}
+const ROTCAP=6000,AUTCAP=6000;
+/* all embeddings on the sphere, one per class under graph automorphisms and reflection */
+function embeddings(a,n){
+  const all=[];const cnt=embedAll(a,n,ROTCAP+1,rot=>all.push(rot.map(r=>r.slice())));
+  if(!cnt)return null;
+  const A=cnt>ROTCAP?null:autList(a,n,AUTCAP);
+  if(!A||A.length>AUTCAP)return{list:[all[0]],capped:true,auts:null};
+  const seen=new Set(),list=[];
+  for(const rot of all){if(seen.has(rotKey(rot,n)))continue;list.push(rot);for(const p of A){seen.add(rotKey(rot,n,p,0));seen.add(rotKey(rot,n,p,1))}}
+  return{list,capped:false,auts:A}}
+const cycKey=w=>{let best=null;for(let i=0;i<w.length;i++){const s=w.slice(i).concat(w.slice(0,i)).join('.');if(best===null||s<best)best=s}return best};
+/* faces that give different pictures when chosen as the outer face: one per orbit of the map's symmetries, longest first */
+function outerChoices(rot,n,A){
+  const F=faceWalks(rot,n),keys=F.map(cycKey),at=new Map(keys.map((k,i)=>[k,i])),par=F.map((_,i)=>i);
+  const find=x=>{while(par[x]!==x)x=par[x]=par[par[x]];return x};
+  if(A){const base=rotKey(rot,n);for(const p of A)for(const mir of[0,1]){if(rotKey(rot,n,p,mir)!==base)continue;
+    F.forEach((w,i)=>{const im=w.map(x=>p[x]);if(mir)im.reverse();const j=at.get(cycKey(im));if(j!==undefined)par[find(i)]=find(j)})}}
+  const reps=[];F.forEach((w,i)=>{if(find(i)===i)reps.push(i)});
+  return{F,reps:reps.sort((x,y)=>F[y].length-F[x].length||x-y)}}
+/* an edge-minimal non-planar subgraph: a subdivision of K5 or of K3,3 */
+function kuratowski(a,n){const b=a.slice();
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(b[i]>>j&1){b[i]&=~(1<<j);b[j]&=~(1<<i);if(isPlanar(b,n)){b[i]|=1<<j;b[j]|=1<<i}}
+  let branch=0,k=0;for(let i=0;i<n;i++)if(pc(b[i])>=3){branch|=1<<i;k++}
+  return{b,branch,type:k===5?'K5':'K33'}}
 const PROP={
   edges:(a,n)=>nEdges(a),
   maxdeg:(a,n)=>Math.max(0,...degs(a)),
@@ -52,7 +117,8 @@ const PROP={
   alpha,omega:(a,n)=>alpha(compl(a,n),n),chi,
   leaves:(a,n)=>degs(a).filter(d=>d===1).length,
   degcount:(a,n,d)=>degs(a).filter(x=>x===d).length,
-  selfc:(a,n)=>isoCount(a,compl(a,n),n,true)?1:0
+  selfc:(a,n)=>isoCount(a,compl(a,n),n,true)?1:0,
+  planar:isPlanar
 };
 const IND={
   indep:(a,S,k)=>{let t=S;while(t){const v=low(t);t&=t-1;if(a[v]&S)return false}return true},
@@ -106,6 +172,7 @@ const KIND={
   diam:{cat:'מבנה',label:'קוטר',type:'num',prop:'diam',max:n=>n-1,def:n=>2,op:'le'},
   girth:{cat:'מבנה',label:'אורך המעגל הקצר ביותר',type:'num',prop:'girth',min:3,max:n=>Math.max(3,n),def:n=>3,op:'eq'},
   tri:{cat:'מבנה',label:'מספר משולשים',type:'num',prop:'tri',max:n=>choose(n,3),def:n=>0,op:'eq'},
+  planar:{cat:'מבנה',label:'מישורי',type:'bool',prop:'planar'},
   euler:{cat:'מבנה',label:'יש מעגל אוילר',type:'bool',prop:'euler'},
   ham:{cat:'מבנה',label:'יש מעגל המילטון',type:'bool',prop:'ham'},
   chi:{cat:'מבנה',label:'מספר צביעה',type:'num',prop:'chi',min:1,max:n=>n,def:n=>2,op:'eq'},
@@ -125,4 +192,4 @@ const KIND={
   ind:{cat:'תת-גרפים מושרים',label:'תת-קבוצות צמתים עם תכונה',type:'ind',noTarget:true}
 };
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
-if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount};
+if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList};

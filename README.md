@@ -9,11 +9,12 @@ The interface is in Hebrew. Everything runs in the browser from a single file; t
 
 ## What it does
 
-- **Conditions as cards.** Connectivity, edge count, degrees, diameter, shortest cycle, chromatic number, matchings, induced subgraphs and more. Each card has a switch and a slider, and can apply to the graph or to its complement.
+- **Conditions as cards.** Connectivity, edge count, degrees, diameter, shortest cycle, chromatic number, planarity, matchings, induced subgraphs and more. Each card has a switch and a slider, and can apply to the graph or to its complement.
 - **A funnel of counts.** Next to every condition: how many graphs remain after it. A disabled card shows what would remain if it were turned on, and a condition implied by the others is flagged.
 - **Labeled and unlabeled counting**, side by side.
 - **Guidance when nothing is left.** The condition that emptied the list is marked, together with the range of values that would bring results back, or the pair of conditions that must change together.
 - **Graph card.** The graph next to its complement, a table of properties, vertex subsets and their induced subgraphs, and a matching tool that shows and applies augmenting paths.
+- **Planarity.** A crossing-free drawing for every planar graph, all its embeddings up to symmetry and reflection, a choice of outer face, and for non-planar graphs a highlighted subdivision of K5 or K3,3.
 - **Modes.** Free exploration, guess the count, hit a target count, draw your own graph, and Prüfer sequences with up to two variables.
 
 ## Limits
