@@ -477,7 +477,7 @@ const SHEET=(()=>{
 const V=x=>`<span class="qv">${x}</span>`;
 /* objects of the question, in order; a derived graph may only use objects defined above it.
    graph properties are tri-state: 'y' given true, 'n' given false, 'u' unknown */
-const newG=(name,o)=>Object.assign({t:'g',name,n:null,m:null,c:null,D:null,dl:null,f:null,chi:null,al:null,nu:null,be:null,rho:null,lv:null,om:null,pl:'u',tr:'u',bp:'u',fo:'u',tf:'u',sc:'u',more:false},o);
+const newG=(name,o)=>Object.assign({t:'g',name,n:null,m:null,c:null,D:null,dl:null,f:null,chi:null,al:null,nu:null,be:null,rho:null,lv:null,om:null,pl:'u',tr:'u',bp:'u',fo:'u',tf:'u',sc:'u',eu:'u',ha:'u',pm:'u',more:false},o);
 let O=[newG('G',{n:10,c:1,pl:'y'}),
        {t:'v',name:'v',in:'G',q:'one',d:3,cut:false},
        newG('H',{op:'delv',src:'G',arg:'v',c:2})];
@@ -485,7 +485,7 @@ const NAMES={v:['v','u','w','x','y','z'],e:['e','e₂','e₃','e₄'],s:['S','T'
 const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הקשת','e'],delS:['הסרת קבוצת הצמתים','s'],adde:['הוספת קשת',null],contr:['כיווץ הקשת','e'],subd:['העדנת הקשת','e'],compl:['המשלים',null],ind:['תת-גרף מושרה על','s'],comp:['רכיב קשירות',null],span:['תת-גרף פורש',null]};
 const SYM={n:'n',m:'m',c:'c',D:'Δ',dl:'δ',f:'f',chi:'χ',al:'α',nu:'ν',be:'β',rho:'ρ',om:'ω',lv:'ℓ'};
 const DEF={n:'מספר הצמתים',m:'מספר הקשתות',c:'מספר רכיבי הקשירות',D:'הדרגה המקסימלית',dl:'הדרגה המינימלית',f:'מספר הפאות בשיכון מישורי',chi:'מספר הצביעה',al:'גודל קבוצה בלתי תלויה מקסימלית',nu:'גודל זיווג מקסימום',be:'גודל מינימלי של כיסוי בצמתים',rho:'גודל מינימלי של כיסוי בקשתות',om:'גודל קליקה מקסימלית',lv:'מספר העלים'};
-const PROPS={pl:'מישורי',tr:'עץ',bp:'דו-צדדי',conn:'קשיר',fo:'יער',tf:'בלי משולשים',sc:'איזומורפי למשלים'};
+const PROPS={pl:'מישורי',tr:'עץ',bp:'דו-צדדי',conn:'קשיר',fo:'יער',tf:'בלי משולשים',sc:'איזומורפי למשלים',eu:'אוילרי',ha:'המילטוני',pm:'יש זיווג מושלם'};
 const COL=new Set(['Σ']);
 const by=n=>O.find(o=>o.name===n),graphs=()=>O.filter(o=>o.t==='g');
 const fresh=t=>NAMES[t].find(n=>!by(n))||NAMES[t][0]+O.length;
@@ -518,7 +518,7 @@ function renderObjs(){
     if(o.t==='g')return `<div class="qbox"><div class="qrow"><span class="name">${o.name}</span>${o.op?`<span>=</span><select data-i="${i}" data-k="op" id="f${i}op" aria-label="פעולה">${opt(Object.entries(OPS).map(([k,v])=>[k,v[0]]),o.op)}</select>${o.arg?`<select data-i="${i}" data-k="arg" id="f${i}arg" aria-label="על מה">${opt(O.filter(a=>a.t===OPS[o.op][1]&&a.in===o.src&&O.indexOf(a)<i).map(a=>[a.name,a.name]),o.arg)}</select>`:''}<span>${o.op==='compl'||o.op==='comp'||o.op==='span'?'של':'מתוך'}</span><select data-i="${i}" data-k="src" id="f${i}src" aria-label="גרף מקור">${gs}</select>`:'<span>הגרף הנתון</span>'}${x}</div>
       <div class="qrow">${num(i,'n',o.n,'צמתים')}${num(i,'m',o.m,'קשתות')}${num(i,'c',o.c,'רכיבים')}</div>
       <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}<label class="cell">עץ<select data-i="${i}" data-k="tr" id="f${i}tr">${opt([['u','לא ידוע'],['y','עץ'],['f','יער'],['n','לא']],o.tr)}</select></label>${tri(i,'bp',o.bp,'דו-צדדי')}</div>
-      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}</div>`:''}
+      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}${tri(i,'eu',o.eu,'אוילרי')}${tri(i,'ha',o.ha,'המילטוני')}${tri(i,'pm',o.pm,'זיווג מושלם')}</div>`:''}
       <button class="link" data-more="${i}">${o.more?'הסתר גדלים ותכונות נוספים':'גדלים ותכונות נוספים'}</button></div>`;
     if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow">${num(i,'d',o.d,'דרגה')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
     if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קשת ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
@@ -595,7 +595,7 @@ const cMany=g=>(g.c!==null&&g.c>1)||!!(rgOf(g,'c')&&rgOf(g,'c')[0]>1);
 const SUBG=['delv','dele','delS','ind','comp','span'],KEEP={fo:[...SUBG,'contr','subd'],pl:[...SUBG,'contr','subd'],bp:SUBG,tf:SUBG};
 const from=(g,k,d)=>!!(g.op&&KEEP[k].includes(g.op)&&(d||0)<12&&by(g.src)&&prop(by(g.src),k,(d||0)+1)==='y');
 const forestish=(g,d)=>g.tr==='y'||g.tr==='f'||from(g,'fo',d);
-const connOf=g=>g.c===1||g.tr==='y'||g.op==='comp'?'y':cMany(g)?'n':'u';
+const connOf=g=>g.c===1||g.tr==='y'||g.op==='comp'||g.eu==='y'||g.ha==='y'?'y':cMany(g)?'n':'u';
 /* a forest is a tree exactly when it is connected; a component of a forest is therefore a tree */
 const isTree=(g,d)=>g.tr==='y'?'y':g.tr==='n'?'n':forestish(g,d)?connOf(g):'u';
 function prop(g,k,d){
@@ -608,6 +608,9 @@ function issues(g){
   const R=[],b=k=>bounds(g,k)||[null,null],lo=k=>b(k)[0],hi=k=>b(k)[1],F=x=>`<span class="fx">${x}</span>`,X=g.name;
   const gt=(x,y)=>x!==null&&y!==null&&x>y;
   const nL=lo('n'),nH=hi('n'),mL=lo('m'),mH=hi('m'),cL=lo('c'),cH=hi('c'),DL=lo('D'),DH=hi('D'),dL=lo('dl'),dH=hi('dl');
+  if(g.eu==='y'&&cMany(g))R.push('גרף אוילרי הוא קשיר, ולכן יש לו רכיב קשירות אחד.');
+  if(g.ha==='y'&&cMany(g))R.push('גרף המילטוני הוא קשיר, ולכן יש לו רכיב קשירות אחד.');
+  if(g.ha==='y'&&forestish(g))R.push('בעץ וביער אין מעגלים, ולכן הם אינם המילטוניים.');
   if(g.tr==='y'&&cMany(g))R.push('עץ הוא גרף קשיר, ולכן יש לו רכיב קשירות אחד בלבד.');
   if(forestish(g)&&g.pl==='n')R.push('עץ ויער הם תמיד מישוריים.');
   if(forestish(g)&&g.bp==='n')R.push('בעץ וביער אין מעגלים, ולכן הם דו-צדדיים.');
@@ -719,6 +722,12 @@ function sheetFor(g){
   tp='אוילר והמילטון';
   add('מסלול אוילר שאינו מעגל','פרק 3','Euler path ⇔ exactly 2 vertices of odd degree','',[['conn','y']]);
   add('אוילרי, אם ורק אם כל הדרגות זוגיות','משפט 3.1','Eulerian ⇔ deg(u) even for all u',ad!==null?`Eulerian ⇔ ${V(ad)} even`:'',[['conn','y']]);
+  add('אוילרי: קשיר, וכל הדרגות זוגיות','משפט 3.1','c = 1,  deg(u) even for all u',`${c} = ${V(1)}`,[['eu','y']]);
+  add('אוילרי: הקשתות מתפרקות למעגלים','מסקנה מ־3.1','δ ≥ 2,  m ≥ n',`${dl} ≥ ${V(2)},  ${m} ≥ ${n}`,[['eu','y']]);
+  add('המילטוני: קשיר, וכל דרגה שתיים לפחות','מההגדרה','c = 1,  δ ≥ 2,  m ≥ n',`${c} = ${V(1)},  ${dl} ≥ ${V(2)},  ${m} ≥ ${n}`,[['ha','y']]);
+  add('המילטוני: זיווג וקבוצה בלתי תלויה מתוך המעגל','מסקנה','ν = ⌊n / 2⌋,  α ≤ n / 2',`${q('nu')} = ⌊${n} / 2⌋,  ${q('al')} ≤ ${n} / 2`,[['ha','y']]);
+  add('המילטוני: הסרת קבוצת צמתים S','מסקנה','c(G − S) ≤ |S|','',[['ha','y']]);
+  add('זיווג מושלם','מההגדרה','ν = n / 2,  n even,  δ ≥ 1',`${q('nu')} = ${n} / 2`,[['pm','y']]);
   add('תנאי אור, לכל שני צמתים לא שכנים','משפט 3.2','deg(u) + deg(w) ≥ n ⇒ Hamiltonian',`${ad!==null?V(ad)+' + '+V(ad):'deg(u) + deg(w)'} ≥ ${n}`);
   add('תנאי דירק להמילטוניות','משפט 3.3','δ ≥ n / 2 ⇒ Hamiltonian',`${dl} ≥ ${n} / 2`);
   /* matchings and covers */
@@ -863,6 +872,18 @@ function digest(g,memo){
     Z();if(L('m')>=1){K();le('c',H('n')-1,'יש קשת');ge('D',1,'יש קשת');ge('chi',2,'יש קשת');ge('om',2,'יש קשת');ge('nu',1,'יש קשת');E();}
     Z();if(H('m')===0){K();eq('D',0,'אין קשתות');eq('chi',1,'אין קשתות');eq('nu',0,'אין קשתות');E();}
     Z();if(P('conn')==='y')eq('c',1,'קשיר');
+    Z();if(g.eu==='y'){eq('c',1,'אוילרי: קשיר');Z();if(L('n')>=2){ge('dl',2,'אוילרי: כל הדרגות זוגיות, ואין צומת מבודד');ge('m',L('n'),'אוילרי: כל דרגה שתיים לפחות')}}
+    Z();if(g.ha==='y'){eq('c',1,'המילטוני: קשיר');ge('n',3,'מעגל המילטון');ge('dl',2,'המילטוני: כל צומת על המעגל');ge('m',L('n'),'המילטוני: קשתות המעגל');ge('nu',dn(L('n')/2),'המילטוני: זיווג מתוך המעגל');Z();if(H('n')<Infinity)le('al',dn(H('n')/2),'המילטוני: לכל היותר כל צומת שני על המעגל');
+      Z();if(P('bp')==='y'){Z();if(L('n')%2)ge('n',L('n')+1,'דו-צדדי המילטוני: מעגל באורך זוגי');Z();if(H('n')<Infinity&&H('n')%2)le('n',H('n')-1,'דו-צדדי המילטוני: מעגל באורך זוגי')}}
+    Z();if(g.pm==='y'){ge('dl',1,'זיווג מושלם: אין צומת מבודד');Z();if(L('n')%2)ge('n',L('n')+1,'זיווג מושלם: מספר צמתים זוגי');Z();if(H('n')<Infinity&&H('n')%2)le('n',H('n')-1,'זיווג מושלם: מספר צמתים זוגי');ge('nu',up(L('n')/2),'זיווג מושלם');Z();if(H('n')<Infinity)le('nu',dn(H('n')/2),'זיווג מושלם')}
+    /* all degrees even, or all odd: known from the data, or carried over from the complement */
+    { const ptn=g.op==='compl'?by(g.src):O.find(o=>o.t==='g'&&o.op==='compl'&&o.src===X),ps=ptn&&memo.get(ptn);let par=g.eu==='y'?'e':ad0!==null?(ad0%2?'o':'e'):null,pw=g.eu==='y'?'אוילרי':'כל הדרגות שוות';
+      Z();if(!par&&ps&&ps.par&&L('n')===H('n')){par=L('n')%2?ps.par:(ps.par==='e'?'o':'e');pw=`הדרגות ב־${ptn.name} כולן ${ps.par==='e'?'זוגיות':'אי-זוגיות'}, והדרגה כאן היא n − 1 פחות הדרגה שם`}
+      Z();if(par!==St.par){St.par=par;St.pw=pw;moved=true}
+      Z();if(par){const odd=par==='o'?1:0,r=par==='e'?'כל הדרגות זוגיות':'כל הדרגות אי-זוגיות';
+        Z();if(L('dl')%2!==odd)ge('dl',L('dl')+1,r);Z();if(L('D')%2!==odd)ge('D',L('D')+1,r);
+        Z();if(H('D')<Infinity&&H('D')%2!==odd)le('D',H('D')-1,r);Z();if(H('dl')<Infinity&&H('dl')%2!==odd)le('dl',H('dl')-1,r);
+        Z();if(odd){Z();if(L('n')%2)ge('n',L('n')+1,'דרגות אי-זוגיות: מספר צמתים זוגי');Z();if(H('n')<Infinity&&H('n')%2)le('n',H('n')-1,'דרגות אי-זוגיות: מספר צמתים זוגי')}}}
     Z();if(H('n')<Infinity&&2*L('dl')>=H('n')-1)eq('c',1,'δ ≥ (n − 1) / 2');
     Z();if(H('n')<Infinity&&L('m')>(H('n')-1)*(H('n')-2)/2)eq('c',1,'m > (n − 1)(n − 2) / 2');
     Z();if(P('tr')==='y'){K();const r='עץ (2.5)';eq('c',1,'עץ');ge('m',L('n')-1,r);le('m',H('n')-1,r);ge('n',L('m')+1,r);le('n',H('m')+1,r);
@@ -898,8 +919,9 @@ function digest(g,memo){
     Z();if(prop(g,'fo')!=='y'&&L('m')>H('n')-L('c'))T('יש בגרף מעגל, ולכן הוא אינו יער','m > n − c');
     Z();if(prop(g,'fo')!=='y'&&ex1('m')&&ex1('n')&&ex1('c')&&L('m')===L('n')-L('c'))T(L('c')===1?'הגרף הוא עץ':'הגרף הוא יער','m = n − c');
     Z();if(ex1('c')&&L('c')===1&&ex1('m')&&ex1('n')&&L('m')===L('n'))T('יש בגרף מעגל אחד בדיוק','קשיר, m = n');
-    Z();if(L('n')>=3&&H('n')<Infinity&&2*L('dl')>=H('n'))T('הגרף המילטוני','דירק (3.3)');
-    Z();if(ad!==null&&ad>=2&&ad%2===0&&ex1('c')&&L('c')===1)T('הגרף אוילרי','משפט 3.1');
+    Z();if(g.ha!=='y'&&L('n')>=3&&H('n')<Infinity&&2*L('dl')>=H('n'))T('הגרף המילטוני','דירק (3.3)');
+    Z();if(g.eu!=='y'&&St.par==='e'&&ex1('c')&&L('c')===1&&L('m')>=1)T('הגרף אוילרי',`משפט 3.1: קשיר, ו${St.pw}`);
+    Z();if(St.par==='o')T('הגרף אינו אוילרי: כל הדרגות אי-זוגיות',St.pw);
     Z();if(ad!==null&&ad%2===1)T('מספר הצמתים זוגי','מסקנה מ־1.3');
     Z();if(L('dl')>=2)T(`יש מעגל פשוט על ${L('dl')+1} צמתים לפחות`,'פרק 1, שאלה 3');
     Z();if(prop(g,'pl')==='u'&&P('pl')==='u'){K();Z();if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)');E();}
@@ -985,7 +1007,7 @@ function digestHtml(){
       const ex=opn?`<div class="qex">${one?tell(g,k,lo===D0[k]?1:0,d,true):(lo>D0[k]?tell(g,k,0,d):'')+(hi<Infinity?tell(g,k,1,d):'')}</div>`:'';
       rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]}</div><div class="qf"><span class="fx qsub">${f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}
     d.N.forEach(([t,r,u],n)=>{const key=g.name+'|i'+n,opn=EXPL.has(key);rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">${t}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי: ${rz(r)}.${used(u||[])}</p></div>`:''}</div>`)});
-    { const P=pairInfo(g,d,memo);if(P.ore&&!d.N.some(x=>x[0]==='הגרף המילטוני')){const key=g.name+'|ore',opn=EXPL.has(key);
+    { const P=pairInfo(g,d,memo);if(P.ore&&g.ha!=='y'&&!d.N.some(x=>x[0]==='הגרף המילטוני')){const key=g.name+'|ore',opn=EXPL.has(key);
         rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">הגרף המילטוני</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי משפט אור (3.2): לכל שני צמתים לא שכנים, סכום הדרגות הוא לפחות <bdi dir="ltr" class="fx">${P.nadjLo}</bdi>, וזה לפחות מספר הצמתים.</p><p>${P.eNadjLo}</p></div>`:''}</div>`)}}
     /* the standard moves on this graph */
     const mv=[],oo=OPN.has(g.name);
