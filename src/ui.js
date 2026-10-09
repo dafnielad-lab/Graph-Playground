@@ -161,7 +161,7 @@ function pruferTree(seq,n){const deg=new Array(n).fill(1),a=new Array(n).fill(0)
   const link=(i,j)=>{a[i]|=1<<j;a[j]|=1<<i};
   for(const v of seq){let leaf=0;while(deg[leaf]!==1)leaf++;link(leaf,v-1);deg[leaf]--;deg[v-1]--}
   const rest=[];for(let i=0;i<n;i++)if(deg[i]===1)rest.push(i);if(rest.length===2)link(rest[0],rest[1]);return a}
-const PVARS=['x','y','z','w'];
+const PVARS=['x','y','z','w'],PCAP=20000;
 const PREL={ne:['≠',(a,b)=>a!==b],lt:['<',(a,b)=>a<b],le:['≤',(a,b)=>a<=b],gt:['>',(a,b)=>a>b],ge:['≥',(a,b)=>a>=b],eq:['=',(a,b)=>a===b]};
 /* each variable ranges over a chosen interval of vertex numbers */
 function pvRange(v){const n=S.n,r=(S.pv=S.pv||{})[v]||{},lo=Math.max(1,Math.min(n,r.lo||1)),hi=Math.max(lo,Math.min(n,r.hi||n));return[lo,hi]}
@@ -174,14 +174,18 @@ function compute(){
   if(S.mode==='prufer'){const n=S.n,vars=PVARS.filter(v=>S.prufer.includes(v)),rg=vars.map(v=>pvRange(v));ITEMS=[];
     /* every assignment in the ranges that respects the relations between variables; only the first few are drawn */
     const cons=(S.pc||[]).filter(c=>vars.includes(c.a)&&vars.includes(c.b)).map(c=>[vars.indexOf(c.a),PREL[c.r][1],vars.indexOf(c.b)]);
+    /* with variables, each condition is checked on every tree of the family, not only on the selected one */
+    const pcnt={};for(const c of S.conds)pcnt[c.id]=0;let checked=0;
     let total=0,space=1;for(const [lo,hi] of rg)space*=hi-lo+1;
     const cur=rg.map(r=>r[0]);
     for(let k=0;k<space;k++){
       if(cons.every(([a,f,b])=>f(cur[a],cur[b]))){total++;
-        if(ITEMS.length<S.show){const val={};vars.forEach((v,i)=>val[v]=cur[i]);const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
-          ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')})}}
+        const show=ITEMS.length<S.show,check=vars.length&&total<=PCAP;
+        if(show||check){const val={};vars.forEach((v,i)=>val[v]=cur[i]);const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]),tree=pruferTree(seq,n);
+          if(show)ITEMS.push({a:tree,idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')});
+          if(check){checked++;for(const c of S.conds){const ok=evalSingle(tree,n,c);if(ok===null)pcnt[c.id]=null;else if(ok&&pcnt[c.id]!==null)pcnt[c.id]++}}}}
       for(let i=vars.length-1;i>=0;i--){if(cur[i]<rg[i][1]){cur[i]++;break}cur[i]=rg[i][0]}}
-    R={r:null,info:{},galleryKind:'prufer',total,vars};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
+    R={r:null,info:{},galleryKind:'prufer',total,vars,pcnt,checked};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
   const on=S.conds.filter(c=>c.on),r=runAll(on);
   const stepOf={};on.forEach((c,i)=>stepOf[c.id]=r.steps[i]);
   const info={};const key=x=>x.u+'/'+x.l;
@@ -288,13 +292,17 @@ function renderConds(){
 const hidden=()=>S.mode==='guess'&&!S.guess.revealed;
 function updateCounts(){
   const lab=S.labeled,pick=x=>fmt(lab?x.l:x.u),man=single();
-  $('#condsub').textContent=S.mode==='prufer'?'האם העץ הנבחר מקיים':man?'האם הגרף שלך מקיים':'כמה נשארו אחרי כל תנאי';
+  $('#condsub').textContent=S.mode==='prufer'?(R.vars.length?'בכמה מהעצים מתקיים כל תנאי':'האם העץ מקיים'):man?'האם הגרף שלך מקיים':'כמה נשארו אחרי כל תנאי';
   $('#baselabel').textContent=(S.type==='tree'?'כל העצים':S.type==='bip'?'כל הגרפים הדו-צדדיים':'כל הגרפים')+(lab?' המתויגים':'');
   $('#basecount').textContent=man?'':pick(R.r.base);
   const g=man?selGraph().a:null;let prev=man?0:lab?R.r.base.l:R.r.base.u;
   for(const c of S.conds){
     const cn=$('#cnt'+c.id),nt=$('#note'+c.id),inf=R.info[c.id];if(!cn)continue;
     const rg=$('#rng'+c.id);rg.className='hint rngl';rg.innerHTML='';cn.className='num ccount';nt.className='note';nt.textContent='';
+    if(S.mode==='prufer'&&R.vars.length){const k=R.pcnt[c.id],N=R.checked;
+      if(k===null){cn.textContent='—';nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':isBelow(c,S.conds)?'נבדק על מה שנשאר אחרי ההסרה':'לא מחושב מעל שישה-עשר צמתים';continue}
+      cn.innerHTML=`${fmt(k)} / ${fmt(N)}`;cn.classList.add(k===N?'ok':'no');
+      nt.textContent=(k===N?'מתקיים בכל העצים':k===0?'לא מתקיים באף עץ':'מתקיים רק בחלק מהעצים')+(N<R.total?`, מתוך ${fmt(N)} הראשונים שנבדקו`:'');if(k!==N)nt.classList.add('warn');continue}
     if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok===null?'—':ok?'✓':'✗';if(ok!==null)cn.classList.add(ok?'ok':'no');if(ok===null)nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':isBelow(c,S.conds)?'נבדק על מה שנשאר אחרי ההסרה':'לא מחושב מעל שישה-עשר צמתים';continue}
     if(hidden()){cn.textContent=c.on?'?':'';continue}
     if(c.on){const now=lab?inf.step.l:inf.step.u;cn.textContent=pick(inf.step);
