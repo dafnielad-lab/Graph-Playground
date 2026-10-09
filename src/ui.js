@@ -150,6 +150,7 @@ function pruferTree(seq,n){const deg=new Array(n).fill(1),a=new Array(n).fill(0)
   for(const v of seq){let leaf=0;while(deg[leaf]!==1)leaf++;link(leaf,v-1);deg[leaf]--;deg[v-1]--}
   const rest=[];for(let i=0;i<n;i++)if(deg[i]===1)rest.push(i);if(rest.length===2)link(rest[0],rest[1]);return a}
 const PVARS=['x','y','z','w'];
+const PREL={ne:['≠',(a,b)=>a!==b],lt:['<',(a,b)=>a<b],le:['≤',(a,b)=>a<=b],gt:['>',(a,b)=>a>b],ge:['≥',(a,b)=>a>=b],eq:['=',(a,b)=>a===b]};
 /* each variable ranges over a chosen interval of vertex numbers */
 function pvRange(v){const n=S.n,r=(S.pv=S.pv||{})[v]||{},lo=Math.max(1,Math.min(n,r.lo||1)),hi=Math.max(lo,Math.min(n,r.hi||n));return[lo,hi]}
 function syncPrufer(){const n=S.n,L=Math.max(0,n-2);if(!S.prufer){S.prufer=Array.from({length:L},(_,i)=>(i*2)%n+1);if(L>=3)S.prufer[2]='x'}
@@ -159,10 +160,14 @@ function runAll(conds){const parts=Ns().map(n=>{const U=curU(n);return{U,r:run(U
 const cutOf=list=>list.find(c=>c.kind==='cut'),isBelow=(c,list)=>{const k=cutOf(list);return !!k&&list.indexOf(c)>list.indexOf(k)};
 function compute(){
   if(S.mode==='prufer'){const n=S.n,vars=PVARS.filter(v=>S.prufer.includes(v)),rg=vars.map(v=>pvRange(v));ITEMS=[];
-    let total=1;for(const [lo,hi] of rg)total*=hi-lo+1;
+    /* every assignment in the ranges that respects the relations between variables; only the first few are drawn */
+    const cons=(S.pc||[]).filter(c=>vars.includes(c.a)&&vars.includes(c.b)).map(c=>[vars.indexOf(c.a),PREL[c.r][1],vars.indexOf(c.b)]);
+    let total=0,space=1;for(const [lo,hi] of rg)space*=hi-lo+1;
     const cur=rg.map(r=>r[0]);
-    for(let k=0;k<Math.min(total,S.show);k++){const val={};vars.forEach((v,i)=>val[v]=cur[i]);const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
-      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')});
+    for(let k=0;k<space;k++){
+      if(cons.every(([a,f,b])=>f(cur[a],cur[b]))){total++;
+        if(ITEMS.length<S.show){const val={};vars.forEach((v,i)=>val[v]=cur[i]);const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
+          ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')})}}
       for(let i=vars.length-1;i>=0;i--){if(cur[i]<rg[i][1]){cur[i]++;break}cur[i]=rg[i][0]}}
     R={r:null,info:{},galleryKind:'prufer',total,vars};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
   const on=S.conds.filter(c=>c.on),r=runAll(on);
@@ -311,7 +316,10 @@ function renderMain(){
     m.innerHTML=`<div class="hero"><div class="big"><b class="num n1">${fmt(R.total)}</b><span class="t">${R.total===1?'עץ מתויג מתאים לסדרה':'עצים מתויגים מתאימים לסדרה'}</span></div><div class="pill">${R.total>ITEMS.length?`מוצגים <b class="num">${ITEMS.length}</b> הראשונים. אפשר להגדיל ב"גרפים להצגה"`:'בכל מקום בסדרה בוחרים מספר צומת או משתנה'}</div></div>
     <div class="game"><span class="lab">סדרת פרופר</span><div class="prseq" dir="ltr">${S.prufer.length?S.prufer.map((t,i)=>`<select id="pr${i}" data-inp="pr" data-i="${i}" aria-label="מקום ${i+1} בסדרה">${opts(t)}</select>`).join(''):'<span class="hint">סדרה ריקה</span>'}</div>
     <button class="btn sm" data-act="prand">סדרה אקראית</button></div>
-    ${R.vars.length?`<div class="game"><span class="lab">טווח הערכים של כל משתנה</span>${R.vars.map(v=>{const [lo,hi]=pvRange(v);return `<span class="pvr"><b class="num">${v}</b><label for="pvlo${v}">מ־</label><input type="number" id="pvlo${v}" data-inp="pvlo" data-var="${v}" min="1" max="${n}" value="${lo}"><label for="pvhi${v}">עד</label><input type="number" id="pvhi${v}" data-inp="pvhi" data-var="${v}" min="1" max="${n}" value="${hi}"></span>`}).join('')}</div>`:''}
+    <div class="game"><span class="lab">טווח הערכים של כל משתנה</span>${PVARS.map(v=>{const [lo,hi]=pvRange(v);return `<span class="pvr${R.vars.includes(v)?'':' idle'}"><b class="num">${v}</b><label for="pvlo${v}">מ־</label><input type="number" id="pvlo${v}" data-inp="pvlo" data-var="${v}" min="1" max="${n}" value="${lo}"><label for="pvhi${v}">עד</label><input type="number" id="pvhi${v}" data-inp="pvhi" data-var="${v}" min="1" max="${n}" value="${hi}"></span>`}).join('')}</div>
+    <div class="game"><span class="lab">תלות בין משתנים</span>${(S.pc||[]).map((c,i)=>{const vs=k=>`<select id="pc${k}${i}" data-inp="pc${k}" data-i="${i}" aria-label="משתנה">${PVARS.map(v=>`<option value="${v}" ${c[k]===v?'selected':''}>${v}</option>`).join('')}</select>`;return `<span class="pvr${R.vars.includes(c.a)&&R.vars.includes(c.b)?'':' idle'}" dir="ltr">${vs('a')}<select id="pcr${i}" data-inp="pcr" data-i="${i}" aria-label="יחס">${Object.entries(PREL).map(([k,r])=>`<option value="${k}" ${c.r===k?'selected':''}>${r[0]}</option>`).join('')}</select>${vs('b')}<button class="ib" data-act="pcdel" data-v="${i}" aria-label="הסר תלות">×</button></span>`}).join('')}
+    <button class="btn sm" data-act="pcadd">+ הוסף תלות</button><button class="btn sm" data-act="pcdist" ${R.vars.length<2?'disabled':''}>כל המשתנים שונים זה מזה</button>
+    ${(S.pc||[]).some(c=>!(R.vars.includes(c.a)&&R.vars.includes(c.b)))?'<span class="hint">תלות או טווח של משתנה שלא מופיע בסדרה מוצגים בהיר ולא משפיעים.</span>':''}</div>
     <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>${showSel()}</div>
     <div class="gal"></div>`;
     fillGal();return;
@@ -494,6 +502,9 @@ document.addEventListener('click',ev=>{
     case'kur':S.kur=!S.kur;renderCard();break;
     case'sel':S.sel=Number(v);resetSel();document.querySelectorAll('.gi').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v)===S.sel)));renderCard();break;
     case'reveal':S.guess.revealed=true;updateCounts();renderMain();renderCard();break;
+    case'pcadd':{const us=R.vars&&R.vars.length>=2?R.vars:PVARS;(S.pc=S.pc||[]).push({a:us[0],r:'ne',b:us[1]});changed();refresh(false);break}
+    case'pcdel':S.pc.splice(Number(v),1);changed();refresh(false);break;
+    case'pcdist':{S.pc=(S.pc||[]).filter(c=>c.r!=='ne');for(let i=0;i<R.vars.length;i++)for(let j=i+1;j<R.vars.length;j++)S.pc.push({a:R.vars[i],r:'ne',b:R.vars[j]});changed();refresh(false);break}
     case'prand':S.prufer=S.prufer.map(()=>1+(Math.random()*S.n|0));changed();refresh(false);break;
     case'wide':S.wide=!S.wide;$('.cols').classList.toggle('wide',S.wide);renderCard();break;
     case'conds':S.condsOpen=!S.condsOpen;$('.cols').classList.toggle('noconds',!S.condsOpen);t.setAttribute('aria-pressed',String(S.condsOpen));break;
@@ -518,6 +529,7 @@ function onInput(ev,commit){
   if(f==='guess'){S.guess.val=t.value;return}
   if(f==='show'){S.show=Number(t.value);changed();refresh(false);return}
   if(f==='pvlo'||f==='pvhi'){if(t.value==='')return;const r=(S.pv=S.pv||{})[t.dataset.var]=S.pv[t.dataset.var]||{};r[f==='pvlo'?'lo':'hi']=Number(t.value);changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
+  if(f==='pca'||f==='pcb'||f==='pcr'){S.pc[Number(t.dataset.i)][f.slice(2)]=t.value;changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   if(f==='pr'){S.prufer[Number(t.dataset.i)]=/^\d+$/.test(t.value)?Number(t.value):t.value;changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   const c=S.conds.find(x=>x.id===Number(t.dataset.id));if(!c)return;
   const isNum=['value','extra','d','v','k'].includes(f);c[f]=isNum?Number(t.value):t.value;
