@@ -126,7 +126,10 @@ const connOf=g=>g.c===1||g.tr==='y'||g.op==='comp'||g.eu==='y'||g.ha==='y'?'y':c
 const isTree=(g,d)=>g.tr==='y'?'y':g.tr==='n'?'n':forestish(g,d)?connOf(g):'u';
 function prop(g,k,d){
   if(k==='tr')return isTree(g,d);if(k==='conn')return connOf(g);if(k==='fo')return forestish(g,d)?'y':'u';
-  if(k==='pl'||k==='bp')return g[k]!=='u'?g[k]:forestish(g,d)||from(g,k,d)?'y':'u';
+  if(k==='pl'||k==='bp'){if(g[k]!=='u')return g[k];if(forestish(g,d)||from(g,k,d))return 'y';
+    /* a graph with a non-planar (non-bipartite) subgraph is itself non-planar (non-bipartite); subdivision keeps planarity both ways */
+    if(O.some(h=>h.t==='g'&&h.op&&h.src===g.name&&h[k]==='n'&&(SUBG.includes(h.op)||(k==='pl'&&h.op==='subd'))))return 'n';
+    if(k==='pl'&&g.op==='subd'&&by(g.src)&&by(g.src).pl==='n')return 'n';return 'u'}
   if(k==='tf')return g.tf!=='u'?g.tf:forestish(g,d)||prop(g,'bp',d)==='y'||from(g,'tf',d)?'y':'u';
   return g[k]}
 /* combinations of data that no graph satisfies; each entry is one sentence shown in red above the graph's formulas */
@@ -342,6 +345,13 @@ function digest(g,memo){
       Z();if(ind)ge('chi',sl('chi')-1,w);
       Z();if(k0!==null&&k1!==null)le('m',sh('m')-k0*sl('dl')+(ind?0:c2(k1)),w);
       Z();if(cq&&k0===2&&k1===2&&prop(src,'tf')==='y')ge('m',sl('m')-(sh('n')-1),'שני שכנים בגרף בלי משולשים: אין להם שכן משותף')}
+    /* what the source graph's own nature says about the result */
+    Z();if(op==='dele'&&prop(src,'fo')==='y')same('c',1);
+    Z();if(op==='dele'&&src.eu==='y'){ge('c',1,'בגרף אוילרי אין גשר: כל קשת על מעגל');le('c',1,'בגרף אוילרי אין גשר: כל קשת על מעגל')}
+    Z();if(src.ha==='y'){Z();if(op==='delv'||op==='dele')eq('c',1,'בגרף המילטוני: מה שנשאר מהמעגל מחבר את כל הצמתים');
+      Z();if(op==='delS'&&a){const b=ownB(a,'k');Z();if(b&&b[1]!==null)le('c',b[1],'בגרף המילטוני: הסרת קבוצה מפרקת את המעגל לכל היותר למספר חלקים כגודלה')}}
+    Z();if(op==='delv'&&a&&a.cut)ge('c',sl('c')+1,`${a.name} צומת מפריד`);
+    Z();if(op==='delv'&&prop(src,'tr')==='y'&&a&&dEx(a)!==null)eq('c',dEx(a),'הסרת צומת מעץ: רכיב לכל שכן');
     Z();if(op==='subd'){K();same('n',1);same('m',1);same('c',0);ge('D',sl('D'),r);le('D',Math.max(2,sh('D')),r);le('dl',Math.min(2,sh('dl')),r);E();}
     Z();if(op==='contr'){K();same('n',-1);same('c',0);le('m',sh('m')-1,r);le('chi',sh('chi')+1,r);E();}
     Z();if(op==='compl'){K();same('n',0);ge('m',sl('n')*(sl('n')-1)/2-sh('m'),r);Z();if(sh('n')<Infinity)le('m',sh('n')*(sh('n')-1)/2-sl('m'),r);ge('D',sl('n')-1-sh('dl'),r);le('D',sh('n')-1-sl('dl'),r);ge('dl',sl('n')-1-sh('D'),r);le('dl',sh('n')-1-sl('D'),r);
@@ -358,6 +368,7 @@ function digest(g,memo){
     Z();if(op==='adde'){K();back('n',0);back('m',-1);ge('chi',cl('chi')-1,r);le('chi',chh('chi'),r);ge('D',cl('D')-1,r);le('D',chh('D'),r);ge('dl',cl('dl')-1,r);le('dl',chh('dl'),r);ge('nu',cl('nu')-1,r);le('nu',chh('nu'),r);ge('al',cl('al'),r);le('al',chh('al')+1,r);ge('c',cl('c'),r);le('c',chh('c')+1,r);le('om',chh('om'),r);E();}
     Z();if(op==='span'){K();back('n',0);le('al',chh('al'),r);le('c',chh('c'),r);ge('dl',cl('dl'),r);E();}
     Z();if(op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(b[0]!==null)ge('n',cl('n')+b[0],r);Z();if(b[1]!==null){K();le('n',chh('n')+b[1],r);le('chi',chh('chi')+b[1],r);le('nu',chh('nu')+b[1],r);E();};E();}
+    Z();if(op==='delv'&&a&&a.cut)le('c',chh('c')-1,`${a.name} צומת מפריד`);
     Z();if(op==='delS'&&a){const b=ownB(a,'k')||[null,null],k0=b[0],k1=b[1],c2=x=>x*(x-1)/2,cq=a.prop==='clique',ind=a.prop==='indep',w=cq?`החזרת הקליקה ${a.name} אל ${h.name}`:ind?`החזרת הקבוצה הבלתי תלויה ${a.name} אל ${h.name}`:`החזרת הקבוצה ${a.name} אל ${h.name}`;
       Z();if(k1!==null){le('om',chh('om')+(ind?1:k1),w);le('al',chh('al')+(cq?1:k1),w);le('m',chh('m')+k1*H('D')-(cq&&k0!==null?c2(k0):0),w)}
       Z();if(ind)le('chi',chh('chi')+1,w);
@@ -371,6 +382,7 @@ function digest(g,memo){
   { const CS=compsOf(g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(g).length;
     Z();if(all){K();const r='סכום על רכיבי הקשירות',r2='לפי רכיבי הקשירות';ge('c',all,'רכיבי הקשירות שהוגדרו');const full=L('c')===H('c')&&L('c')===all&&CS.length===all,hid=Math.max(0,L('c')-all);
       Z();if(CS.length===all){K();for(const k of ['n','m','al','nu','be']){ge(k,CS.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),r);Z();if(full)le(k,CS.reduce((t,x)=>t+x.B[k][1],0),r)}
+        Z();if(!full&&H('c')<Infinity&&H('n')<Infinity){const rest=H('c')-all,R=H('n')-CS.reduce((t,x)=>t+x.B.n[0],0)-(rest-1);Z();if(rest>=1&&R>=1)le('m',CS.reduce((t,x)=>t+x.B.m[1],0)+R*(R-1)/2,'קשתות ברכיבים שהוגדרו, ועוד כל מה שנכנס בצמתים שנותרו')}
         le('dl',Math.min(...CS.map(x=>x.B.dl[1])),r2);ge('D',Math.max(...CS.map(x=>x.B.D[0])),r2);
         Z();if(full){K();for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2);E();};E();};E();}}
   /* a property left unknown is also taken from the numbers once they settle it: m = n − c makes a forest */
@@ -400,8 +412,8 @@ function digest(g,memo){
     Z();if(P('conn')==='y')eq('c',1,'קשיר');
     /* sharpened links found by running whole questions through the solver */
     Z();if(g.sc==='y'){eq('c',1,'גרף או המשלים שלו קשיר, והם איזומורפיים');const r='איזומורפי למשלים: קליקה כאן היא קבוצה בלתי תלויה במשלים',r2='איזומורפי למשלים: Δ + δ = n − 1';ge('om',L('al'),r);le('om',H('al'),r);ge('al',L('om'),r);le('al',H('om'),r);ge('D',L('n')-1-H('dl'),r2);le('D',H('n')-1-L('dl'),r2);ge('dl',L('n')-1-H('D'),r2);le('dl',H('n')-1-L('D'),r2)}
-    Z();if(g.bp==='n'){ge('chi',3,'לא דו-צדדי (1.6)');ge('n',3,'לא דו-צדדי: מעגל אי-זוגי');ge('m',3,'לא דו-צדדי: מעגל אי-זוגי')}
-    Z();if(g.pl==='n'){ge('n',5,'לא מישורי (5.8)');ge('m',9,'לא מישורי (5.8)');ge('D',3,'לא מישורי (5.8)')}
+    Z();if(P('bp')==='n'){ge('chi',3,'לא דו-צדדי (1.6)');ge('n',3,'לא דו-צדדי: מעגל אי-זוגי');ge('m',3,'לא דו-צדדי: מעגל אי-זוגי')}
+    Z();if(P('pl')==='n'){ge('n',5,'לא מישורי (5.8)');ge('m',9,'לא מישורי (5.8)');ge('D',3,'לא מישורי (5.8)')}
     Z();if(H('al')===1){ge('om',L('n'),'אין שני צמתים לא שכנים: גרף מלא');ge('dl',L('n')-1,'אין שני צמתים לא שכנים: גרף מלא')}
     Z();if(L('n')===H('n')&&L('om')>=L('n'))ge('m',L('n')*(L('n')-1)/2,'גרף מלא');
     Z();if(L('n')===H('n')){const miss=L('n')*(L('n')-1)/2-L('m');ge('dl',L('n')-1-miss,'כל קשת חסרה מורידה דרגה אחת לכל היותר לצומת')}
@@ -421,7 +433,7 @@ function digest(g,memo){
     Z();if(H('n')<Infinity&&2*L('dl')>=H('n')-1)eq('c',1,'δ ≥ (n − 1) / 2');
     Z();if(H('n')<Infinity&&L('m')>(H('n')-1)*(H('n')-2)/2)eq('c',1,'m > (n − 1)(n − 2) / 2');
     Z();if(P('tr')==='y'){K();const r='עץ (2.5)';eq('c',1,'עץ');ge('m',L('n')-1,r);le('m',H('n')-1,r);ge('n',L('m')+1,r);le('n',H('m')+1,r);
-      Z();if(L('n')>=2){K();eq('dl',1,'עלה בעץ (2.3)');eq('chi',2,'עץ הוא דו-צדדי');ge('lv',Math.max(2,L('D')),'בעץ: ℓ ≥ 2, ℓ ≥ Δ');le('D',H('lv'),'בעץ: ℓ ≥ Δ');Z();if(L('n')>=3){K();le('lv',H('n')-1,'בעץ: לא כל הצמתים עלים');ge('n',L('lv')+1,'בעץ: לא כל הצמתים עלים');E();}
+      Z();if(L('n')>=2){K();eq('dl',1,'עלה בעץ (2.3)');eq('chi',2,'עץ הוא דו-צדדי');ge('lv',Math.max(2,L('D')),'בעץ: ℓ ≥ 2, ℓ ≥ Δ');le('D',H('lv'),'בעץ: ℓ ≥ Δ');Z();if(L('n')>=3){K();le('lv',H('n')-1,'בעץ: לא כל הצמתים עלים');le('be',H('n')-L('lv'),'בעץ: הצמתים שאינם עלים מכסים את כל הקשתות');Z();if(H('D')<Infinity&&H('D')>=2&&H('n')<Infinity)le('lv',dn((2+H('n')*(H('D')-2))/(H('D')-1)),'בעץ: סכום הדרגות קובע כמה עלים אפשריים');ge('n',L('lv')+1,'בעץ: לא כל הצמתים עלים');E();}
         Z();if(H('D')<Infinity&&H('D')>=1)ge('nu',up((L('n')-1)/H('D')),'כיסוי בצמתים של עץ: β ≥ m / Δ, קניג');E();};E();}
     Z();if(P('fo')==='y')eq('f',1,'אין מעגלים: פאה אחת');
     Z();if(P('tr')==='y'){E();K();}else if(P('fo')==='y'){sum('n','m','c','יער: m = n − c');le('dl',1,'ביער יש צומת מדרגה קטנה');Z();if(L('m')>=1)ge('lv',2,'רכיב עם קשת ביער הוא עץ: שני עלים');Z();if(L('dl')>=1)ge('lv',2*L('c'),'כל רכיב ביער הוא עץ: שני עלים לרכיב')}
@@ -460,8 +472,10 @@ function digest(g,memo){
     Z();if(L('dl')>=2)T(`יש מעגל פשוט על ${L('dl')+1} צמתים לפחות`,'פרק 1, שאלה 3');
     Z();if(prop(g,'pl')==='u'&&P('pl')==='u'){K();Z();if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)');E();}
     Z();if(prop(g,'bp')==='u'&&P('bp')==='u'){K();Z();if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)');E();}
-    Z();if(P('pl')==='y'&&ex1('m')&&ex1('n')&&L('n')>=3){Z();if(L('m')===3*L('n')-6)T('כל הפאות משולשים, ואי אפשר להוסיף קשת בלי לאבד מישוריות','m = 3n − 6 (5.4)');else if(P('tf')==='y'&&L('m')===2*L('n')-4)T('כל הפאות מרובעות','m = 2n − 4')}
+    Z();if(P('pl')==='y'&&ex1('m')&&ex1('n')&&L('n')>=3){Z();if(L('m')===3*L('n')-6)T('כל הפאות משולשים, ואי אפשר להוסיף קשת בלי לאבד מישוריות','m = 3n − 6 (5.4)');else if(P('tf')==='y'&&L('m')===2*L('n')-4&&P('fo')!=='y')T('כל הפאות מרובעות','m = 2n − 4')}
     Z();if(ex1('om')&&ex1('n')&&L('om')===L('n')&&L('n')>=2)T('הגרף מלא','ω = n');
+    Z();if(g.pl==='u'&&prop(g,'pl')==='n')T('הגרף אינו מישורי','מכיל תת-גרף לא מישורי, או נוצר מהעדנה של גרף לא מישורי');
+    Z();if(g.bp==='u'&&prop(g,'bp')==='n')T('הגרף אינו דו-צדדי','מכיל תת-גרף לא דו-צדדי');
     Z();if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
     Z();if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי');E();}
   St.fo=P('fo')==='y';St.pl=P('pl')==='y';St.tf=P('tf')==='y';
