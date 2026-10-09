@@ -302,18 +302,18 @@ function sheetFor(g){
 /* the digest: every formula of the sheet is used as a constraint on the ranges of the quantities, again and again until nothing
    tightens any more. Each bound remembers the formula that gave it. */
 const D0={n:1,m:0,c:1,D:0,dl:0,f:1,chi:1,al:1,nu:0,be:0,rho:0,om:1,lv:0};
-function digest(g,memo,depth){
-  if(memo.has(g))return memo.get(g);
-  const B={},W={},X=g.name;let ch=true,bad=false;
-  for(const k in SYM){B[k]=[D0[k],Infinity];W[k]=[null,null];const b=bounds(g,k),own=val(g,k)!==null||rgOf(g,k),r=own?'נתון':g.op?'מהפעולה':forestish(g)&&k==='m'?'עץ או יער: m = n − c':'מהנתונים';
+function digest(g,memo){
+  let St=memo.get(g);const fresh=!St;if(fresh){St={B:{},W:{},N:[],bad:false};memo.set(g,St)}
+  const B=St.B,W=St.W,X=g.name;let ch=true,bad=St.bad,moved=false;if(bad)return false;
+  if(fresh)for(const k in SYM){B[k]=[D0[k],Infinity];W[k]=[null,null];const b=bounds(g,k),own=val(g,k)!==null||rgOf(g,k),r=own?'נתון':g.op?'מהפעולה':forestish(g)&&k==='m'?'עץ או יער: m = n − c':'מהנתונים';
     if(b){if(b[0]!==null&&b[0]>B[k][0]){B[k][0]=b[0];W[k][0]=r}if(b[1]!==null){B[k][1]=b[1];W[k][1]=r}}}
   const L=k=>B[k][0],H=k=>B[k][1];
-  const ge=(k,v,r)=>{if(Number.isFinite(v)&&v>B[k][0]){B[k][0]=v;W[k][0]=r;ch=true}},le=(k,v,r)=>{if(Number.isFinite(v)&&v<B[k][1]){B[k][1]=v;W[k][1]=r;ch=true}};
+  const ge=(k,v,r)=>{if(Number.isFinite(v)&&v>B[k][0]){B[k][0]=v;W[k][0]=r;ch=moved=true}},le=(k,v,r)=>{if(Number.isFinite(v)&&v<B[k][1]){B[k][1]=v;W[k][1]=r;ch=moved=true}};
   const eq=(k,v,r)=>{ge(k,v,r);le(k,v,r)},up=Math.ceil,dn=Math.floor;
   /* a = b + c, as a constraint on all three */
   const sum=(a,b,c,r)=>{ge(a,L(b)+L(c),r);le(a,H(b)+H(c),r);ge(b,L(a)-H(c),r);le(b,H(a)-L(c),r);ge(c,L(a)-H(b),r);le(c,H(a)-L(b),r)};
   /* what the operation carries over from everything already concluded about the source graph */
-  const src=g.op&&(depth||0)<12?by(g.src):null,S=src?digest(src,memo,(depth||0)+1):null;
+  const src=g.op?by(g.src):null,S=src?memo.get(src):null;
   if(S&&!S.bad){const sl=k=>S.B[k][0],sh=k=>S.B[k][1],op=g.op,a=by(g.arg),r=`מ־${src.name}`,sub1=SUBG.includes(op);
     const same=(k,c)=>{ge(k,sl(k)+c,r);le(k,sh(k)+c,r)};
     if(sub1){for(const k of ['n','m','D','chi','om','nu'])le(k,sh(k),r);if(op!=='span'&&op!=='dele')le('al',sh('al'),r)}
@@ -327,7 +327,30 @@ function digest(g,memo,depth){
     if(op==='contr'){same('n',-1);same('c',0);le('m',sh('m')-1,r);le('chi',sh('chi')+1,r)}
     if(op==='compl'){same('n',0);ge('m',sl('n')*(sl('n')-1)/2-sh('m'),r);if(sh('n')<Infinity)le('m',sh('n')*(sh('n')-1)/2-sl('m'),r);ge('D',sl('n')-1-sh('dl'),r);le('D',sh('n')-1-sl('dl'),r);ge('dl',sl('n')-1-sh('D'),r);le('dl',sh('n')-1-sl('D'),r);
       ge('om',sl('al'),r);le('om',sh('al'),r);ge('al',sl('om'),r);le('al',sh('om'),r);if(sh('chi')<Infinity)ge('chi',up(sl('n')/sh('chi')),'χ·χ(complement) ≥ n');if(sl('c')>=2)eq('c',1,'המשלים של גרף לא קשיר הוא קשיר')}}
-  const ad0=allDeg(g),P=k=>prop(g,k),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
+  /* a component among the components of its graph: what the others take is not available to it */
+  if(S&&!S.bad&&g.op==='comp'){const sib=compsOf(src).filter(x=>x!==g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(src).length,cs=S.B.c,full=cs[0]===cs[1]&&cs[0]===all,hid=Math.max(0,cs[0]-all),r=`שאר הרכיבים של ${src.name}`;
+    if(sib.length===all-1)for(const k of ['n','m','al','nu','be']){const lo=sib.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),hi=sib.reduce((t,x)=>t+x.B[k][1],0);le(k,S.B[k][1]-lo,r);if(full)ge(k,S.B[k][0]-hi,r)}}
+  /* back from the graphs made of this one: what is known about them limits this graph too */
+  for(const h of O.filter(o=>o.t==='g'&&o.op&&o.src===X)){const C=memo.get(h);if(!C||C.bad)continue;const cl=k=>C.B[k][0],chh=k=>C.B[k][1],op=h.op,a=by(h.arg),r=`מ־${h.name}`,back=(k,c)=>{ge(k,cl(k)+c,r);le(k,chh(k)+c,r)};
+    if(SUBG.includes(op)){for(const k of ['n','m','D','chi','om','nu'])ge(k,cl(k),r);if(op!=='span'&&op!=='dele')ge('al',cl('al'),r)}
+    if(op==='delv'){back('n',1);le('chi',chh('chi')+1,r);le('al',chh('al')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);le('c',chh('c')+1,r);ge('m',cl('m')+(dLo(a)??0),r);le('m',chh('m')+(dHi(a)??chh('n')),r);le('dl',chh('dl')+1,r)}
+    if(op==='dele'){back('n',0);back('m',1);le('chi',chh('chi')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);if(a&&a.bridge)back('c',-1);else{ge('c',cl('c')-1,r);le('c',chh('c'),r)}le('D',chh('D')+1,r);ge('dl',cl('dl'),r);le('dl',chh('dl')+1,r);ge('al',cl('al')-1,r);le('al',chh('al'),r)}
+    if(op==='adde'){back('n',0);back('m',-1);ge('chi',cl('chi')-1,r);le('chi',chh('chi'),r);ge('D',cl('D')-1,r);le('D',chh('D'),r);ge('dl',cl('dl')-1,r);le('dl',chh('dl'),r);ge('nu',cl('nu')-1,r);le('nu',chh('nu'),r);ge('al',cl('al'),r);le('al',chh('al')+1,r);ge('c',cl('c'),r);le('c',chh('c')+1,r);le('om',chh('om'),r)}
+    if(op==='span'){back('n',0);le('al',chh('al'),r);le('c',chh('c'),r);ge('dl',cl('dl'),r)}
+    if(op==='delS'){const b=ownB(a,'k')||[null,null];if(b[0]!==null)ge('n',cl('n')+b[0],r);if(b[1]!==null){le('n',chh('n')+b[1],r);le('chi',chh('chi')+b[1],r);le('nu',chh('nu')+b[1],r)}}
+    if(op==='subd'){back('n',-1);back('m',-1);back('c',0)}
+    if(op==='contr'){back('n',1);back('c',0);ge('m',cl('m')+1,r);ge('chi',cl('chi')-1,r)}
+    if(op==='compl'){back('n',0);ge('m',cl('n')*(cl('n')-1)/2-chh('m'),r);if(chh('n')<Infinity)le('m',chh('n')*(chh('n')-1)/2-cl('m'),r);ge('D',cl('n')-1-chh('dl'),r);le('D',chh('n')-1-cl('dl'),r);ge('dl',cl('n')-1-chh('D'),r);le('dl',chh('n')-1-cl('D'),r);
+      ge('om',cl('al'),r);le('om',chh('al'),r);ge('al',cl('om'),r);le('al',chh('om'),r);if(chh('chi')<Infinity)ge('chi',up(cl('n')/chh('chi')),'χ·χ(complement) ≥ n');if(cl('c')>=2)eq('c',1,'המשלים של גרף לא קשיר הוא קשיר')}}
+  { const CS=compsOf(g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(g).length;
+    if(all){const r='סכום על רכיבי הקשירות',r2='לפי רכיבי הקשירות';ge('c',all,'רכיבי הקשירות שהוגדרו');const full=L('c')===H('c')&&L('c')===all&&CS.length===all,hid=Math.max(0,L('c')-all);
+      if(CS.length===all){for(const k of ['n','m','al','nu','be']){ge(k,CS.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),r);if(full)le(k,CS.reduce((t,x)=>t+x.B[k][1],0),r)}
+        le('dl',Math.min(...CS.map(x=>x.B.dl[1])),r2);ge('D',Math.max(...CS.map(x=>x.B.D[0])),r2);
+        if(full){for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2)}}}}
+  /* a property left unknown is also taken from the numbers once they settle it: m = n − c makes a forest */
+  const P=k=>{const v=prop(g,k);if(v!=='u')return v;const f=L('m')===H('m')&&L('n')===H('n')&&L('c')===H('c')&&L('m')===L('n')-L('c');
+    if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';if(k==='tr'&&f&&L('c')===1)return 'y';if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';return v};
+  const ad0=allDeg(g),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
   let it=0;
   while(ch&&it++<60){ch=false;
     if(av){if(dLo(av)!==null)ge('dl',dLo(av),'כל הדרגות בטווח');if(dHi(av)!==null)le('D',dHi(av),'כל הדרגות בטווח')}
@@ -375,29 +398,32 @@ function digest(g,memo,depth){
     if(P('sc')==='y'&&L('n')===H('n'))eq('m',L('n')*(L('n')-1)/4,'איזומורפי למשלים');
     for(const k in SYM)if(B[k][0]>B[k][1]){bad=true;ch=false}}
   /* what the ranges say beyond numbers */
-  const N=[],T=(t,r)=>N.push([t,r]),ex1=k=>L(k)===H(k),ad=allDeg(g);
+  const N=St.N;N.length=0;const T=(t,r)=>N.push([t,r]),ex1=k=>L(k)===H(k),ad=allDeg(g);
   if(!bad){
-    if(ex1('c')&&L('c')===1&&P('conn')!=='y')T('הגרף קשיר',W.c[1]||W.c[0]);
-    if(P('tr')==='y'&&g.tr!=='y')T('הגרף הוא עץ',g.op==='comp'?'רכיב קשירות של יער':'יער קשיר');
+    if(ex1('c')&&L('c')===1&&prop(g,'conn')!=='y')T('הגרף קשיר',W.c[1]||W.c[0]);
+    if(prop(g,'tr')==='y'&&g.tr!=='y')T('הגרף הוא עץ',g.op==='comp'?'רכיב קשירות של יער':'יער קשיר');
     if(P('tr')==='y'&&ex1('lv')&&L('lv')===2&&L('n')>=2)T('העץ הוא מסלול','שני עלים בדיוק');if(P('tr')==='y'&&ex1('D')&&ex1('n')&&L('D')===L('n')-1&&L('n')>=3)T('העץ הוא כוכב','Δ = n − 1');
-    if(P('fo')!=='y'&&L('m')>H('n')-L('c'))T('יש בגרף מעגל, ולכן הוא אינו יער','m > n − c');
-    if(P('fo')!=='y'&&ex1('m')&&ex1('n')&&ex1('c')&&L('m')===L('n')-L('c'))T(L('c')===1?'הגרף הוא עץ':'הגרף הוא יער','m = n − c');
+    if(prop(g,'fo')!=='y'&&L('m')>H('n')-L('c'))T('יש בגרף מעגל, ולכן הוא אינו יער','m > n − c');
+    if(prop(g,'fo')!=='y'&&ex1('m')&&ex1('n')&&ex1('c')&&L('m')===L('n')-L('c'))T(L('c')===1?'הגרף הוא עץ':'הגרף הוא יער','m = n − c');
     if(ex1('c')&&L('c')===1&&ex1('m')&&ex1('n')&&L('m')===L('n'))T('יש בגרף מעגל אחד בדיוק','קשיר, m = n');
     if(L('n')>=3&&H('n')<Infinity&&2*L('dl')>=H('n'))T('הגרף המילטוני','דירק (3.3)');
     if(ad!==null&&ad>=2&&ad%2===0&&ex1('c')&&L('c')===1)T('הגרף אוילרי','משפט 3.1');
     if(ad!==null&&ad%2===1)T('מספר הצמתים זוגי','מסקנה מ־1.3');
     if(L('dl')>=2)T(`יש מעגל פשוט על ${L('dl')+1} צמתים לפחות`,'פרק 1, שאלה 3');
-    if(P('pl')==='u'){if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)')}
-    if(P('bp')==='u'){if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)')}
+    if(prop(g,'pl')==='u'&&P('pl')==='u'){if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)')}
+    if(prop(g,'bp')==='u'&&P('bp')==='u'){if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)')}
     if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
     if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי')}
-  const R={B,W,N,bad};memo.set(g,R);return R}
+  St.fo=P('fo')==='y';St.pl=P('pl')==='y';
+  St.bad=bad;return moved||bad}
+/* all graphs together: each round lets every graph use what the others have reached, until nothing moves */
+function solveAll(){const memo=new Map();let any=true,r=0;while(any&&r++<14){any=false;for(const g of graphs())any=digest(g,memo)||any}return memo}
 const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 function digestHtml(){
-  const G=graphs(),open=!COL.has('Σ'),memo=new Map();
-  const body=G.map(g=>{const d=digest(g,memo),s=sub(g),rows=[];
+  const G=graphs(),open=!COL.has('Σ'),memo=solveAll();
+  const body=G.map(g=>{const d=memo.get(g),s=sub(g),rows=[];
     if(d.bad)return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b></div><div class="qwarn">הנתונים של ${g.name} סותרים זה את זה, ולכן אין תמצית.</div></div>`;
-    for(const k in SYM){if(k==='f'&&prop(g,'pl')!=='y')continue;if(k==='lv'&&prop(g,'fo')!=='y')continue;if(k==='c'&&g.op==='comp')continue;const [lo,hi]=d.B[k],w=d.W[k],sym=SYM[k]+s;
+    for(const k in SYM){if(k==='f'&&!d.pl)continue;if(k==='lv'&&!d.fo)continue;if(k==='c'&&g.op==='comp')continue;const [lo,hi]=d.B[k],w=d.W[k],sym=SYM[k]+s;
       if(lo===D0[k]&&hi===Infinity)continue;const given=val(g,k)!==null;
       const why=given?'נתון':[...new Set([lo>D0[k]?w[0]:null,hi<Infinity?w[1]:null].filter(Boolean))].map(x=>`<span class="fx">${x}</span>`).join(' · ');
       const f=lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`;
