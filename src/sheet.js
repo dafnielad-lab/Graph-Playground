@@ -31,7 +31,7 @@ function renderObjs(){
       <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}${tri(i,'tr',o.tr,'עץ')}${tri(i,'bp',o.bp,'דו-צדדי')}</div>
       ${o.more?`<div class="qrow">${['D','dl','f','chi','al','nu','be','rho'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div>`:''}
       <button class="link" data-more="${i}">${o.more?'הסתר גדלים נוספים':'גדלים נוספים: דרגות, פאות, צביעה, זיווג'}</button></div>`;
-    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow"><span class="cell">דרגה</span><select data-i="${i}" data-k="dm" id="f${i}dm" aria-label="סוג הנתון על הדרגה">${opt([['eq','בדיוק'],['rng','בטווח']],o.dm||'eq')}</select>${o.dm==='rng'?num(i,'d1',o.d1,'מ־')+num(i,'d2',o.d2,'עד'):num(i,'d',o.d,'')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
+    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow"><span class="cell">דרגה</span><select data-i="${i}" data-k="dm" id="f${i}dm" aria-label="סוג הנתון על הדרגה">${opt([['eq','בדיוק'],['rng','בטווח']],o.dm||'eq')}</select>${o.dm==='rng'?num(i,'d1',o.d1,'מ־')+num(i,'d2',o.d2,'עד'):num(i,'d',o.d,'')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
     if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>צלע ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
     return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה'],['cover','כיסוי בצמתים'],['side','צד בגרף דו-צדדי']],o.prop)}</select></div></div>`}).join('')}
 /* symbol of a graph quantity: the given value in colour, otherwise the symbol (with the graph's name unless it is G) */
@@ -41,9 +41,11 @@ const dLo=v=>v.dm==='rng'?(v.d1??null):v.d,dHi=v=>v.dm==='rng'?(v.d2??null):v.d,
 const allV=g=>O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='all'&&(dLo(o)!==null||dHi(o)!==null));
 const allDeg=g=>{const v=allV(g);return v?dEx(v):null};
 const rngTxt=(lo,mid,hi)=>`${lo!==null?V(lo)+' ≤ ':''}${mid}${hi!==null?' ≤ '+V(hi):''}`;
-const val=(g,k)=>g[k]!==null&&g[k]!==undefined?g[k]:(k==='D'||k==='dl')?allDeg(g):null;
+/* a chosen vertex can be the one of highest or lowest degree; its exact degree then fixes Δ or δ */
+const ext=(g,w)=>O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='one'&&o.w===w);
+const val=(g,k)=>{if(g[k]!==null&&g[k]!==undefined)return g[k];if(k!=='D'&&k!=='dl')return null;const a=allDeg(g);if(a!==null)return a;const v=ext(g,k==='D'?'max':'min');return v?dEx(v):null};
 const sy=(g,k)=>{const v=val(g,k);return v!==null?V(v):SYM[k]+sub(g)};
-const degOf=v=>dEx(v)!==null?V(dEx(v)):`deg(${v.name})`;
+const degOf=v=>dEx(v)!==null?V(dEx(v)):v.q==='one'&&v.w?(x=>x.includes('class="qv"')?x:`<span class="qs">${x}</span>`)(sy(by(v.in),v.w==='max'?'D':'dl')):`deg(${v.name})`;
 const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':g.c!==null&&g.c>1?'n':'u'):g[k];
 function sheetFor(g){
   const s=sub(g),q=k=>sy(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
@@ -73,7 +75,10 @@ function sheetFor(g){
     add('כל הדרגות בטווח','מההגדרה','min deg ≤ δ ≤ Δ ≤ max deg',rngTxt(aLo,`${dl} ≤ ${D}`,aHi))}
   add('דרגה מינימלית, ממוצעת ומקסימלית','מההגדרה','δ ≤ 2m / n ≤ Δ',`${dl} ≤ 2·${m} / ${n} ≤ ${D}`);
   add('דרגה מקסימלית בגרף פשוט','מההגדרה','Δ ≤ n − 1',`${D} ≤ ${n} − 1`);
-  for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all')){add(v.q==='ex'?'קיים צומת בדרגה נתונה':`הדרגה של ${v.name}`,'מההגדרה',`δ ≤ deg(${v.name}) ≤ Δ`,dEx(v)!==null||(dLo(v)===null&&dHi(v)===null)?`${dl} ≤ ${degOf(v)} ≤ ${D}`:[dHi(v)!==null?`${dl} ≤ ${V(dHi(v))}`:'',dLo(v)!==null?`${V(dLo(v))} ≤ ${D}`:''].filter(Boolean).join(',   '));
+  for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q==='one'&&o.w)){const mx=v.w==='max',E=mx?D:dl,S0=mx?'Δ':'δ';
+    add(`${v.name} בעל הדרגה ${mx?'הגבוהה':'הנמוכה'} ביותר`,'מההגדרה',`deg(${v.name}) = ${S0}`,`deg(${v.name}) = ${E}`);
+    if(dEx(v)===null&&(dLo(v)!==null||dHi(v)!==null))add(`טווח הדרגה של ${v.name}`,'נתון',`min ≤ ${S0} ≤ max`,rngTxt(dLo(v),S0+s,dHi(v)))}
+  for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'&&!(o.q==='one'&&o.w))){add(v.q==='ex'?'קיים צומת בדרגה נתונה':`הדרגה של ${v.name}`,'מההגדרה',`δ ≤ deg(${v.name}) ≤ Δ`,dEx(v)!==null||(dLo(v)===null&&dHi(v)===null)?`${dl} ≤ ${degOf(v)} ≤ ${D}`:[dHi(v)!==null?`${dl} ≤ ${V(dHi(v))}`:'',dLo(v)!==null?`${V(dLo(v))} ≤ ${D}`:''].filter(Boolean).join(',   '));
     if(dEx(v)===null&&(dLo(v)!==null||dHi(v)!==null))add(`טווח הדרגה של ${v.name}`,'נתון',`min ≤ deg(${v.name}) ≤ max`,rngTxt(dLo(v),`deg(${v.name})`,dHi(v)))}
   /* edges, components, trees */
   add('מספר הצלעות המרבי בגרף פשוט','מההגדרה','m ≤ n(n − 1) / 2',`${m} ≤ ${n}·(${n} − 1) / 2`);
@@ -118,19 +123,19 @@ function sheetFor(g){
   /* status of each formula: applies, hidden (a needed property is given as the opposite), or conditional (unknown) */
   const st=f=>{if(!f.need)return 'on';let u=false;for(const [k,w] of f.need){const p=prop(g,k);if(p==='u')u=true;else if(p!==w)return 'hide'}return u?'hide':'on'};
   const cond=f=>f.need.filter(([k])=>prop(g,k)==='u').map(([k,w])=>(w==='n'?'לא ':'')+PROPS[k]).join(' ו');
-  const card=f=>{const z=st(f);return `<article class="f${z==='if'?' off':''}${f.rel?' rel':''}"><div class="fh"><b>${f.t}</b><span class="ref">${f.r}</span>${z==='if'?`<span class="need">אם ${X} ${cond(f)}</span>`:''}</div><div class="fx gen">${f.g}</div>${f.s&&f.s.includes('class="qv"')?`<div class="fx qsub">${f.s}</div>`:''}</article>`};
+  const card=f=>{const z=st(f);return `<article class="f${z==='if'?' off':''}${f.rel?' rel':''}"><div class="fh"><b>${f.t}</b><span class="ref">${f.r}</span>${z==='if'?`<span class="need">אם ${X} ${cond(f)}</span>`:''}</div><div class="fx gen">${f.g}</div>${f.s&&/class="q[vs]"/.test(f.s)?`<div class="fx qsub">${f.s}</div>`:''}</article>`};
   const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
   const vis=F.filter(f=>st(f)!=='hide');
   return `<h3 class="gt"><span class="name">${X}</span> ${title}</h3>${vis.filter(f=>st(f)==='on').map(card).join('')}${vis.filter(f=>st(f)==='if').map(card).join('')}`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,val(g,k)])}}
-  for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
+  for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
   L.push(['ω','גודל קליקה מקסימלית',null],['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
 document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb'))return;const o=O[i];
   o[k]=t.type==='checkbox'?t.checked:t.type==='number'?(t.value===''?null:Number(t.value)):t.value;
-  if(['op','src','in','arg','dm'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);renderObjs()}
+  if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);renderObjs()}
   renderSheet()});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
   if(mo){const o=O[Number(mo.dataset.more)];o.more=!o.more}
