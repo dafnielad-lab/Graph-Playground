@@ -98,6 +98,28 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .cols.wide #card .duo svg{max-height:62vh}
 .cols.wide #card .props{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));column-gap:28px}.cols.wide #card .props .kv{border-bottom:1px solid var(--track)}
 .cols.wide #main .gi.two{grid-column:auto}.cols.wide #main .n1{font-size:36px}
+/* formula-sheet mode */
+.fx{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+.qb{display:flex;flex-direction:column;gap:10px}.qlist{display:flex;flex-direction:column;gap:10px}
+.qbox{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.qrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--bg);border-radius:10px;padding:8px}
+.qb .name,.qgrid .name{background:var(--ink);color:var(--surface);border-radius:8px;padding:4px 10px;font-weight:700;direction:ltr}.qb .name.v{background:var(--accent);color:var(--accent-ink)}
+.qb input[type=number]{width:58px;text-align:center;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.qb input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.cell{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.addrow{display:flex;flex-wrap:wrap;gap:6px}.addb{border:2px dashed var(--line);background:transparent;border-radius:10px;min-height:38px;padding:0 12px;font-weight:500}
+.qb .x{margin-inline-start:auto;border:1px solid var(--line);background:transparent;border-radius:8px;width:30px;height:30px}
+.qhero{flex-direction:column;align-items:flex-start;gap:4px}.qhero p{margin:0;max-width:75ch}.qhero b{color:var(--hero-2)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.qgrid .gt{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:6px 0 0;font-size:15px}
+.f{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.f.off{background:transparent;border:2px dashed var(--line)}.f.rel{border-inline-start:4px solid var(--accent)}
+.fh{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.fh b{font-weight:500}
+.ref{font-size:12px;background:var(--track);border-radius:12px;padding:2px 8px;color:var(--muted)}.need{font-size:12px;color:var(--hi);font-weight:500}
+.gen{font-size:16px;color:var(--muted);overflow-x:auto}.qsub{font-size:19px;background:var(--bg);border-radius:8px;padding:6px 10px;overflow-x:auto}
+.qv{color:var(--accent);font-weight:700}.same{font-size:13px;color:var(--muted)}
+.qleg{margin:0;display:flex;flex-direction:column}.qleg div{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--track);align-items:baseline}
+.qleg dt{min-width:70px;flex:none;font-size:16px}.qleg dd{margin:0;font-size:14px}.qleg .given dt{color:var(--accent)}
 .cardhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 [data-act="conds"]{display:none}
 @media (max-width:760px),(max-height:520px){
@@ -139,6 +161,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 .kv{font-size:12px}.props .kv{padding:5px 0}.toolbox{padding:8px}.tag{font-size:11px}
 .sig{font-size:11px;padding-block:0}
 .prseq select{font-size:13px;min-height:32px}
+.qgrid{grid-template-columns:minmax(0,1fr);gap:6px}.qsub{font-size:15px;padding:4px 8px}.gen{font-size:13px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input[type=number]{width:46px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
 }
 
 </style>
@@ -158,6 +181,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>תנאים מדרגה שנייה</h3><p>התנאי "אחרי הסרת צלעות או צמתים" מחלק את הרשימה. התנאים שמעליו נבדקים על הגרף, והתנאים שמתחתיו נבדקים על מה שנשאר אחרי הסרת צלעות או צמתים. בוחרים כמה מסירים, ואם מספיק שקיימת הסרה מתאימה או שנדרש שכל הסרה תתאים. בכרטיס הגרף מסומנת באדום הסרה לדוגמה.</p></div>
 <div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי צלעות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
+<div><h3>דף נוסחאות</h3><p>מצב בלי הגבלה על מספר הצמתים. מגדירים את האובייקטים שבשאלה: הגרף הנתון, צמתים, צלעות, קבוצות צמתים, וגרפים שנוצרים מפעולות כמו הסרה, משלים או תת-גרף מושרה. כל ערך שממלאים מוצב בכל הנוסחאות שבהן הוא מופיע, ומה שלא נתון נשאר כסמל. הדף לא פותר, הוא מראה מה אפשר לחבר.</p></div>
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>
 </div>
 </section>
@@ -416,6 +440,90 @@ const KIND={
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
 if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV};
 
+/* ---------- formula-sheet mode: objects, operations, live substitution ---------- */
+const SHEET=(()=>{
+
+const V=x=>`<span class="qv">${x}</span>`;
+/* objects of the question, in order; a derived graph may only use objects defined above it */
+let O=[{t:'g',name:'G',n:10,m:null,c:1,pl:true,tr:false},
+       {t:'v',name:'v',in:'G',q:'one',d:3},
+       {t:'g',name:'H',op:'delv',src:'G',arg:'v',n:null,m:null,c:2,pl:true,tr:false}];
+const NAMES={v:['v','u','w','x','y','z'],e:['e','e₂','e₃','e₄'],s:['S','T','A','B'],g:['H','K','L','M','N']};
+const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הצלע','e'],adde:['הוספת צלע',null],compl:['המשלים',null],ind:['תת-גרף מושרה על','s']};
+const by=n=>O.find(o=>o.name===n),graphs=()=>O.filter(o=>o.t==='g');
+const fresh=t=>NAMES[t].find(n=>!by(n))||NAMES[t][0]+O.length;
+function ensureArg(g){const need=OPS[g.op][1];if(!need){g.arg=null;return}
+  const cur=by(g.arg);if(cur&&cur.t===need&&cur.in===g.src)return;
+  let a=O.find(o=>o.t===need&&o.in===g.src&&O.indexOf(o)<O.indexOf(g));
+  if(!a){a=need==='v'?{t:'v',name:fresh('v'),in:g.src,q:'one',d:null}:need==='e'?{t:'e',name:fresh('e'),in:g.src}:{t:'s',name:fresh('s'),in:g.src,k:null,prop:''};O.splice(O.indexOf(g),0,a)}
+  g.arg=a.name}
+function removeObj(name){const dep=O.filter(o=>o.in===name||o.src===name||o.arg===name).map(o=>o.name);O=O.filter(o=>o.name!==name);dep.forEach(removeObj)}
+const opt=(list,cur)=>list.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
+const num=(i,k,val,lab)=>`<label class="cell">${lab}<input type="number" min="0" data-i="${i}" data-k="${k}" value="${val===null?'':val}" placeholder="?" id="f${i}${k}"></label>`;
+function renderObjs(){
+  document.getElementById('qobjs').innerHTML=O.map((o,i)=>{const gs=opt(graphs().filter(g=>o.t!=='g'||O.indexOf(g)<i).map(g=>[g.name,g.name]),o.t==='g'?o.src:o.in),x=o.name==='G'?'':`<button class="x" data-del="${o.name}" aria-label="הסר את ${o.name}">×</button>`;
+    if(o.t==='g')return `<div class="qbox"><div class="qrow"><span class="name">${o.name}</span>${o.op?`<span>=</span><select data-i="${i}" data-k="op" id="f${i}op" aria-label="פעולה">${opt(Object.entries(OPS).map(([k,v])=>[k,v[0]]),o.op)}</select>${o.arg?`<select data-i="${i}" data-k="arg" id="f${i}arg" aria-label="על מה">${opt(O.filter(a=>a.t===OPS[o.op][1]&&a.in===o.src&&O.indexOf(a)<i).map(a=>[a.name,a.name]),o.arg)}</select>`:''}<span>מתוך</span><select data-i="${i}" data-k="src" id="f${i}src" aria-label="גרף מקור">${gs}</select>`:'<span>הגרף הנתון</span>'}${x}</div>
+      <div class="qrow">${num(i,'n',o.n,'צמתים')}${num(i,'m',o.m,'צלעות')}${num(i,'c',o.c,'רכיבים')}<label class="cell">מישורי<input type="checkbox" data-i="${i}" data-k="pl" id="f${i}pl" ${o.pl?'checked':''}></label><label class="cell">עץ<input type="checkbox" data-i="${i}" data-k="tr" id="f${i}tr" ${o.tr?'checked':''}></label></div></div>`;
+    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'d',o.d,'דרגה')}</div></div>`;
+    if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>צלע ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div></div>`;
+    return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה']],o.prop)}</select></div></div>`}).join('')}
+/* symbol of a graph quantity: the given value in blue, otherwise the symbol (with the graph's name unless it is G) */
+const sub=g=>g.name==='G'?'':`<sub>${g.name}</sub>`;
+const sy=(g,k)=>g[k]!==null&&g[k]!==undefined?V(g[k]):k+sub(g);
+const allDeg=g=>{const v=O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='all'&&o.d!==null);return v?v.d:null};
+const degOf=v=>v.d!==null?V(v.d):`deg(${v.name})`;
+function sheetFor(g){
+  const n=sy(g,'n'),m=sy(g,'m'),c=sy(g,'c'),s=sub(g),ad=allDeg(g),D=ad!==null?V(ad):'Δ'+s,dl=ad!==null?V(ad):'δ'+s,conn=g.c===1||g.tr,F=[];
+  const src=g.op?by(g.src):null;
+  if(src){const N=sy(src,'n'),M=sy(src,'m'),C=sy(src,'c'),a=by(g.arg),rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:gn,s:st,rel:1}),H=g.name,X=src.name;
+    if(g.op==='delv'){rel('צמתים אחרי הסרת צומת',`n(${H}) = n(${X}) − 1`,`${n} = ${N} − 1`);rel('צלעות אחרי הסרת צומת',`m(${H}) = m(${X}) − deg(${a.name})`,`${m} = ${M} − ${degOf(a)}`)}
+    if(g.op==='dele'){rel('צמתים אחרי הסרת צלע',`n(${H}) = n(${X})`,`${n} = ${N}`);rel('צלעות אחרי הסרת צלע',`m(${H}) = m(${X}) − 1`,`${m} = ${M} − 1`);rel('רכיבי קשירות אחרי הסרת צלע',`c(${X}) ≤ c(${H}) ≤ c(${X}) + 1`,`${C} ≤ ${c} ≤ ${C} + 1`)}
+    if(g.op==='adde'){rel('צלעות אחרי הוספת צלע',`m(${H}) = m(${X}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי הוספת צלע',`c(${X}) − 1 ≤ c(${H}) ≤ c(${X})`,`${C} − 1 ≤ ${c} ≤ ${C}`)}
+    if(g.op==='compl'){rel('צמתים במשלים',`n(${H}) = n(${X})`,`${n} = ${N}`);rel('צלעות בגרף ובמשלים',`m(${X}) + m(${H}) = n(n − 1) / 2`,`${M} + ${m} = ${N}·(${N} − 1) / 2`);const xd=allDeg(src);rel('דרגה במשלים',`deg in ${H} = n − 1 − deg in ${X}`,`deg in ${H} = ${N} − 1 − ${xd!==null?V(xd):'deg in '+X}`)}
+    if(g.op==='ind'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים בתת-גרף מושרה',`n(${H}) = |${a.name}|`,`${n} = ${k}`);rel('צלעות בתת-גרף מושרה',`m(${H}) ≤ m(${X})`,`${m} ≤ ${M}`);
+      if(a.prop==='indep')rel('מושרה על קבוצה בלתי תלויה',`m(${H}) = 0`,`${m} = ${V(0)}`);if(a.prop==='clique')rel('מושרה על קליקה',`m(${H}) = |${a.name}|(|${a.name}| − 1) / 2`,`${m} = ${k}·(${k} − 1) / 2`)}}
+  F.push({t:'סכום הדרגות',r:'טענה 1.3',g:'Σ deg(u) = 2m',s:`${ad!==null?V(ad)+'·'+n:'Σ deg(u)'} = 2·${m}`},
+    {t:'דרגה מינימלית, ממוצעת ומקסימלית',r:'מההגדרה',g:'δ ≤ 2m / n ≤ Δ',s:`${dl} ≤ 2·${m} / ${n} ≤ ${D}`});
+  for(const v of O.filter(o=>o.t==='v'&&o.in===g.name&&o.q!=='all'))F.push({t:v.q==='ex'?'קיים צומת בדרגה נתונה':`הדרגה של ${v.name}`,r:'מההגדרה',g:`δ ≤ deg(${v.name}) ≤ Δ`,s:`δ${s} ≤ ${degOf(v)} ≤ Δ${s}`});
+  for(const S of O.filter(o=>o.t==='s'&&o.in===g.name&&o.prop)){const k=S.k!==null?V(S.k):`|${S.name}|`;
+    if(S.prop==='indep')F.push({t:'קבוצה בלתי תלויה נתונה',r:'מההגדרה',g:`α ≥ |${S.name}|`,s:`α${s} ≥ ${k}`});
+    else F.push({t:'קליקה נתונה',r:'מההגדרה',g:`χ ≥ ω ≥ |${S.name}|`,s:`χ${s} ≥ ω${s} ≥ ${k}`})}
+  F.push({t:'מספר הצלעות המרבי בגרף פשוט',r:'מההגדרה',g:'m ≤ n(n − 1) / 2',s:`${m} ≤ ${n}·(${n} − 1) / 2`},
+    {t:'מספר הצלעות המזערי לפי רכיבי הקשירות',r:'פרק 2',g:'m ≥ n − c',s:`${m} ≥ ${n} − ${c}`},
+    {t:'חסם על מספר הצביעה',r:'פרק 6, שאלה 1',g:'χ ≤ Δ + 1',s:`χ${s} ≤ ${D} + 1`},
+    {t:'עץ: מספר הצלעות',r:'משפט 2.5',g:'m = n − 1',s:`${m} = ${n} − 1`,need:g.name+' עץ',ok:g.tr},
+    {t:'נוסחת אוילר',r:'משפט 5.3',g:'f = m − n + 2',s:`f${s} = ${m} − ${n} + 2`,need:g.name+' מישורי וקשיר',ok:g.pl&&conn},
+    {t:'חסם הצלעות בגרף מישורי (שלושה צמתים לפחות)',r:'מסקנה 5.4',g:'m ≤ 3n − 6',s:`${m} ≤ 3·${n} − 6`,need:g.name+' מישורי',ok:g.pl},
+    {t:'סכום אורכי הפאות',r:'פרק 5',g:'Σ len(face) = 2m',s:`Σ len(face) = 2·${m}`,need:g.name+' מישורי',ok:g.pl});
+  const card=f=>{const off=f.need&&!f.ok;return `<article class="f${off?' off':''}${f.rel?' rel':''}"><div class="fh"><b>${f.t}</b><span class="ref">${f.r}</span>${off?`<span class="need">חסר: ${f.need}</span>`:''}</div><div class="fx gen">${f.g}</div>${off?'':(f.s.includes('class="qv"')?`<div class="fx qsub">${f.s}</div>`:'<div class="same">אין נתון להצבה בנוסחה הזו</div>')}</article>`};
+  const title=g.op?`${g.name} = ${OPS[g.op][0]}${g.arg?' '+g.arg:''} מתוך ${g.src}`:'G, הגרף הנתון';
+  return `<h3 class="gt"><span class="name">${g.name}</span> ${title}</h3>${F.filter(f=>!f.need||f.ok).map(card).join('')}${F.filter(f=>f.need&&!f.ok).map(card).join('')}`}
+function renderSheet(){
+  document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
+  const L=[];for(const g of graphs()){const s=sub(g),ad=allDeg(g);L.push(['n'+s,'מספר הצמתים של '+g.name,g.n],['m'+s,'מספר הצלעות של '+g.name,g.m],['c'+s,'מספר רכיבי הקשירות של '+g.name,g.c],['Δ'+s,'הדרגה המקסימלית ב־'+g.name,ad],['δ'+s,'הדרגה המינימלית ב־'+g.name,ad],['χ'+s,'מספר הצביעה של '+g.name,null]);if(g.pl)L.push(['f'+s,'מספר הפאות של '+g.name+' בשיכון מישורי',null])}
+  for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}`,o.d]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
+  document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
+document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb'))return;const o=O[i];
+  o[k]=t.type==='checkbox'?t.checked:t.type==='number'?(t.value===''?null:Number(t.value)):t.value;
+  if(['op','src','in','arg'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);renderObjs()}
+  renderSheet()});
+document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]');
+  if(d){removeObj(d.dataset.del)}
+  else if(a){const t=a.dataset.add,last=graphs()[graphs().length-1].name;
+    if(t==='v')O.push({t:'v',name:fresh('v'),in:last,q:'one',d:null});
+    if(t==='e')O.push({t:'e',name:fresh('e'),in:last});
+    if(t==='s')O.push({t:'s',name:fresh('s'),in:last,k:null,prop:''});
+    if(t==='g'){const g={t:'g',name:fresh('g'),op:'compl',src:last,arg:null,n:null,m:null,c:null,pl:false,tr:false};O.push(g);ensureArg(g)}}
+  else return;renderObjs();renderSheet()});
+return{render(){
+  document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
+  <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ צלע</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
+  <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p></div></div>`;
+  document.getElementById('main').innerHTML=`<div class="hero qhero"><p>דף הנוסחאות של האובייקטים שבשאלה, בלי הגבלה על מספר הצמתים. הערכים הנתונים מוצבים <b>בצבע</b>, ומה שלא נתון נשאר כסמל.</p><p>הדף לא פותר: המטרה היא לזהות לבד אילו נוסחאות אפשר לחבר כדי למצוא עוד נתונים.</p></div><div class="qgrid" id="qsheet"></div>`;
+  document.getElementById('card').innerHTML=`<div class="cardhead"><h2>מקרא הסמלים</h2></div><dl id="qlegend" class="qleg"></dl><p class="hint">סמל צבוע הוא נתון. השאר לא נתונים, ומוצגים בנוסחאות לפי ההגדרה שלהם.</p>`;
+  renderObjs();renderSheet()}};
+})();
+
 /* ---------- UI ---------- */
 const SHOWS=[20,50,100,200,500,1000],LIVE=50;
 const $=s=>document.querySelector(s);
@@ -432,7 +540,7 @@ function mkCond(kind,over){
   else if(K.type==='ind'){c.prop='indep';c.k=Math.min(2,n-1);c.op='ge';c.value=1}
   return Object.assign(c,over||{});
 }
-const single=()=>S.mode==='manual'||S.mode==='prufer';
+const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';
 const ranged=()=>!!S.rng&&!single(),nHi=()=>ranged()?Math.max(S.n,S.n2||S.n):S.n,Ns=()=>{const r=[];for(let n=S.n;n<=nHi();n++)r.push(n);return r};
 S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
 const maxN=()=>S.mode==='prufer'?12:S.mode==='manual'?8:(S.type==='tree'?12:8);
@@ -633,11 +741,12 @@ function selGraph(){if(S.mode==='manual')return{a:manualGraph(),idx:-1,n:S.n};if
 const seg=(act,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" aria-pressed="${v===cur}">${l}</button>`).join('')}</div>`;
 const nStep=(w,val,lo,hi)=>`<div class="seg step"><button data-act="n" data-w="${w}" data-v="-1" aria-label="הפחת צומת" ${val<=lo?'disabled':''}>−</button><b class="num" aria-live="polite">${val}</b><button data-act="n" data-w="${w}" data-v="1" aria-label="הוסף צומת" ${val>=hi?'disabled':''}>+</button></div>`;
 function renderTop(){
+  $('.cols').classList.toggle('sheet',sheetMode());
   $('#top').innerHTML=`<div class="grp"><div class="brand">מגרש גרפים</div><button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
-  <div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
+  ${sheetMode()?'':`<div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
   <div class="grp"><span class="lab">ספירה</span>${seg('lab',[['0','לא מתויג'],['1','מתויג']],S.labeled?'1':'0')}</div>
-  <div class="grp"><span class="lab">צמתים</span>${nStep('lo',S.n,1,ranged()?S.n2:maxN())}${ranged()?`<span class="lab">עד</span>${nStep('hi',S.n2,S.n,maxN())}`:''}${single()?'':`<button class="btn sm" data-act="rng" aria-pressed="${!!S.rng}">טווח</button>`}<span class="lab">לכל היותר <span class="num">${maxN()}</span></span></div>
-  <div class="grp end"><span class="lab">מצב</span>${seg('mode',[['explore','חקירה חופשית'],['guess','ניחוש'],['target','יעד'],['manual','גרף ידני'],['prufer','סדרת פרופר']],S.mode)}<button class="btn" data-act="help" aria-expanded="${!$('#help').hidden}" aria-controls="help">הוראות</button></div>`;
+  <div class="grp"><span class="lab">צמתים</span>${nStep('lo',S.n,1,ranged()?S.n2:maxN())}${ranged()?`<span class="lab">עד</span>${nStep('hi',S.n2,S.n,maxN())}`:''}${single()?'':`<button class="btn sm" data-act="rng" aria-pressed="${!!S.rng}">טווח</button>`}<span class="lab">לכל היותר <span class="num">${maxN()}</span></span></div>`}
+  <div class="grp end"><span class="lab">מצב</span>${seg('mode',[['explore','חקירה חופשית'],['guess','ניחוש'],['target','יעד'],['manual','גרף ידני'],['prufer','סדרת פרופר'],['sheet','דף נוסחאות']],S.mode)}<button class="btn" data-act="help" aria-expanded="${!$('#help').hidden}" aria-controls="help">הוראות</button></div>`;
 }
 
 /* ----- render: conditions ----- */
@@ -878,6 +987,7 @@ function newTarget(){
 function resetSel(){S.subset=0;S.matching=[];S.augPath=null;S.emb=0;S.outer=0;S.kur=false}
 function refresh(full){
   if(S.n>maxN())S.n=maxN();S.n2=Math.max(S.n,Math.min(maxN(),S.n2||S.n));if(S.mode==='prufer'){if(S.n<2)S.n=2;syncPrufer()}
+  if(sheetMode()){renderTop();SHEET.render();return}
   if(full){clampConds();renderTop();renderConds()}
   compute();updateCounts();renderMain();renderCard();
 }

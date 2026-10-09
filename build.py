@@ -18,6 +18,7 @@ boot = (
 app = (
     "<script>\nconst DATA=" + (src / "data.json").read_text(encoding="utf-8") + ";\n"
     + (src / "core.js").read_text(encoding="utf-8") + "\n"
+    + (src / "sheet.js").read_text(encoding="utf-8") + "\n"
     + (src / "ui.js").read_text(encoding="utf-8") + "\n</script>\n"
 )
 html = (
