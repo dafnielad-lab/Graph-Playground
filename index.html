@@ -925,16 +925,41 @@ function virtFor(g,d){
     mk('הוספת קשת בין שני צמתים לא שכנים',`${X}+e`,'adde',{t:'e',name:`e∉${X}`,in:X,bridge:false})}
   if(!isBar(X)&&!O.some(o=>o.t==='g'&&o.op==='compl'&&o.src===X))mk('המשלים',barName(X),'compl',null);
   return out}
-/* bounds on a pair of vertices, straight from the settled ranges */
-function pairRows(g,d){
-  const L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),R=[],dg=`deg${s}(u) + deg${s}(w)`,row=(t,f,e)=>R.push({t,f,e});
-  const lo=2*L('dl'),hi=H('D')<Infinity?2*H('D'):null;
-  if(lo>0||hi!==null)row('סכום הדרגות של שני צמתים כלשהם',`${lo>0?V(lo)+' ≤ ':''}${dg}${hi!==null?' ≤ '+V(hi):''}`,'כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית, ולכן הסכום של שתיים נמצא בין פעמיים המינימלית לפעמיים המקסימלית.');
-  if(H('n')<Infinity){const a=Math.min(hi??Infinity,2*(H('n')-2));if(L('n')>=3&&a>=0)row('סכום הדרגות של שני צמתים לא שכנים',`${dg} ≤ ${V(a)}`,'שני צמתים לא שכנים יכולים להיות שכנים רק של שאר הצמתים, ולכן כל דרגה היא לכל היותר מספר הצמתים פחות שתיים.');
-    if(d.tf)row('סכום הדרגות של שני שכנים, בגרף בלי משולשים',`${dg} ≤ ${V(Math.min(hi??Infinity,H('n')))}`,'בגרף בלי משולשים לשני שכנים אין שכן משותף, ולכן קבוצות השכנים שלהם זרות וביחד לא עוברות את מספר הצמתים.');
-    const cn=lo-H('n')+2;if(cn>=1)row('שכנים משותפים לשני צמתים לא שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(cn)}`,'שתי קבוצות השכנים נמצאות בתוך שאר הצמתים. כשסכום הדרגות גדול ממספרם, הקבוצות חייבות להיחתך. מכאן שבין כל שני צמתים יש מסלול באורך שתיים לכל היותר.');
-    const ct=lo-H('n');if(ct>=1)row('שכנים משותפים לשני צמתים שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(ct)}`,'מכל קבוצת שכנים מורידים את הצומת השני, ושתיהן נמצאות בתוך שאר הצמתים. כשהסכום גדול ממספרם יש שכן משותף, ולכן כל קשת נמצאת במשולש.')}
+/* bounds on the sum of two degrees: for any pair, for two neighbours and for two non-neighbours. A graph and its complement
+   exchange them: neighbours here are non-neighbours there, and each degree is n − 1 minus the degree there. */
+function pairBase(g,d,memo){
+  const L=k=>d.B[k][0],H=k=>d.B[k][1],CS=compsOf(g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),full=CS.length&&L('c')===H('c')&&CS.length===L('c');
+  /* the largest component: all its neighbours stay inside it */
+  const cm=full?Math.max(...CS.map(x=>x.B.n[1])):H('n')-(L('c')-1),lo=2*L('dl'),hi=2*H('D');
+  const b=x=>`<bdi dir="ltr" class="fx">${x}</bdi>`,P={lo,hi,cm,adjLo:lo,nadjLo:lo,adjHi:hi,nadjHi:hi,eAdjHi:'',eNadjHi:'',eAdjLo:'',eNadjLo:''};
+  const base=`כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית.`;P.eAdjHi=P.eNadjHi=P.eAdjLo=P.eNadjLo=base;
+  if(cm<Infinity){const a=d.tf?cm:2*(cm-1);
+    if(a<P.adjHi){P.adjHi=a;P.eAdjHi=d.tf?`ב־${b(g.name)} אין משולשים, ולכן לשני שכנים אין שכן משותף. כל השכנים שלהם נמצאים ברכיב הקשירות שלהם, ולכן סכום הדרגות לא עובר את מספר הצמתים ברכיב. ברכיב הגדול ביותר יש לכל היותר ${b(cm)} צמתים.`:`כל השכנים של צומת נמצאים ברכיב הקשירות שלו, שיש בו לכל היותר ${b(cm)} צמתים.`}
+    const n2=Math.min(2*(H('n')-2),L('c')>=2?2*(cm-1):Infinity);
+    if(n2<P.nadjHi&&n2>=0){P.nadjHi=n2;P.eNadjHi=`שני צמתים לא שכנים יכולים להיות שכנים רק של שאר הצמתים, ורק בתוך רכיב הקשירות שלהם.`}}
+  return P}
+function pairInfo(g,d,memo){
+  const P=pairBase(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],b=x=>`<bdi dir="ltr" class="fx">${x}</bdi>`;
+  const h=g.op==='compl'?by(g.src):O.find(o=>o.t==='g'&&o.op==='compl'&&o.src===g.name),q=h&&memo.get(h);
+  if(q&&!q.bad){const Q=pairBase(h,q,memo),nl=2*(L('n')-1),nh=2*(H('n')-1),hn=`<bdi dir="ltr" class="fx">${h.name}</bdi>`;
+    const say=(kind,there,v)=>`שני צמתים ${kind} כאן הם ${there} ב־${hn}. הדרגה של צומת כאן היא ${b('n − 1')} פחות הדרגה שלו שם, ולכן הסכום כאן הוא ${b('2(n − 1)')} פחות הסכום שם. הסכום שם הוא ${v}. `;
+    if(Q.adjHi<Infinity&&nl-Q.adjHi>P.nadjLo){P.nadjLo=nl-Q.adjHi;P.eNadjLo=say('לא שכנים','שכנים',`לכל היותר ${b(Q.adjHi)}`)+Q.eAdjHi}
+    if(Q.nadjHi<Infinity&&nl-Q.nadjHi>P.adjLo){P.adjLo=nl-Q.nadjHi;P.eAdjLo=say('שכנים','לא שכנים',`לכל היותר ${b(Q.nadjHi)}`)+Q.eNadjHi}
+    if(nh<Infinity&&nh-Q.adjLo<P.nadjHi){P.nadjHi=nh-Q.adjLo;P.eNadjHi=say('לא שכנים','שכנים',`לפחות ${b(Q.adjLo)}`)+Q.eAdjLo}
+    if(nh<Infinity&&nh-Q.nadjLo<P.adjHi){P.adjHi=nh-Q.nadjLo;P.eAdjHi=say('שכנים','לא שכנים',`לפחות ${b(Q.nadjLo)}`)+Q.eNadjLo}}
+  /* Ore: every two non-neighbours with degree sum at least n */
+  P.ore=L('n')>=3&&H('n')<Infinity&&P.nadjLo>=H('n');
+  return P}
+function pairRows(g,d,memo){
+  const P=pairInfo(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),R=[],dg=`deg${s}(u) + deg${s}(w)`,row=(t,f,e)=>R.push({t,f,e});
+  const rng=(lo,hi)=>`${lo>0?V(lo)+' ≤ ':''}${dg}${hi<Infinity?' ≤ '+V(hi):''}`,two=(a,c)=>a===c?`<p>${a}</p>`:`<p><b>החסם התחתון:</b> ${a}</p><p><b>החסם העליון:</b> ${c}</p>`;
+  if(P.lo>0||P.hi<Infinity)row('סכום הדרגות של שני צמתים כלשהם',rng(P.lo,P.hi),'<p>כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית, ולכן הסכום של שתיים נמצא בין פעמיים המינימלית לפעמיים המקסימלית.</p>');
+  if(P.adjLo>0||P.adjHi<Infinity)row('סכום הדרגות של שני שכנים',rng(P.adjLo,P.adjHi),two(P.eAdjLo,P.eAdjHi));
+  if(P.nadjLo>0||P.nadjHi<Infinity)row('סכום הדרגות של שני צמתים לא שכנים',rng(P.nadjLo,P.nadjHi),two(P.eNadjLo,P.eNadjHi));
+  if(H('n')<Infinity){const cn=P.nadjLo-H('n')+2;if(cn>=1)row('שכנים משותפים לשני צמתים לא שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(cn)}`,'<p>שתי קבוצות השכנים נמצאות בתוך שאר הצמתים. כשסכום הדרגות גדול ממספרם, הקבוצות חייבות להיחתך. מכאן שבין כל שני צמתים יש מסלול באורך שתיים לכל היותר.</p>');
+    const ct=P.adjLo-H('n');if(ct>=1)row('שכנים משותפים לשני צמתים שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(ct)}`,'<p>מכל קבוצת שכנים מורידים את הצומת השני, ושתיהן נמצאות בתוך שאר הצמתים. כשהסכום גדול ממספרם יש שכן משותף, ולכן כל קשת נמצאת במשולש.</p>')}
   return R}
+
 const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 /* a reason mixes Hebrew words and formulas: each formula run is set left to right inside the Hebrew line */
 const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
@@ -958,9 +983,11 @@ function digestHtml(){
       const ex=opn?`<div class="qex">${one?tell(g,k,lo===D0[k]?1:0,d,true):(lo>D0[k]?tell(g,k,0,d):'')+(hi<Infinity?tell(g,k,1,d):'')}</div>`:'';
       rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]}</div><div class="qf"><span class="fx qsub">${f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}
     d.N.forEach(([t,r,u],n)=>{const key=g.name+'|i'+n,opn=EXPL.has(key);rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">${t}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי: ${rz(r)}.${used(u||[])}</p></div>`:''}</div>`)});
+    { const P=pairInfo(g,d,memo);if(P.ore&&!d.N.some(x=>x[0]==='הגרף המילטוני')){const key=g.name+'|ore',opn=EXPL.has(key);
+        rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">הגרף המילטוני</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי משפט אור (3.2): לכל שני צמתים לא שכנים, סכום הדרגות הוא לפחות <bdi dir="ltr" class="fx">${P.nadjLo}</bdi>, וזה לפחות מספר הצמתים.</p><p>${P.eNadjLo}</p></div>`:''}</div>`)}}
     /* the standard moves on this graph */
     const mv=[],oo=OPN.has(g.name);
-    if(oo){for(const r of pairRows(g,d)){const key=g.name+'|p'+mv.length,opn=EXPL.has(key);mv.push(`<div class="qi der"><div class="qn">${r.t}</div><div class="qf"><span class="fx qsub">${r.f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>${r.e}</p></div>`:''}</div>`)}
+    if(oo){for(const r of pairRows(g,d,memo)){const key=g.name+'|p'+mv.length,opn=EXPL.has(key);mv.push(`<div class="qi der"><div class="qn">${r.t}</div><div class="qf"><span class="fx qsub">${r.f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex">${r.e}</div>`:''}</div>`)}
       for(const v of VR.get(g)||[]){const e=memo.get(v.h);if(!e)continue;const key=g.name+'|v'+v.h.name,opn=EXPL.has(key),ks=['n','m','c','D','dl','chi','al','nu','om'].filter(k=>!(e.B[k][0]===D0[k]&&e.B[k][1]===Infinity));
         const fs=e.bad?'<span class="qins">הפעולה סותרת את הנתונים</span>':ks.map(k=>{const [lo,hi]=e.B[k],sym=SYM[k]+sub(v.h);return `<span class="fx qsub">${lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`}</span>`}).join('');
         const ex=opn&&!e.bad?`<div class="qex">${ks.map(k=>{const [lo,hi]=e.B[k],one=lo===hi&&(e.W[k][0]===e.W[k][1]||lo===D0[k]);return one?tell(v.h,k,lo===D0[k]?1:0,e,true):(lo>D0[k]?tell(v.h,k,0,e):'')+(hi<Infinity?tell(v.h,k,1,e):'')}).join('')}</div>`:'';
