@@ -377,7 +377,8 @@ function digest(g,memo){
     if(P('tr')==='y'){const r='עץ (2.5)';eq('c',1,'עץ');ge('m',L('n')-1,r);le('m',H('n')-1,r);ge('n',L('m')+1,r);le('n',H('m')+1,r);
       if(L('n')>=2){eq('dl',1,'עלה בעץ (2.3)');eq('chi',2,'עץ הוא דו-צדדי');ge('lv',Math.max(2,L('D')),'בעץ: ℓ ≥ 2, ℓ ≥ Δ');le('D',H('lv'),'בעץ: ℓ ≥ Δ');if(L('n')>=3){le('lv',H('n')-1,'בעץ: לא כל הצמתים עלים');ge('n',L('lv')+1,'בעץ: לא כל הצמתים עלים')}
         if(H('D')<Infinity&&H('D')>=1)ge('nu',up((L('n')-1)/H('D')),'כיסוי בצמתים של עץ: β ≥ m / Δ, קניג')}}
-    else if(P('fo')==='y'){sum('n','m','c','יער: m = n − c');le('dl',1,'ביער יש צומת מדרגה קטנה');if(L('m')>=1)ge('lv',2,'רכיב עם קשת ביער הוא עץ: שני עלים');if(L('dl')>=1)ge('lv',2*L('c'),'כל רכיב ביער הוא עץ: שני עלים לרכיב')}
+    if(P('fo')==='y')eq('f',1,'אין מעגלים: פאה אחת');
+    if(P('tr')==='y'){}else if(P('fo')==='y'){sum('n','m','c','יער: m = n − c');le('dl',1,'ביער יש צומת מדרגה קטנה');if(L('m')>=1)ge('lv',2,'רכיב עם קשת ביער הוא עץ: שני עלים');if(L('dl')>=1)ge('lv',2*L('c'),'כל רכיב ביער הוא עץ: שני עלים לרכיב')}
     if(P('pl')==='y'){if(L('n')>=3){const r='מישורי: m ≤ 3n − 6 (5.4)';le('m',3*H('n')-6,r);ge('n',up((L('m')+6)/3),r);
         if(P('tf')==='y'){const r2='מישורי בלי משולשים: m ≤ 2n − 4';le('m',2*H('n')-4,r2);ge('n',up((L('m')+4)/2),r2)}}
       le('dl',5,'מישורי: δ ≤ 5 (5.5)');le('chi',4,'ארבעת הצבעים (6.3)');
@@ -419,16 +420,18 @@ function digest(g,memo){
 /* all graphs together: each round lets every graph use what the others have reached, until nothing moves */
 function solveAll(){const memo=new Map();let any=true,r=0;while(any&&r++<14){any=false;for(const g of graphs())any=digest(g,memo)||any}return memo}
 const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
+/* a reason mixes Hebrew words and formulas: each formula run is set left to right inside the Hebrew line */
+const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
 function digestHtml(){
   const G=graphs(),open=!COL.has('Σ'),memo=solveAll();
   const body=G.map(g=>{const d=memo.get(g),s=sub(g),rows=[];
     if(d.bad)return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b></div><div class="qwarn">הנתונים של ${g.name} סותרים זה את זה, ולכן אין תמצית.</div></div>`;
     for(const k in SYM){if(k==='f'&&!d.pl)continue;if(k==='lv'&&!d.fo)continue;if(k==='c'&&g.op==='comp')continue;const [lo,hi]=d.B[k],w=d.W[k],sym=SYM[k]+s;
       if(lo===D0[k]&&hi===Infinity)continue;const given=val(g,k)!==null;
-      const why=given?'נתון':[...new Set([lo>D0[k]?w[0]:null,hi<Infinity?w[1]:null].filter(Boolean))].map(x=>`<span class="fx">${x}</span>`).join(' · ');
+      const why=given?'נתון':[...new Set([lo>D0[k]?w[0]:null,hi<Infinity?w[1]:null].filter(Boolean))].map(rz).join(' · ');
       const f=lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`;
       rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]} <span class="ref">${why}</span></div><div class="qf"><span class="fx qsub">${f}</span></div></div>`)}
-    for(const [t,r] of d.N)rows.push(`<div class="qi ins"><div class="qn">תובנה <span class="ref"><span class="fx">${r}</span></span></div><div class="qins">${t}</div></div>`);
+    for(const [t,r] of d.N)rows.push(`<div class="qi ins"><div class="qn">תובנה <span class="ref">${rz(r)}</span></div><div class="qins">${t}</div></div>`);
     return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div></div>`}).join('');
   return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, ומאיזו נוסחה הוא התקבל</span></h3>${open?body:''}</section>`}
 function renderSheet(){
