@@ -105,7 +105,8 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qbox{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .qrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--bg);border-radius:10px;padding:8px}
 .qb .name,.qt .name{background:var(--ink);color:var(--surface);border-radius:8px;padding:4px 10px;font-weight:700;direction:ltr}.qb .name.v{background:var(--accent);color:var(--accent-ink)}
-.qb input[type=number]{width:58px;text-align:center;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.qb input.rn[aria-invalid=true]{border-color:var(--bad)}
+.qb input.rn{width:62px;text-align:center;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
 .qb input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 .cell{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 .addrow{display:flex;flex-wrap:wrap;gap:6px}.addb{border:2px dashed var(--line);background:transparent;border-radius:10px;min-height:38px;padding:0 12px;font-weight:500}
@@ -174,7 +175,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 .kv{font-size:12px}.props .kv{padding:5px 0}.toolbox{padding:8px}.tag{font-size:11px}
 .sig{font-size:11px;padding-block:0}
 .prseq select{font-size:13px;min-height:32px}
-.qitems{grid-template-columns:minmax(0,1fr)}.qn{white-space:normal}.qf .gen{font-size:12px}.qf .qsub{font-size:13px}.qf .fx{white-space:normal}.qt{padding:6px 8px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input[type=number]{width:46px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
+.qitems{grid-template-columns:minmax(0,1fr)}.qn{white-space:normal}.qf .gen{font-size:12px}.qf .qsub{font-size:13px}.qf .fx{white-space:normal}.qt{padding:6px 8px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input.rn{width:50px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
 }
 
 </style>
@@ -482,9 +483,23 @@ function ensureArg(g){const need=OPS[g.op][1];if(!need){g.arg=null;return}
   let a=O.find(o=>o.t===need&&o.in===g.src&&O.indexOf(o)<O.indexOf(g));
   if(!a){a=need==='v'?{t:'v',name:fresh('v'),in:g.src,q:'one',d:null,cut:false}:need==='e'?{t:'e',name:fresh('e'),in:g.src,bridge:false}:{t:'s',name:fresh('s'),in:g.src,k:null,prop:''};O.splice(O.indexOf(g),0,a)}
   g.arg=a.name}
+/* a complement is named after its source with a bar above, not with a new letter */
+const barName=n=>(n+'\u0304').normalize('NFC'),isBar=n=>n.normalize('NFD').includes('\u0304');
+function rename(o,nw){const old=o.name;for(const x of O){if(x.in===old)x.in=nw;if(x.src===old)x.src=nw;if(x.arg===old)x.arg=nw}o.name=nw}
+function fixNames(){for(const g of O)if(g.t==='g'&&g.op){
+  if(g.op==='compl'){const w=barName(g.src);if(g.name!==w&&!by(w))rename(g,w)}
+  else if(isBar(g.name))rename(g,fresh('g'))}}
 function removeObj(name){const dep=O.filter(o=>o.in===name||o.src===name||o.arg===name).map(o=>o.name);O=O.filter(o=>o.name!==name);dep.forEach(removeObj)}
 const opt=(list,cur)=>list.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
-const num=(i,k,val,lab)=>`<label class="cell">${lab}<input type="number" min="0" data-i="${i}" data-k="${k}" value="${val===null||val===undefined?'':val}" placeholder="?" id="f${i}${k}"></label>`;
+/* every numeric cell takes a number or a range: "3", "2-5", "3-" (at least), "-5" (at most) */
+function parseNum(t){t=String(t).trim().replace(/\s+/g,'');let m;
+  if(t==='')return{v:null,r:null};
+  if(/^\d+$/.test(t))return{v:Number(t),r:null};
+  if((m=/^(\d*)[-–…:](\d*)$/.exec(t))&&(m[1]||m[2])||(m=/^(?:>=|≥)(\d+)()$/.exec(t))||(m=/^()(?:<=|≤)(\d+)$/.exec(t))||(m=/^(\d+)\+()$/.exec(t))){const lo=m[1]===''?null:Number(m[1]),hi=m[2]===''?null:Number(m[2]);
+    if(lo!==null&&hi!==null&&lo>hi)return{v:null,r:null,bad:true};return lo!==null&&lo===hi?{v:lo,r:null}:{v:null,r:[lo,hi]}}
+  return{v:null,r:null,bad:true}}
+const rgOf=(o,k)=>(o.rg&&o.rg[k])||null;
+const num=(i,k,val,lab)=>{const o=O[i],tx=o.tx&&o.tx[k]!==undefined?o.tx[k]:(val===null||val===undefined?'':val);return `<label class="cell">${lab}<input type="text" inputmode="numeric" class="rn" dir="ltr" data-i="${i}" data-k="${k}" data-r="1" value="${String(tx).replace(/"/g,'')}" placeholder="?" id="f${i}${k}" autocomplete="off"></label>`};
 const tri=(i,k,val,lab)=>`<label class="cell">${lab}<select data-i="${i}" data-k="${k}" id="f${i}${k}">${opt([['u','לא ידוע'],['y','כן'],['n','לא']],val)}</select></label>`;
 const chk=(i,k,val,lab)=>`<label class="cell">${lab}<input type="checkbox" data-i="${i}" data-k="${k}" id="f${i}${k}" ${val?'checked':''}></label>`;
 function renderObjs(){
@@ -494,7 +509,7 @@ function renderObjs(){
       <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}${tri(i,'tr',o.tr,'עץ')}${tri(i,'bp',o.bp,'דו-צדדי')}</div>
       ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'fo',o.fo,'יער')}${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}</div>`:''}
       <button class="link" data-more="${i}">${o.more?'הסתר גדלים ותכונות נוספים':'גדלים ותכונות נוספים'}</button></div>`;
-    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow"><span class="cell">דרגה</span><select data-i="${i}" data-k="dm" id="f${i}dm" aria-label="סוג הנתון על הדרגה">${opt([['eq','בדיוק'],['rng','בטווח']],o.dm||'eq')}</select>${o.dm==='rng'?num(i,'d1',o.d1,'מ־')+num(i,'d2',o.d2,'עד'):num(i,'d',o.d,'')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
+    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow">${num(i,'d',o.d,'דרגה')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
     if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קשת ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
     return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה'],['cover','כיסוי בצמתים'],['side','צד בגרף דו-צדדי']],o.prop)}</select></div></div>`}).join('')}
 /* symbol of a graph quantity: the given value in colour, otherwise the symbol (with the graph's name unless it is G) */
@@ -527,8 +542,21 @@ function ex(g,k,depth){
   if(k==='c'){if(op==='dele'&&a.bridge)return plus(E('c'),1);if(op==='contr'||op==='subd')return E('c');if(op==='comp')return NUM(1)}
   if((k==='D'||k==='dl')&&op==='compl'){const N=E('n'),d=E(k==='D'?'dl':'D');return N.num!==null&&d.num!==null?NUM(N.num-1-d.num):EXP(`${OPD(N)} − 1 − ${OPD(d)}`)}
   return me}
+/* a range for a quantity: given directly, or carried over from the source graph by the operation */
+const bounds=(g,k,d)=>{const e=ex(g,k,d);return e.num!==null?[e.num,e.num]:interval(g,k,d)};
+const shift=(b,c)=>b&&[b[0]===null?null:b[0]+c,b[1]===null?null:b[1]+c];
+const span2=(b,lo,hi)=>b&&[b[0]===null||hi===null?null:b[0]-hi,b[1]===null||lo===null?null:b[1]-lo];
+function interval(g,k,depth){
+  const own=rgOf(g,k);if(own)return own;
+  if(!g.op||(depth||0)>12)return null;
+  const src=by(g.src),a=by(g.arg),E=x=>bounds(src,x,(depth||0)+1),op=g.op;let r=null;
+  if(k==='n'){if(op==='delv'||op==='contr')r=shift(E('n'),-1);else if(op==='subd')r=shift(E('n'),1);else if(['dele','adde','compl','span'].includes(op))r=E('n');
+    else if(op==='delS')r=span2(E('n'),a.k!==null?a.k:(rgOf(a,'k')||[null,null])[0],a.k!==null?a.k:(rgOf(a,'k')||[null,null])[1]);else if(op==='ind')r=rgOf(a,'k')}
+  if(k==='m'){if(op==='delv')r=span2(E('m'),dLo(a),dHi(a));else if(op==='dele')r=shift(E('m'),-1);else if(op==='adde'||op==='subd')r=shift(E('m'),1)}
+  if(k==='c'){const C=E('c');if(op==='dele')r=a.bridge?shift(C,1):C&&[C[0],C[1]===null?null:C[1]+1];else if(op==='adde')r=C&&[C[0]===null?null:Math.max(1,C[0]-1),C[1]];else if(op==='contr'||op==='subd')r=C}
+  return r&&(r[0]!==null||r[1]!==null)&&r[0]!==r[1]?r:null}
 const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<span class="qs">${OPD(e)}</span>`};
-const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':g.c!==null&&g.c>1?'n':'u'):k==='fo'&&g.tr==='y'?'y':k==='tf'&&(g.bp==='y'||g.tr==='y'||g.fo==='y')?'y':g[k];
+const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':(g.c!==null&&g.c>1)||(rgOf(g,'c')&&rgOf(g,'c')[0]>1)?'n':'u'):k==='fo'&&g.tr==='y'?'y':k==='tf'&&(g.bp==='y'||g.tr==='y'||g.fo==='y')?'y':g[k];
 function sheetFor(g){
   const s=sub(g),q=k=>sx(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
   let tp='קשרים מהפעולה';const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need,tp});
@@ -551,6 +579,9 @@ function sheetFor(g){
     if(g.op==='comp'){rel('רכיב קשירות הוא קשיר',`c(${X}) = 1`,`${c} = ${V(1)}`);rel('צמתים ברכיב',`n(${X}) ≤ n(${P})`,`${n} ≤ ${N}`);rel('קשתות ברכיב',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`)}
     if(g.op==='span'){rel('תת-גרף פורש: אותם צמתים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בתת-גרף פורש',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('רכיבי קשירות בתת-גרף פורש',`c(${X}) ≥ c(${P})`,`${c} ≥ ${C}`);F.push({tp,t:'כל גרף קשיר מכיל עץ פורש',r:'טענה 2.6',g:`${P} connected ⇒ exists spanning tree`,s:'',rel:1,text:1})}}
   /* degrees */
+  tp='נתונים בטווח';
+  for(const k in SYM){const iv=ex(g,k).num===null?interval(g,k):null;if(iv)add(DEF[k]+(rgOf(g,k)?'':' (מהפעולה)'),'נתון',`min ≤ ${SYM[k]} ≤ max`,rngTxt(iv[0],SYM[k]+s,iv[1]))}
+  for(const S of O.filter(o=>o.t==='s'&&o.in===X&&rgOf(o,'k')))add(`מספר הצמתים בקבוצה ${S.name}`,'נתון',`min ≤ |${S.name}| ≤ max`,rngTxt(rgOf(S,'k')[0],`|${S.name}|`,rgOf(S,'k')[1]));
   tp='דרגות';
   const av=allV(g),aLo=av?dLo(av):null,aHi=av?dHi(av):null;
   add('סכום הדרגות','טענה 1.3','Σ deg(u) = 2m',`${ad!==null?V(ad)+'·'+n:'Σ deg(u)'} = 2·${m}`);
@@ -642,13 +673,15 @@ function sheetFor(g){
   return `<section class="qt"><h3 class="qcap"><span class="name">${X}</span> ${title}</h3>${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
-  const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,ex(g,k).num])}}
+  const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;{const e=ex(g,k).num,iv=e===null?interval(g,k):null;L.push([SYM[k]+s,DEF[k]+' של '+g.name,e!==null?e:iv?`${iv[0]??'?'} … ${iv[1]??'?'}`:null])}}}
   for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
   L.push(['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
 document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb'))return;const o=O[i];
-  o[k]=t.type==='checkbox'?t.checked:t.type==='number'?(t.value===''?null:Number(t.value)):t.value;
-  if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);renderObjs()}
+  if(t.dataset.r){const q=parseNum(t.value);(o.tx=o.tx||{})[k]=t.value;(o.rg=o.rg||{})[k]=q.r;o[k]=q.v;t.setAttribute('aria-invalid',String(!!q.bad));
+    if(o.t==='v'&&k==='d'){o.dm=q.r?'rng':'eq';o.d1=q.r?q.r[0]:null;o.d2=q.r?q.r[1]:null}}
+  else o[k]=t.type==='checkbox'?t.checked:t.value;
+  if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);fixNames();renderObjs()}
   renderSheet()});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
@@ -658,12 +691,12 @@ document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest
     if(t==='v')O.push({t:'v',name:fresh('v'),in:last,q:'one',d:null,cut:false});
     if(t==='e')O.push({t:'e',name:fresh('e'),in:last,bridge:false});
     if(t==='s')O.push({t:'s',name:fresh('s'),in:last,k:null,prop:''});
-    if(t==='g'){const g=newG(fresh('g'),{op:'compl',src:last,arg:null});O.push(g);ensureArg(g)}}
+    if(t==='g'){const g=newG(fresh('g'),{op:'compl',src:last,arg:null});O.push(g);ensureArg(g);fixNames()}}
   else return;renderObjs();renderSheet()});
 return{render(){
   document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
   <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ קשת</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
-  <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p></div></div>`;
+  <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p><p class="hint">בכל תא מספרי אפשר לכתוב מספר או טווח: <span class="fx">2-5</span>, לפחות <span class="fx">3-</span>, לכל היותר <span class="fx">-5</span>.</p></div></div>`;
   document.getElementById('main').innerHTML=`<div class="qsheet" id="qsheet"></div>`;
   document.getElementById('card').innerHTML=`<div class="cardhead"><h2>מקרא הסמלים</h2></div><dl id="qlegend" class="qleg"></dl><p class="hint">סמל צבוע הוא נתון. השאר לא נתונים, ומוצגים בנוסחאות לפי ההגדרה שלהם.</p>`;
   renderObjs();renderSheet()}};
