@@ -763,7 +763,7 @@ function sheetFor(g){
     return `<span class="qc0 ${r}" title="${r==='y'?'התנאי מתקיים':r==='n'?'התנאי לא מתקיים':'לא ידוע אם התנאי מתקיים'}"><span class="fx">${mk(SYM[k],g)||SYM[k]} ≥ ${v}</span>${e!==null?`<span class="fx qsub">${V(e)} ≥ ${v}</span>`:r!=='u'?`<span class="fx qsub">${b[0]!==null?V(b[0])+' ≤ ':''}${SYM[k]+s}${b[1]!==null?' ≤ '+V(b[1]):''}</span>`:''}<b>${r==='y'?'✓':r==='n'?'✗':'?'}</b></span>`};
   const bad0=f=>f.cs&&f.cs.some(c=>typeof c!=='string'&&(b=>b&&b[1]!==null&&b[1]<c[1])(bounds(g,c[0])));
   const card=f=>{const sb=f.s&&/class="q[vs]"/.test(f.s)?f.s:'';return `<div class="qi${f.rel?' rel':''}${bad0(f)?' off':''}"><div class="qn">${f.t} <span class="ref">${f.r}</span></div><div class="qf"><span class="fx gen">${f.g}</span>${sb?`<span class="fx qsub">${sb}</span>`:''}</div>${f.cs?`<div class="qc"><span class="qcl">בתנאי</span>${f.cs.map(chk).join('')}</div>`:''}</div>`};
-  const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
+  const title=titleOf(g);
   const vis=F.filter(f=>st(f)!=='hide');
   const tps=[...new Set(vis.map(f=>f.tp))];
   const bad=issues(g);
@@ -862,17 +862,18 @@ function digest(g,memo,depth){
     if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
     if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי')}
   const R={B,W,N,bad};memo.set(g,R);return R}
+const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 function digestHtml(){
   const G=graphs(),open=!COL.has('Σ'),memo=new Map();
   const body=G.map(g=>{const d=digest(g,memo),s=sub(g),rows=[];
-    if(d.bad)return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span></div><div class="qwarn">הנתונים של ${g.name} סותרים זה את זה, ולכן אין תמצית.</div></div>`;
+    if(d.bad)return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b></div><div class="qwarn">הנתונים של ${g.name} סותרים זה את זה, ולכן אין תמצית.</div></div>`;
     for(const k in SYM){if(k==='f'&&prop(g,'pl')!=='y')continue;if(k==='lv'&&prop(g,'fo')!=='y')continue;if(k==='c'&&g.op==='comp')continue;const [lo,hi]=d.B[k],w=d.W[k],sym=SYM[k]+s;
       if(lo===D0[k]&&hi===Infinity)continue;const given=val(g,k)!==null;
       const why=given?'נתון':[...new Set([lo>D0[k]?w[0]:null,hi<Infinity?w[1]:null].filter(Boolean))].map(x=>`<span class="fx">${x}</span>`).join(' · ');
       const f=lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`;
       rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]} <span class="ref">${why}</span></div><div class="qf"><span class="fx qsub">${f}</span></div></div>`)}
     for(const [t,r] of d.N)rows.push(`<div class="qi ins"><div class="qn">תובנה <span class="ref"><span class="fx">${r}</span></span></div><div class="qins">${t}</div></div>`);
-    return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div></div>`}).join('');
+    return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div></div>`}).join('');
   return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, ומאיזו נוסחה הוא התקבל</span></h3>${open?body:''}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('')+digestHtml();
