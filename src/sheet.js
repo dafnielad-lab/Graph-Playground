@@ -375,7 +375,7 @@ function digest(g,memo){
         Z();if(full){K();for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2);E();};E();};E();}}
   /* a property left unknown is also taken from the numbers once they settle it: m = n − c makes a forest */
   const P=k=>{const v=prop(g,k);Z();if(v!=='u')return v;const f=L('m')===H('m')&&L('n')===H('n')&&L('c')===H('c')&&L('m')===L('n')-L('c');
-    Z();if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';Z();if(k==='tr'&&f&&L('c')===1)return 'y';Z();if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';return v};
+    Z();if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';Z();if(k==='tr'&&f&&L('c')===1)return 'y';Z();if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';if((k==='bp'||k==='tf')&&B.chi[1]<=2)return 'y';return v};
   const ad0=allDeg(g),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
   let it=0;
   while(ch&&it++<60){ch=false;
@@ -398,6 +398,14 @@ function digest(g,memo){
     Z();if(L('m')>=1){K();le('c',H('n')-1,'יש קשת');ge('D',1,'יש קשת');ge('chi',2,'יש קשת');ge('om',2,'יש קשת');ge('nu',1,'יש קשת');E();}
     Z();if(H('m')===0){K();eq('D',0,'אין קשתות');eq('chi',1,'אין קשתות');eq('nu',0,'אין קשתות');E();}
     Z();if(P('conn')==='y')eq('c',1,'קשיר');
+    /* sharpened links found by running whole questions through the solver */
+    Z();if(g.sc==='y'){eq('c',1,'גרף או המשלים שלו קשיר, והם איזומורפיים');const r='איזומורפי למשלים: קליקה כאן היא קבוצה בלתי תלויה במשלים',r2='איזומורפי למשלים: Δ + δ = n − 1';ge('om',L('al'),r);le('om',H('al'),r);ge('al',L('om'),r);le('al',H('om'),r);ge('D',L('n')-1-H('dl'),r2);le('D',H('n')-1-L('dl'),r2);ge('dl',L('n')-1-H('D'),r2);le('dl',H('n')-1-L('D'),r2)}
+    Z();if(g.bp==='n'){ge('chi',3,'לא דו-צדדי (1.6)');ge('n',3,'לא דו-צדדי: מעגל אי-זוגי');ge('m',3,'לא דו-צדדי: מעגל אי-זוגי')}
+    Z();if(g.pl==='n'){ge('n',5,'לא מישורי (5.8)');ge('m',9,'לא מישורי (5.8)');ge('D',3,'לא מישורי (5.8)')}
+    Z();if(H('al')===1){ge('om',L('n'),'אין שני צמתים לא שכנים: גרף מלא');ge('dl',L('n')-1,'אין שני צמתים לא שכנים: גרף מלא')}
+    Z();if(L('n')===H('n')&&L('om')>=L('n'))ge('m',L('n')*(L('n')-1)/2,'גרף מלא');
+    Z();if(L('n')===H('n')){const miss=L('n')*(L('n')-1)/2-L('m');ge('dl',L('n')-1-miss,'כל קשת חסרה מורידה דרגה אחת לכל היותר לצומת')}
+    le('om',H('n'),'ω ≤ n');le('lv',H('n'),'ℓ ≤ n');
     Z();if(g.eu==='y'){eq('c',1,'אוילרי: קשיר');Z();if(L('n')>=2){ge('dl',2,'אוילרי: כל הדרגות זוגיות, ואין צומת מבודד');ge('m',L('n'),'אוילרי: כל דרגה שתיים לפחות')}}
     Z();if(g.ha==='y'){eq('c',1,'המילטוני: קשיר');ge('n',3,'מעגל המילטון');ge('dl',2,'המילטוני: כל צומת על המעגל');ge('m',L('n'),'המילטוני: קשתות המעגל');ge('nu',dn(L('n')/2),'המילטוני: זיווג מתוך המעגל');Z();if(H('n')<Infinity)le('al',dn(H('n')/2),'המילטוני: לכל היותר כל צומת שני על המעגל');
       Z();if(P('bp')==='y'){Z();if(L('n')%2)ge('n',L('n')+1,'דו-צדדי המילטוני: מעגל באורך זוגי');Z();if(H('n')<Infinity&&H('n')%2)le('n',H('n')-1,'דו-צדדי המילטוני: מעגל באורך זוגי')}}
@@ -452,6 +460,8 @@ function digest(g,memo){
     Z();if(L('dl')>=2)T(`יש מעגל פשוט על ${L('dl')+1} צמתים לפחות`,'פרק 1, שאלה 3');
     Z();if(prop(g,'pl')==='u'&&P('pl')==='u'){K();Z();if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)');E();}
     Z();if(prop(g,'bp')==='u'&&P('bp')==='u'){K();Z();if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)');E();}
+    Z();if(P('pl')==='y'&&ex1('m')&&ex1('n')&&L('n')>=3){Z();if(L('m')===3*L('n')-6)T('כל הפאות משולשים, ואי אפשר להוסיף קשת בלי לאבד מישוריות','m = 3n − 6 (5.4)');else if(P('tf')==='y'&&L('m')===2*L('n')-4)T('כל הפאות מרובעות','m = 2n − 4')}
+    Z();if(ex1('om')&&ex1('n')&&L('om')===L('n')&&L('n')>=2)T('הגרף מלא','ω = n');
     Z();if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
     Z();if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי');E();}
   St.fo=P('fo')==='y';St.pl=P('pl')==='y';St.tf=P('tf')==='y';
@@ -570,7 +580,11 @@ document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest
     if(t==='s')O.push({t:'s',name:fresh('s'),in:last,k:null,prop:''});
     if(t==='g'){const g=newG(fresh('g'),{op:'compl',src:last,arg:null});O.push(g);ensureArg(g);fixNames()}}
   else return;renderObjs();renderSheet()});
-return{render(){
+return{
+/* for tests: solve a list of objects without touching the page */
+solve(list){const keep=O.slice();O.splice(0,O.length,...list.map(o=>o.t==='g'?newG(o.name,o):o));
+  try{const m=solveAll();return graphs().map(g=>{const d=m.get(g);return{name:g.name,bad:d.bad,B:JSON.parse(JSON.stringify(d.B,(k,v)=>v===Infinity?'inf':v)),N:d.N.map(x=>x[0]),ore:!d.bad&&pairInfo(g,d,m).ore}})}finally{O.splice(0,O.length,...keep)}},
+render(){
   document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
   <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ קשת</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
   <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p><p class="hint">בכל תא מספרי אפשר לכתוב מספר או טווח: <span class="fx">2-5</span>, לפחות <span class="fx">3-</span>, לכל היותר <span class="fx">-5</span>.</p></div></div>`;
