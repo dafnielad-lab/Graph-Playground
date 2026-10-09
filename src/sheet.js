@@ -112,7 +112,54 @@ const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<sp
 const cMany=g=>(g.c!==null&&g.c>1)||!!(rgOf(g,'c')&&rgOf(g,'c')[0]>1);
 /* the tree field also offers "forest": a forest is a tree exactly when it has one component */
 const isTree=g=>g.tr==='y'?'y':g.tr==='n'?'n':g.tr==='f'?(g.c===1?'y':cMany(g)?'n':'u'):'u';
-const prop=(g,k)=>k==='tr'?isTree(g):k==='conn'?(g.c===1||g.tr==='y'?'y':cMany(g)?'n':'u'):k==='fo'?(g.tr==='y'||g.tr==='f'?'y':'u'):k==='tf'&&(g.bp==='y'||g.tr==='y'||g.tr==='f')?'y':g[k];
+/* a property the user left unknown is taken from what the other data imply: a forest is planar, bipartite and triangle-free */
+const forestish=g=>g.tr==='y'||g.tr==='f';
+const prop=(g,k)=>k==='tr'?isTree(g):k==='conn'?(g.c===1||g.tr==='y'?'y':cMany(g)?'n':'u'):k==='fo'?(forestish(g)?'y':'u')
+  :k==='pl'||k==='bp'?(g[k]!=='u'?g[k]:forestish(g)?'y':'u'):k==='tf'?(g.tf!=='u'?g.tf:forestish(g)||g.bp==='y'?'y':'u'):g[k];
+/* combinations of data that no graph satisfies; each entry is one sentence shown in red above the graph's formulas */
+function issues(g){
+  const R=[],b=k=>bounds(g,k)||[null,null],lo=k=>b(k)[0],hi=k=>b(k)[1],F=x=>`<span class="fx">${x}</span>`,X=g.name;
+  const gt=(x,y)=>x!==null&&y!==null&&x>y;
+  const nL=lo('n'),nH=hi('n'),mL=lo('m'),mH=hi('m'),cL=lo('c'),cH=hi('c'),DL=lo('D'),DH=hi('D'),dL=lo('dl'),dH=hi('dl');
+  if(g.tr==='y'&&cMany(g))R.push('עץ הוא גרף קשיר, ולכן יש לו רכיב קשירות אחד בלבד.');
+  if(forestish(g)&&g.pl==='n')R.push('עץ ויער הם תמיד מישוריים.');
+  if(forestish(g)&&g.bp==='n')R.push('בעץ וביער אין מעגלים, ולכן הם דו-צדדיים.');
+  if((forestish(g)||g.bp==='y')&&g.tf==='n')R.push(forestish(g)?'בעץ וביער אין מעגלים, ולכן אין משולשים.':'משולש הוא מעגל באורך אי-זוגי, ובגרף דו-צדדי אין כזה.');
+  if(gt(cL,nH))R.push('מספר רכיבי הקשירות גדול ממספר הצמתים.');
+  if(nH!==null&&gt(mL,nH*(nH-1)/2))R.push(`יותר קשתות ממה שיש בגרף פשוט: ${F('m ≤ n(n − 1) / 2')}.`);
+  if(nL!==null&&cH!==null&&mH!==null&&mH<nL-cH)R.push(`פחות מדי קשתות למספר הרכיבים הזה: ${F('m ≥ n − c')}.`);
+  if(nH!==null&&gt(DL,nH-1))R.push(`הדרגה המקסימלית גדולה מדי: ${F('Δ ≤ n − 1')}.`);
+  if(gt(dL,DH))R.push('הדרגה המינימלית גדולה מהמקסימלית.');
+  if(dL!==null&&nL!==null&&mH!==null&&dL*nL>2*mH)R.push(`הדרגה המינימלית גדולה מהדרגה הממוצעת: ${F('δ ≤ 2m / n')}.`);
+  if(DH!==null&&nH!==null&&mL!==null&&DH*nH<2*mL)R.push(`הדרגה המקסימלית קטנה מהדרגה הממוצעת: ${F('Δ ≥ 2m / n')}.`);
+  const ad=allDeg(g);if(ad!==null&&nL!==null&&nL===nH&&(ad*nL)%2)R.push('סכום הדרגות יוצא אי-זוגי, והוא חייב להיות פעמיים מספר הקשתות.');
+  if(ad!==null&&nL!==null&&nL===nH&&mL!==null&&mL===mH&&g.m!==null&&ad*nL!==2*mL)R.push(`סכום הדרגות לא שווה לפעמיים מספר הקשתות: ${F(ad+'·'+nL+' ≠ 2·'+mL)}.`);
+  if(g.tr==='y'&&g.m!==null&&nL!==null&&nL===nH&&g.m!==nL-1)R.push(`בעץ מספר הקשתות הוא ${F('n − 1')}.`);
+  if(g.tr==='f'&&g.m!==null&&nL!==null&&nL===nH&&cL!==null&&cL===cH&&g.m!==nL-cL)R.push(`ביער מספר הקשתות הוא ${F('n − c')}.`);
+  if(prop(g,'tr')==='y'&&nL!==null&&nL>=2&&gt(dL,1))R.push('בעץ עם שני צמתים לפחות יש עלה, ולכן הדרגה המינימלית היא אחת.');
+  if(g.pl==='y'&&nH!==null&&nH>=3&&gt(mL,3*nH-6))R.push(`יותר מדי קשתות לגרף מישורי: ${F('m ≤ 3n − 6')}.`);
+  if(g.pl==='y'&&prop(g,'tf')==='y'&&nH!==null&&nH>=3&&gt(mL,2*nH-4))R.push(`יותר מדי קשתות לגרף מישורי בלי משולשים: ${F('m ≤ 2n − 4')}.`);
+  if(g.pl==='y'&&gt(dL,5))R.push('בגרף מישורי יש צומת מדרגה חמש לכל היותר.');
+  if(g.pl==='y'&&gt(lo('chi'),4))R.push('גרף מישורי נצבע בארבעה צבעים לכל היותר.');
+  if(g.pl==='n'&&((nH!==null&&nH<5)||(mH!==null&&mH<9)))R.push('גרף לא מישורי מכיל העדנה של K₅ או של K₃,₃, ולכן יש בו חמישה צמתים ותשע קשתות לפחות.');
+  if(prop(g,'bp')==='y'&&gt(lo('chi'),2))R.push('גרף דו-צדדי נצבע בשני צבעים לכל היותר.');
+  if(DH!==null&&gt(lo('chi'),DH+1))R.push(`מספר הצביעה גדול מדי: ${F('χ ≤ Δ + 1')}.`);
+  if(gt(lo('om'),hi('chi')))R.push(`מספר הצביעה קטן מגודל הקליקה המקסימלית: ${F('χ ≥ ω')}.`);
+  for(const [k,w] of [['chi','מספר הצביעה'],['al','הקבוצה הבלתי תלויה המקסימלית'],['om','הקליקה המקסימלית'],['be','הכיסוי בצמתים']])if(gt(lo(k),nH))R.push(`${w} גדול ממספר הצמתים.`);
+  if(nH!==null&&lo('nu')!==null&&2*lo('nu')>nH)R.push(`הזיווג גדול מדי: ${F('ν ≤ n / 2')}.`);
+  if(gt(lo('nu'),hi('be')))R.push(`כיסוי בצמתים קטן מהזיווג: ${F('β ≥ ν')}.`);
+  if(g.al!==null&&g.be!==null&&nL!==null&&nL===nH&&g.al+g.be!==nL)R.push(`צריך להתקיים ${F('α + β = n')}.`);
+  if(g.sc==='y'&&nL!==null&&nL===nH&&nL%4>1)R.push('בגרף שאיזומורפי למשלים שלו, מספר הצמתים נותן שארית אפס או אחת בחלוקה לארבע.');
+  for(const o of O){if(o.in!==X)continue;
+    if(o.t==='v'&&nH!==null&&gt(dLo(o),nH-1))R.push(`הדרגה של ${F(o.name)} גדולה מדי: לכל היותר ${F('n − 1')}.`);
+    if(o.t==='v'&&gt(dLo(o),DH)&&g.D!==null)R.push(`הדרגה של ${F(o.name)} גדולה מהדרגה המקסימלית שנתונה.`);
+    if(o.t==='v'&&gt(dL,dHi(o))&&g.dl!==null)R.push(`הדרגה של ${F(o.name)} קטנה מהדרגה המינימלית שנתונה.`);
+    if(o.t==='s'){const k=ownB(o,'k');if(k&&gt(k[0],nH))R.push(`הקבוצה ${F(o.name)} גדולה ממספר הצמתים.`);
+      if(k&&o.prop==='indep'&&g.al!==null&&gt(k[0],g.al))R.push(`הקבוצה הבלתי תלויה ${F(o.name)} גדולה מהמקסימלית שנתונה.`);
+      if(k&&o.prop==='clique'&&g.om!==null&&gt(k[0],g.om))R.push(`הקליקה ${F(o.name)} גדולה מהמקסימלית שנתונה.`)}}
+  const cn=ex(g,'c').num,CL=compsOf(g);if(cn!==null&&CL.length>cn)R.push('הוגדרו יותר רכיבי קשירות ממה שיש בגרף.');
+  if(g.op==='comp'&&cMany(g))R.push('רכיב קשירות הוא קשיר, ולכן יש לו רכיב אחד.');
+  return R}
 function sheetFor(g){
   const s=sub(g),q=k=>sx(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
   let tp='קשרים מהפעולה';const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need,tp});
@@ -232,7 +279,8 @@ function sheetFor(g){
   const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
   const vis=F.filter(f=>st(f)!=='hide');
   const tps=[...new Set(vis.map(f=>f.tp))];
-  return `<section class="qt"><h3 class="qcap"><span class="name">${X}</span> ${title}</h3>${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
+  const bad=issues(g);
+  return `<section class="qt"><h3 class="qcap"><span class="name">${X}</span> ${title}</h3>${bad.length?`<div class="qwarn" role="alert"><b>הנתונים של ${X} לא מתיישבים:</b><ul>${bad.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;{const e=ex(g,k).num,iv=e===null?interval(g,k):null;L.push([SYM[k]+s,DEF[k]+' של '+g.name,e!==null?e:iv?`${iv[0]??'?'} … ${iv[1]??'?'}`:null])}}}
