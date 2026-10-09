@@ -122,6 +122,8 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qc0.y b{color:var(--good)}.qc0.n{border-color:var(--bad)}.qc0.n b{color:var(--bad)}.qc0:not(.y):not(.n):not(.u){direction:rtl}
 .qi.off .qf{opacity:.45;text-decoration:line-through}
 .qsum{border:1px solid var(--accent)}.qsg{display:flex;gap:8px;align-items:baseline;padding:2px 4px}.qi.der .qsub .qv{color:var(--hi)}.qins{font-size:14px;font-weight:700;color:var(--ink)}.qi.ins{background:var(--hi-soft);border-radius:6px}
+.qexb{margin-inline-start:auto;border:0;background:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0 4px;text-decoration:underline}
+.qex{direction:rtl;font-size:13px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:6px;padding:4px 8px;margin-top:2px}.qex p{margin:2px 0}.qex .fx{font-size:13px}.qi.ins .qf{direction:rtl}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
@@ -773,118 +775,122 @@ function sheetFor(g){
    tightens any more. Each bound remembers the formula that gave it. */
 const D0={n:1,m:0,c:1,D:0,dl:0,f:1,chi:1,al:1,nu:0,be:0,rho:0,om:1,lv:0};
 function digest(g,memo){
-  let St=memo.get(g);const fresh=!St;if(fresh){St={B:{},W:{},N:[],bad:false};memo.set(g,St)}
-  const B=St.B,W=St.W,X=g.name;let ch=true,bad=St.bad,moved=false;if(bad)return false;
-  if(fresh)for(const k in SYM){B[k]=[D0[k],Infinity];W[k]=[null,null];const b=bounds(g,k),own=val(g,k)!==null||rgOf(g,k),r=own?'נתון':g.op?'מהפעולה':forestish(g)&&k==='m'?'עץ או יער: m = n − c':'מהנתונים';
+  let St=memo.get(g);const fresh=!St;if(fresh){St={B:{},W:{},U:{},N:[],bad:false};memo.set(g,St)}
+  const B=St.B,W=St.W,U=St.U,X=g.name;let ch=true,bad=St.bad,moved=false;if(bad)return false;
+  if(fresh)for(const k in SYM){B[k]=[D0[k],Infinity];W[k]=[null,null];U[k]=[[],[]];const b=bounds(g,k),own=val(g,k)!==null||rgOf(g,k),r=own?'נתון':g.op?'מהפעולה':forestish(g)&&k==='m'?'עץ או יער: m = n − c':'מהנתונים';
     if(b){if(b[0]!==null&&b[0]>B[k][0]){B[k][0]=b[0];W[k][0]=r}if(b[1]!==null){B[k][1]=b[1];W[k][1]=r}}}
-  const L=k=>B[k][0],H=k=>B[k][1];
-  const ge=(k,v,r)=>{if(Number.isFinite(v)&&v>B[k][0]){B[k][0]=v;W[k][0]=r;ch=moved=true}},le=(k,v,r)=>{if(Number.isFinite(v)&&v<B[k][1]){B[k][1]=v;W[k][1]=r;ch=moved=true}};
-  const eq=(k,v,r)=>{ge(k,v,r);le(k,v,r)},up=Math.ceil,dn=Math.floor;
+  /* every bound that a rule reads is noted, so that each conclusion can say what it was made of */
+  const rd=[],stk=[],K=()=>{stk.push(rd.slice())},E=()=>{stk.pop()},note=(name,Wx,k,i,v)=>{if(Wx[k][i])rd.push({g:name,k,i,v,r:Wx[k][i]})},Z=()=>{rd.length=0};
+  const take=()=>{const seen=new Set(),u=[...stk.flat(),...rd].filter(x=>{const q=x.g+'|'+x.k+x.i;if(seen.has(q))return false;seen.add(q);return true});rd.length=0;return u};
+  const L=k=>{note(X,W,k,0,B[k][0]);return B[k][0]},H=k=>{note(X,W,k,1,B[k][1]);return B[k][1]};
+  const put=(k,i,v,r,u)=>{B[k][i]=v;W[k][i]=r;U[k][i]=u.filter(x=>!(x.g===X&&x.k===k&&x.i===i));ch=moved=true};
+  const ge=(k,v,r,u0)=>{const u=u0||take();if(Number.isFinite(v)&&v>B[k][0])put(k,0,v,r,u)},le=(k,v,r,u0)=>{const u=u0||take();if(Number.isFinite(v)&&v<B[k][1])put(k,1,v,r,u)};
+  const eq=(k,v,r)=>{const u=take();ge(k,v,r,u);le(k,v,r,u)},up=Math.ceil,dn=Math.floor;
   /* a = b + c, as a constraint on all three */
   const sum=(a,b,c,r)=>{ge(a,L(b)+L(c),r);le(a,H(b)+H(c),r);ge(b,L(a)-H(c),r);le(b,H(a)-L(c),r);ge(c,L(a)-H(b),r);le(c,H(a)-L(b),r)};
   /* what the operation carries over from everything already concluded about the source graph */
   const src=g.op?by(g.src):null,S=src?memo.get(src):null;
-  if(S&&!S.bad){const sl=k=>S.B[k][0],sh=k=>S.B[k][1],op=g.op,a=by(g.arg),r=`מ־${src.name}`,sub1=SUBG.includes(op);
+  Z();if(S&&!S.bad){K();const sl=k=>{note(src.name,S.W,k,0,S.B[k][0]);return S.B[k][0]},sh=k=>{note(src.name,S.W,k,1,S.B[k][1]);return S.B[k][1]},op=g.op,a=by(g.arg),r=`מ־${src.name}`,sub1=SUBG.includes(op);
     const same=(k,c)=>{ge(k,sl(k)+c,r);le(k,sh(k)+c,r)};
-    if(sub1){for(const k of ['n','m','D','chi','om','nu'])le(k,sh(k),r);if(op!=='span'&&op!=='dele')le('al',sh('al'),r)}
-    if(op==='delv'){same('n',-1);ge('chi',sl('chi')-1,r);ge('al',sl('al')-1,r);ge('nu',sl('nu')-1,r);ge('dl',sl('dl')-1,r);ge('om',sl('om')-1,r);ge('m',sl('m')-(dHi(a)??sh('D')),r);le('m',sh('m')-(dLo(a)??sl('dl')),r);le('c',sh('c')+(dHi(a)??sh('D'))-1,r)}
-    if(op==='dele'){same('n',0);same('m',-1);ge('chi',sl('chi')-1,r);ge('nu',sl('nu')-1,r);ge('dl',sl('dl')-1,r);le('dl',sh('dl'),r);ge('D',sl('D')-1,r);ge('al',sl('al'),r);le('al',sh('al')+1,r);ge('c',sl('c'),r);le('c',sh('c')+1,r);ge('om',sl('om')-1,r)}
-    if(op==='adde'){same('n',0);same('m',1);ge('chi',sl('chi'),r);le('chi',sh('chi')+1,r);ge('D',sl('D'),r);le('D',sh('D')+1,r);ge('dl',sl('dl'),r);le('dl',sh('dl')+1,r);ge('nu',sl('nu'),r);le('nu',sh('nu')+1,r);le('al',sh('al'),r);ge('al',sl('al')-1,r);le('c',sh('c'),r);ge('c',sl('c')-1,r);ge('om',sl('om'),r)}
-    if(op==='span'){same('n',0);ge('al',sl('al'),r);ge('c',sl('c'),r);le('dl',sh('dl'),r)}
-    if(op==='comp'){ge('dl',sl('dl'),r);if(S.B.c[0]===1&&S.B.c[1]===1)for(const k in SYM){ge(k,sl(k),r);le(k,sh(k),r)}}
-    if(op==='ind'||op==='delS'){const b=ownB(a,'k')||[null,null];if(op==='delS'){if(b[1]!==null)ge('n',sl('n')-b[1],r);if(b[0]!==null)le('n',sh('n')-b[0],r);if(b[1]!==null){ge('chi',sl('chi')-b[1],r);ge('nu',sl('nu')-b[1],r);ge('dl',sl('dl')-b[1],r)}}}
-    if(op==='subd'){same('n',1);same('m',1);same('c',0);ge('D',sl('D'),r);le('D',Math.max(2,sh('D')),r);le('dl',Math.min(2,sh('dl')),r)}
-    if(op==='contr'){same('n',-1);same('c',0);le('m',sh('m')-1,r);le('chi',sh('chi')+1,r)}
-    if(op==='compl'){same('n',0);ge('m',sl('n')*(sl('n')-1)/2-sh('m'),r);if(sh('n')<Infinity)le('m',sh('n')*(sh('n')-1)/2-sl('m'),r);ge('D',sl('n')-1-sh('dl'),r);le('D',sh('n')-1-sl('dl'),r);ge('dl',sl('n')-1-sh('D'),r);le('dl',sh('n')-1-sl('D'),r);
-      ge('om',sl('al'),r);le('om',sh('al'),r);ge('al',sl('om'),r);le('al',sh('om'),r);if(sh('chi')<Infinity)ge('chi',up(sl('n')/sh('chi')),'χ·χ(complement) ≥ n');if(sl('c')>=2)eq('c',1,'המשלים של גרף לא קשיר הוא קשיר')}}
+    Z();if(sub1){K();for(const k of ['n','m','D','chi','om','nu'])le(k,sh(k),r);Z();if(op!=='span'&&op!=='dele')le('al',sh('al'),r);E();}
+    Z();if(op==='delv'){K();same('n',-1);ge('chi',sl('chi')-1,r);ge('al',sl('al')-1,r);ge('nu',sl('nu')-1,r);ge('dl',sl('dl')-1,r);ge('om',sl('om')-1,r);ge('m',sl('m')-(dHi(a)??sh('D')),r);le('m',sh('m')-(dLo(a)??sl('dl')),r);le('c',sh('c')+(dHi(a)??sh('D'))-1,r);E();}
+    Z();if(op==='dele'){K();same('n',0);same('m',-1);ge('chi',sl('chi')-1,r);ge('nu',sl('nu')-1,r);ge('dl',sl('dl')-1,r);le('dl',sh('dl'),r);ge('D',sl('D')-1,r);ge('al',sl('al'),r);le('al',sh('al')+1,r);ge('c',sl('c'),r);le('c',sh('c')+1,r);ge('om',sl('om')-1,r);E();}
+    Z();if(op==='adde'){K();same('n',0);same('m',1);ge('chi',sl('chi'),r);le('chi',sh('chi')+1,r);ge('D',sl('D'),r);le('D',sh('D')+1,r);ge('dl',sl('dl'),r);le('dl',sh('dl')+1,r);ge('nu',sl('nu'),r);le('nu',sh('nu')+1,r);le('al',sh('al'),r);ge('al',sl('al')-1,r);le('c',sh('c'),r);ge('c',sl('c')-1,r);ge('om',sl('om'),r);E();}
+    Z();if(op==='span'){K();same('n',0);ge('al',sl('al'),r);ge('c',sl('c'),r);le('dl',sh('dl'),r);E();}
+    Z();if(op==='comp'){K();ge('dl',sl('dl'),r);Z();if(S.B.c[0]===1&&S.B.c[1]===1)for(const k in SYM){ge(k,sl(k),r);le(k,sh(k),r)};E();}
+    Z();if(op==='ind'||op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(op==='delS'){K();Z();if(b[1]!==null)ge('n',sl('n')-b[1],r);Z();if(b[0]!==null)le('n',sh('n')-b[0],r);Z();if(b[1]!==null){K();ge('chi',sl('chi')-b[1],r);ge('nu',sl('nu')-b[1],r);ge('dl',sl('dl')-b[1],r);E();};E();};E();}
+    Z();if(op==='subd'){K();same('n',1);same('m',1);same('c',0);ge('D',sl('D'),r);le('D',Math.max(2,sh('D')),r);le('dl',Math.min(2,sh('dl')),r);E();}
+    Z();if(op==='contr'){K();same('n',-1);same('c',0);le('m',sh('m')-1,r);le('chi',sh('chi')+1,r);E();}
+    Z();if(op==='compl'){K();same('n',0);ge('m',sl('n')*(sl('n')-1)/2-sh('m'),r);Z();if(sh('n')<Infinity)le('m',sh('n')*(sh('n')-1)/2-sl('m'),r);ge('D',sl('n')-1-sh('dl'),r);le('D',sh('n')-1-sl('dl'),r);ge('dl',sl('n')-1-sh('D'),r);le('dl',sh('n')-1-sl('D'),r);
+      ge('om',sl('al'),r);le('om',sh('al'),r);ge('al',sl('om'),r);le('al',sh('om'),r);Z();if(sh('chi')<Infinity)ge('chi',up(sl('n')/sh('chi')),'χ·χ(complement) ≥ n');Z();if(sl('c')>=2)eq('c',1,'המשלים של גרף לא קשיר הוא קשיר');E();};E();}
   /* a component among the components of its graph: what the others take is not available to it */
-  if(S&&!S.bad&&g.op==='comp'){const sib=compsOf(src).filter(x=>x!==g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(src).length,cs=S.B.c,full=cs[0]===cs[1]&&cs[0]===all,hid=Math.max(0,cs[0]-all),r=`שאר הרכיבים של ${src.name}`;
-    if(sib.length===all-1)for(const k of ['n','m','al','nu','be']){const lo=sib.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),hi=sib.reduce((t,x)=>t+x.B[k][1],0);le(k,S.B[k][1]-lo,r);if(full)ge(k,S.B[k][0]-hi,r)}}
+  Z();if(S&&!S.bad&&g.op==='comp'){K();const sib=compsOf(src).filter(x=>x!==g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(src).length,cs=S.B.c,full=cs[0]===cs[1]&&cs[0]===all,hid=Math.max(0,cs[0]-all),r=`שאר הרכיבים של ${src.name}`;
+    Z();if(sib.length===all-1)for(const k of ['n','m','al','nu','be']){const lo=sib.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),hi=sib.reduce((t,x)=>t+x.B[k][1],0);le(k,S.B[k][1]-lo,r);Z();if(full)ge(k,S.B[k][0]-hi,r)};E();}
   /* back from the graphs made of this one: what is known about them limits this graph too */
-  for(const h of O.filter(o=>o.t==='g'&&o.op&&o.src===X)){const C=memo.get(h);if(!C||C.bad)continue;const cl=k=>C.B[k][0],chh=k=>C.B[k][1],op=h.op,a=by(h.arg),r=`מ־${h.name}`,back=(k,c)=>{ge(k,cl(k)+c,r);le(k,chh(k)+c,r)};
-    if(SUBG.includes(op)){for(const k of ['n','m','D','chi','om','nu'])ge(k,cl(k),r);if(op!=='span'&&op!=='dele')ge('al',cl('al'),r)}
-    if(op==='delv'){back('n',1);le('chi',chh('chi')+1,r);le('al',chh('al')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);le('c',chh('c')+1,r);ge('m',cl('m')+(dLo(a)??0),r);le('m',chh('m')+(dHi(a)??chh('n')),r);le('dl',chh('dl')+1,r)}
-    if(op==='dele'){back('n',0);back('m',1);le('chi',chh('chi')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);if(a&&a.bridge)back('c',-1);else{ge('c',cl('c')-1,r);le('c',chh('c'),r)}le('D',chh('D')+1,r);ge('dl',cl('dl'),r);le('dl',chh('dl')+1,r);ge('al',cl('al')-1,r);le('al',chh('al'),r)}
-    if(op==='adde'){back('n',0);back('m',-1);ge('chi',cl('chi')-1,r);le('chi',chh('chi'),r);ge('D',cl('D')-1,r);le('D',chh('D'),r);ge('dl',cl('dl')-1,r);le('dl',chh('dl'),r);ge('nu',cl('nu')-1,r);le('nu',chh('nu'),r);ge('al',cl('al'),r);le('al',chh('al')+1,r);ge('c',cl('c'),r);le('c',chh('c')+1,r);le('om',chh('om'),r)}
-    if(op==='span'){back('n',0);le('al',chh('al'),r);le('c',chh('c'),r);ge('dl',cl('dl'),r)}
-    if(op==='delS'){const b=ownB(a,'k')||[null,null];if(b[0]!==null)ge('n',cl('n')+b[0],r);if(b[1]!==null){le('n',chh('n')+b[1],r);le('chi',chh('chi')+b[1],r);le('nu',chh('nu')+b[1],r)}}
-    if(op==='subd'){back('n',-1);back('m',-1);back('c',0)}
-    if(op==='contr'){back('n',1);back('c',0);ge('m',cl('m')+1,r);ge('chi',cl('chi')-1,r)}
-    if(op==='compl'){back('n',0);ge('m',cl('n')*(cl('n')-1)/2-chh('m'),r);if(chh('n')<Infinity)le('m',chh('n')*(chh('n')-1)/2-cl('m'),r);ge('D',cl('n')-1-chh('dl'),r);le('D',chh('n')-1-cl('dl'),r);ge('dl',cl('n')-1-chh('D'),r);le('dl',chh('n')-1-cl('D'),r);
-      ge('om',cl('al'),r);le('om',chh('al'),r);ge('al',cl('om'),r);le('al',chh('om'),r);if(chh('chi')<Infinity)ge('chi',up(cl('n')/chh('chi')),'χ·χ(complement) ≥ n');if(cl('c')>=2)eq('c',1,'המשלים של גרף לא קשיר הוא קשיר')}}
+  for(const h of O.filter(o=>o.t==='g'&&o.op&&o.src===X)){const C=memo.get(h);Z();if(!C||C.bad)continue;const cl=k=>{note(h.name,C.W,k,0,C.B[k][0]);return C.B[k][0]},chh=k=>{note(h.name,C.W,k,1,C.B[k][1]);return C.B[k][1]},op=h.op,a=by(h.arg),r=`מ־${h.name}`,back=(k,c)=>{ge(k,cl(k)+c,r);le(k,chh(k)+c,r)};
+    Z();if(SUBG.includes(op)){K();for(const k of ['n','m','D','chi','om','nu'])ge(k,cl(k),r);Z();if(op!=='span'&&op!=='dele')ge('al',cl('al'),r);E();}
+    Z();if(op==='delv'){K();back('n',1);le('chi',chh('chi')+1,r);le('al',chh('al')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);le('c',chh('c')+1,r);ge('m',cl('m')+(dLo(a)??0),r);le('m',chh('m')+(dHi(a)??chh('n')),r);le('dl',chh('dl')+1,r);E();}
+    Z();if(op==='dele'){K();back('n',0);back('m',1);le('chi',chh('chi')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);Z();if(a&&a.bridge)back('c',-1);else{ge('c',cl('c')-1,r);le('c',chh('c'),r)}le('D',chh('D')+1,r);ge('dl',cl('dl'),r);le('dl',chh('dl')+1,r);ge('al',cl('al')-1,r);le('al',chh('al'),r);E();}
+    Z();if(op==='adde'){K();back('n',0);back('m',-1);ge('chi',cl('chi')-1,r);le('chi',chh('chi'),r);ge('D',cl('D')-1,r);le('D',chh('D'),r);ge('dl',cl('dl')-1,r);le('dl',chh('dl'),r);ge('nu',cl('nu')-1,r);le('nu',chh('nu'),r);ge('al',cl('al'),r);le('al',chh('al')+1,r);ge('c',cl('c'),r);le('c',chh('c')+1,r);le('om',chh('om'),r);E();}
+    Z();if(op==='span'){K();back('n',0);le('al',chh('al'),r);le('c',chh('c'),r);ge('dl',cl('dl'),r);E();}
+    Z();if(op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(b[0]!==null)ge('n',cl('n')+b[0],r);Z();if(b[1]!==null){K();le('n',chh('n')+b[1],r);le('chi',chh('chi')+b[1],r);le('nu',chh('nu')+b[1],r);E();};E();}
+    Z();if(op==='subd'){K();back('n',-1);back('m',-1);back('c',0);E();}
+    Z();if(op==='contr'){K();back('n',1);back('c',0);ge('m',cl('m')+1,r);ge('chi',cl('chi')-1,r);E();}
+    Z();if(op==='compl'){K();back('n',0);ge('m',cl('n')*(cl('n')-1)/2-chh('m'),r);Z();if(chh('n')<Infinity)le('m',chh('n')*(chh('n')-1)/2-cl('m'),r);ge('D',cl('n')-1-chh('dl'),r);le('D',chh('n')-1-cl('dl'),r);ge('dl',cl('n')-1-chh('D'),r);le('dl',chh('n')-1-cl('D'),r);
+      ge('om',cl('al'),r);le('om',chh('al'),r);ge('al',cl('om'),r);le('al',chh('om'),r);Z();if(chh('chi')<Infinity)ge('chi',up(cl('n')/chh('chi')),'χ·χ(complement) ≥ n');Z();if(cl('c')>=2)eq('c',1,'המשלים של גרף לא קשיר הוא קשיר');E();}}
   { const CS=compsOf(g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(g).length;
-    if(all){const r='סכום על רכיבי הקשירות',r2='לפי רכיבי הקשירות';ge('c',all,'רכיבי הקשירות שהוגדרו');const full=L('c')===H('c')&&L('c')===all&&CS.length===all,hid=Math.max(0,L('c')-all);
-      if(CS.length===all){for(const k of ['n','m','al','nu','be']){ge(k,CS.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),r);if(full)le(k,CS.reduce((t,x)=>t+x.B[k][1],0),r)}
+    Z();if(all){K();const r='סכום על רכיבי הקשירות',r2='לפי רכיבי הקשירות';ge('c',all,'רכיבי הקשירות שהוגדרו');const full=L('c')===H('c')&&L('c')===all&&CS.length===all,hid=Math.max(0,L('c')-all);
+      Z();if(CS.length===all){K();for(const k of ['n','m','al','nu','be']){ge(k,CS.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),r);Z();if(full)le(k,CS.reduce((t,x)=>t+x.B[k][1],0),r)}
         le('dl',Math.min(...CS.map(x=>x.B.dl[1])),r2);ge('D',Math.max(...CS.map(x=>x.B.D[0])),r2);
-        if(full){for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2)}}}}
+        Z();if(full){K();for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2);E();};E();};E();}}
   /* a property left unknown is also taken from the numbers once they settle it: m = n − c makes a forest */
-  const P=k=>{const v=prop(g,k);if(v!=='u')return v;const f=L('m')===H('m')&&L('n')===H('n')&&L('c')===H('c')&&L('m')===L('n')-L('c');
-    if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';if(k==='tr'&&f&&L('c')===1)return 'y';if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';return v};
+  const P=k=>{const v=prop(g,k);Z();if(v!=='u')return v;const f=L('m')===H('m')&&L('n')===H('n')&&L('c')===H('c')&&L('m')===L('n')-L('c');
+    Z();if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';Z();if(k==='tr'&&f&&L('c')===1)return 'y';Z();if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';return v};
   const ad0=allDeg(g),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
   let it=0;
   while(ch&&it++<60){ch=false;
-    if(av){if(dLo(av)!==null)ge('dl',dLo(av),'כל הדרגות בטווח');if(dHi(av)!==null)le('D',dHi(av),'כל הדרגות בטווח')}
-    for(const v of vs){const a=dLo(v),b=dHi(v),r=`הדרגה של ${v.name}`;if(v.q==='one'&&v.w==='max'){if(a!==null)ge('D',a,r);if(b!==null)le('D',b,r)}else if(v.q==='one'&&v.w==='min'){if(a!==null)ge('dl',a,r);if(b!==null)le('dl',b,r)}else{if(a!==null)ge('D',a,r);if(b!==null)le('dl',b,r)}}
+    Z();if(av){K();Z();if(dLo(av)!==null)ge('dl',dLo(av),'כל הדרגות בטווח');Z();if(dHi(av)!==null)le('D',dHi(av),'כל הדרגות בטווח');E();}
+    for(const v of vs){const a=dLo(v),b=dHi(v),r=`הדרגה של ${v.name}`;Z();if(v.q==='one'&&v.w==='max'){K();Z();if(a!==null)ge('D',a,r);Z();if(b!==null)le('D',b,r);E();}else if(v.q==='one'&&v.w==='min'){Z();if(a!==null)ge('dl',a,r);Z();if(b!==null)le('dl',b,r)}else{Z();if(a!==null)ge('D',a,r);Z();if(b!==null)le('dl',b,r)}}
     ge('D',L('dl'),'δ ≤ Δ');le('dl',H('D'),'δ ≤ Δ');le('D',H('n')-1,'Δ ≤ n − 1');ge('n',L('D')+1,'Δ ≤ n − 1');
-    { const r='סכום הדרגות (1.3)';ge('m',up(L('n')*L('dl')/2),r);if(H('D')<Infinity&&H('n')<Infinity)le('m',dn(H('n')*H('D')/2),r);le('dl',dn(2*H('m')/L('n')),r);if(H('n')<Infinity)ge('D',up(2*L('m')/H('n')),r);if(H('D')<Infinity)ge('n',up(2*L('m')/H('D')),r);if(L('dl')>=1)le('n',dn(2*H('m')/L('dl')),r)}
-    { const r='m ≤ n(n − 1) / 2';if(H('n')<Infinity)le('m',H('n')*(H('n')-1)/2,r);let x=1;while(x*(x-1)/2<L('m'))x++;ge('n',x,r)}
+    { const r='סכום הדרגות (1.3)';ge('m',up(L('n')*L('dl')/2),r);Z();if(H('D')<Infinity&&H('n')<Infinity)le('m',dn(H('n')*H('D')/2),r);le('dl',dn(2*H('m')/L('n')),r);Z();if(H('n')<Infinity)ge('D',up(2*L('m')/H('n')),r);Z();if(H('D')<Infinity)ge('n',up(2*L('m')/H('D')),r);Z();if(L('dl')>=1)le('n',dn(2*H('m')/L('dl')),r)}
+    { const r='m ≤ n(n − 1) / 2';Z();if(H('n')<Infinity)le('m',H('n')*(H('n')-1)/2,r);let x=1;while(x*(x-1)/2<L('m'))x++;ge('n',x,r)}
     { const r='m ≥ n − c';ge('m',L('n')-H('c'),r);ge('c',L('n')-H('m'),r);le('n',H('m')+H('c'),r)}
     le('c',H('n'),'c ≤ n');ge('n',L('c'),'c ≤ n');
-    { const x=H('n')-L('c')+1;if(x<Infinity)le('m',x*(x-1)/2,'m ≤ (n − c + 1)(n − c) / 2')}
+    { const x=H('n')-L('c')+1;Z();if(x<Infinity)le('m',x*(x-1)/2,'m ≤ (n − c + 1)(n − c) / 2')}
     le('c',H('n')-L('nu'),'כל קשת בזיווג מחברת שני צמתים');ge('al',L('c'),'צומת מכל רכיב: קבוצה בלתי תלויה');
-    if(H('D')<Infinity&&H('D')>=1){ge('be',up(L('m')/H('D')),'צומת מכסה לכל היותר Δ קשתות');ge('nu',up(L('m')/(2*H('D')-1)),'קשת בזיווג חוסמת לכל היותר 2Δ − 1 קשתות')}
+    Z();if(H('D')<Infinity&&H('D')>=1){K();ge('be',up(L('m')/H('D')),'צומת מכסה לכל היותר Δ קשתות');ge('nu',up(L('m')/(2*H('D')-1)),'קשת בזיווג חוסמת לכל היותר 2Δ − 1 קשתות');E();}
     le('m',H('be')*H('D'),'צומת מכסה לכל היותר Δ קשתות');
     ge('m',L('om')*(L('om')-1)/2,'קליקה: ω(ω − 1) / 2 קשתות');ge('m',L('chi')*(L('chi')-1)/2,'צביעה ב־χ צבעים דורשת קשת בין כל שני צבעים');
-    if(L('c')===1&&H('c')===1){if(L('n')>=2)ge('dl',1,'קשיר');if(L('n')>=3)ge('D',2,'קשיר, שלושה צמתים לפחות')}
-    if(L('dl')>=1)ge('nu',1,'אין צמתים מבודדים');
-    if(H('n')<Infinity&&L('n')>=3&&2*L('dl')>=H('n')){ge('nu',dn(L('n')/2),'המילטוני (דירק 3.3)')}
-    if(ad0!==null&&ad0%2===1){if(L('n')%2)ge('n',L('n')+1,'דרגות אי-זוגיות: מספר צמתים זוגי');if(H('n')<Infinity&&H('n')%2)le('n',H('n')-1,'דרגות אי-זוגיות: מספר צמתים זוגי')}
-    if(L('m')>=1){le('c',H('n')-1,'יש קשת');ge('D',1,'יש קשת');ge('chi',2,'יש קשת');ge('om',2,'יש קשת');ge('nu',1,'יש קשת')}
-    if(H('m')===0){eq('D',0,'אין קשתות');eq('chi',1,'אין קשתות');eq('nu',0,'אין קשתות')}
-    if(P('conn')==='y')eq('c',1,'קשיר');
-    if(H('n')<Infinity&&2*L('dl')>=H('n')-1)eq('c',1,'δ ≥ (n − 1) / 2');
-    if(H('n')<Infinity&&L('m')>(H('n')-1)*(H('n')-2)/2)eq('c',1,'m > (n − 1)(n − 2) / 2');
-    if(P('tr')==='y'){const r='עץ (2.5)';eq('c',1,'עץ');ge('m',L('n')-1,r);le('m',H('n')-1,r);ge('n',L('m')+1,r);le('n',H('m')+1,r);
-      if(L('n')>=2){eq('dl',1,'עלה בעץ (2.3)');eq('chi',2,'עץ הוא דו-צדדי');ge('lv',Math.max(2,L('D')),'בעץ: ℓ ≥ 2, ℓ ≥ Δ');le('D',H('lv'),'בעץ: ℓ ≥ Δ');if(L('n')>=3){le('lv',H('n')-1,'בעץ: לא כל הצמתים עלים');ge('n',L('lv')+1,'בעץ: לא כל הצמתים עלים')}
-        if(H('D')<Infinity&&H('D')>=1)ge('nu',up((L('n')-1)/H('D')),'כיסוי בצמתים של עץ: β ≥ m / Δ, קניג')}}
-    if(P('fo')==='y')eq('f',1,'אין מעגלים: פאה אחת');
-    if(P('tr')==='y'){}else if(P('fo')==='y'){sum('n','m','c','יער: m = n − c');le('dl',1,'ביער יש צומת מדרגה קטנה');if(L('m')>=1)ge('lv',2,'רכיב עם קשת ביער הוא עץ: שני עלים');if(L('dl')>=1)ge('lv',2*L('c'),'כל רכיב ביער הוא עץ: שני עלים לרכיב')}
-    if(P('pl')==='y'){if(L('n')>=3){const r='מישורי: m ≤ 3n − 6 (5.4)';le('m',3*H('n')-6,r);ge('n',up((L('m')+6)/3),r);
-        if(P('tf')==='y'){const r2='מישורי בלי משולשים: m ≤ 2n − 4';le('m',2*H('n')-4,r2);ge('n',up((L('m')+4)/2),r2)}}
+    Z();if(L('c')===1&&H('c')===1){K();Z();if(L('n')>=2)ge('dl',1,'קשיר');Z();if(L('n')>=3)ge('D',2,'קשיר, שלושה צמתים לפחות');E();}
+    Z();if(L('dl')>=1)ge('nu',1,'אין צמתים מבודדים');
+    Z();if(H('n')<Infinity&&L('n')>=3&&2*L('dl')>=H('n')){K();ge('nu',dn(L('n')/2),'המילטוני (דירק 3.3)');E();}
+    Z();if(ad0!==null&&ad0%2===1){K();Z();if(L('n')%2)ge('n',L('n')+1,'דרגות אי-זוגיות: מספר צמתים זוגי');Z();if(H('n')<Infinity&&H('n')%2)le('n',H('n')-1,'דרגות אי-זוגיות: מספר צמתים זוגי');E();}
+    Z();if(L('m')>=1){K();le('c',H('n')-1,'יש קשת');ge('D',1,'יש קשת');ge('chi',2,'יש קשת');ge('om',2,'יש קשת');ge('nu',1,'יש קשת');E();}
+    Z();if(H('m')===0){K();eq('D',0,'אין קשתות');eq('chi',1,'אין קשתות');eq('nu',0,'אין קשתות');E();}
+    Z();if(P('conn')==='y')eq('c',1,'קשיר');
+    Z();if(H('n')<Infinity&&2*L('dl')>=H('n')-1)eq('c',1,'δ ≥ (n − 1) / 2');
+    Z();if(H('n')<Infinity&&L('m')>(H('n')-1)*(H('n')-2)/2)eq('c',1,'m > (n − 1)(n − 2) / 2');
+    Z();if(P('tr')==='y'){K();const r='עץ (2.5)';eq('c',1,'עץ');ge('m',L('n')-1,r);le('m',H('n')-1,r);ge('n',L('m')+1,r);le('n',H('m')+1,r);
+      Z();if(L('n')>=2){K();eq('dl',1,'עלה בעץ (2.3)');eq('chi',2,'עץ הוא דו-צדדי');ge('lv',Math.max(2,L('D')),'בעץ: ℓ ≥ 2, ℓ ≥ Δ');le('D',H('lv'),'בעץ: ℓ ≥ Δ');Z();if(L('n')>=3){K();le('lv',H('n')-1,'בעץ: לא כל הצמתים עלים');ge('n',L('lv')+1,'בעץ: לא כל הצמתים עלים');E();}
+        Z();if(H('D')<Infinity&&H('D')>=1)ge('nu',up((L('n')-1)/H('D')),'כיסוי בצמתים של עץ: β ≥ m / Δ, קניג');E();};E();}
+    Z();if(P('fo')==='y')eq('f',1,'אין מעגלים: פאה אחת');
+    Z();if(P('tr')==='y'){E();K();}else if(P('fo')==='y'){sum('n','m','c','יער: m = n − c');le('dl',1,'ביער יש צומת מדרגה קטנה');Z();if(L('m')>=1)ge('lv',2,'רכיב עם קשת ביער הוא עץ: שני עלים');Z();if(L('dl')>=1)ge('lv',2*L('c'),'כל רכיב ביער הוא עץ: שני עלים לרכיב')}
+    Z();if(P('pl')==='y'){K();Z();if(L('n')>=3){K();const r='מישורי: m ≤ 3n − 6 (5.4)';le('m',3*H('n')-6,r);ge('n',up((L('m')+6)/3),r);
+        Z();if(P('tf')==='y'){K();const r2='מישורי בלי משולשים: m ≤ 2n − 4';le('m',2*H('n')-4,r2);ge('n',up((L('m')+4)/2),r2);E();};E();}
       le('dl',5,'מישורי: δ ≤ 5 (5.5)');le('chi',4,'ארבעת הצבעים (6.3)');
       { const r='נוסחת אוילר (5.3)';ge('f',L('m')-H('n')+L('c')+1,r);le('f',H('m')-L('n')+H('c')+1,r);ge('m',L('f')+L('n')-H('c')-1,r);le('m',H('f')+H('n')-L('c')-1,r);ge('n',L('m')+L('c')+1-H('f'),r);le('n',H('m')+H('c')+1-L('f'),r);ge('c',L('f')-H('m')+L('n')-1,r);le('c',H('f')-L('m')+H('n')-1,r)}
-      if(L('n')>=3&&L('m')>=3)le('f',dn(2*H('m')/3),'3f ≤ 2m')}
-    if(P('bp')==='y'){le('chi',2,'דו-צדדי (1.6)');if(H('n')<Infinity)le('m',dn(H('n')*H('n')/4),'דו-צדדי: m ≤ n² / 4');{let x=1;while(dn(x*x/4)<L('m'))x++;ge('n',x,'דו-צדדי: m ≤ n² / 4')}
-      const r='קניג (4.16)';ge('be',L('nu'),r);le('be',H('nu'),r);ge('nu',L('be'),r);le('nu',H('be'),r);ge('al',up(L('n')/2),'דו-צדדי: צד אחד הוא בלתי תלוי')}
-    if(H('n')<Infinity)le('nu',dn(H('n')/2),'ν ≤ n / 2');ge('n',2*L('nu'),'ν ≤ n / 2');
+      Z();if(L('n')>=3&&L('m')>=3)le('f',dn(2*H('m')/3),'3f ≤ 2m');E();}
+    Z();if(P('bp')==='y'){K();le('chi',2,'דו-צדדי (1.6)');Z();if(H('n')<Infinity)le('m',dn(H('n')*H('n')/4),'דו-צדדי: m ≤ n² / 4');{let x=1;while(dn(x*x/4)<L('m'))x++;ge('n',x,'דו-צדדי: m ≤ n² / 4')}
+      const r='קניג (4.16)';ge('be',L('nu'),r);le('be',H('nu'),r);ge('nu',L('be'),r);le('nu',H('be'),r);ge('al',up(L('n')/2),'דו-צדדי: צד אחד הוא בלתי תלוי');E();}
+    Z();if(H('n')<Infinity)le('nu',dn(H('n')/2),'ν ≤ n / 2');ge('n',2*L('nu'),'ν ≤ n / 2');
     sum('n','al','be','α + β = n (4.14)');
     ge('be',L('nu'),'β ≥ ν (4.15)');le('nu',H('be'),'β ≥ ν (4.15)');le('be',2*H('nu'),'β ≤ 2ν');ge('nu',up(L('be')/2),'β ≤ 2ν');
-    if(L('dl')>=1)sum('n','rho','nu','ρ = n − ν (4.10)');
-    if(H('D')<Infinity)ge('al',up(L('n')/(H('D')+1)),'α ≥ n / (Δ + 1)');
+    Z();if(L('dl')>=1)sum('n','rho','nu','ρ = n − ν (4.10)');
+    Z();if(H('D')<Infinity)ge('al',up(L('n')/(H('D')+1)),'α ≥ n / (Δ + 1)');
     le('chi',H('D')+1,'χ ≤ Δ + 1');ge('D',L('chi')-1,'χ ≤ Δ + 1');
-    if(H('al')<Infinity)ge('chi',up(L('n')/H('al')),'n ≤ χ·α');if(H('chi')<Infinity)ge('al',up(L('n')/H('chi')),'n ≤ χ·α');if(H('chi')<Infinity&&H('al')<Infinity)le('n',H('chi')*H('al'),'n ≤ χ·α');
+    Z();if(H('al')<Infinity)ge('chi',up(L('n')/H('al')),'n ≤ χ·α');Z();if(H('chi')<Infinity)ge('al',up(L('n')/H('chi')),'n ≤ χ·α');Z();if(H('chi')<Infinity&&H('al')<Infinity)le('n',H('chi')*H('al'),'n ≤ χ·α');
     ge('chi',L('om'),'χ ≥ ω');le('om',H('chi'),'χ ≥ ω');le('chi',H('n'),'χ ≤ n');le('al',H('n'),'α ≤ n');
-    if(P('tf')==='y')le('om',2,'בלי משולשים');
-    for(const S of ss){const b=ownB(S,'k');if(!b)continue;if(S.prop==='indep'&&b[0]!==null)ge('al',b[0],`הקבוצה ${S.name}`);if(S.prop==='clique'&&b[0]!==null)ge('om',b[0],`הקליקה ${S.name}`);if(S.prop==='cover'&&b[1]!==null)le('be',b[1],`הכיסוי ${S.name}`)}
-    if(P('sc')==='y'&&L('n')===H('n'))eq('m',L('n')*(L('n')-1)/4,'איזומורפי למשלים');
+    Z();if(P('tf')==='y')le('om',2,'בלי משולשים');
+    for(const S of ss){const b=ownB(S,'k');Z();if(!b)continue;Z();if(S.prop==='indep'&&b[0]!==null)ge('al',b[0],`הקבוצה ${S.name}`);Z();if(S.prop==='clique'&&b[0]!==null)ge('om',b[0],`הקליקה ${S.name}`);Z();if(S.prop==='cover'&&b[1]!==null)le('be',b[1],`הכיסוי ${S.name}`)}
+    Z();if(P('sc')==='y'&&L('n')===H('n'))eq('m',L('n')*(L('n')-1)/4,'איזומורפי למשלים');
     for(const k in SYM)if(B[k][0]>B[k][1]){bad=true;ch=false}}
   /* what the ranges say beyond numbers */
-  const N=St.N;N.length=0;const T=(t,r)=>N.push([t,r]),ex1=k=>L(k)===H(k),ad=allDeg(g);
-  if(!bad){
-    if(ex1('c')&&L('c')===1&&prop(g,'conn')!=='y')T('הגרף קשיר',W.c[1]||W.c[0]);
-    if(prop(g,'tr')==='y'&&g.tr!=='y')T('הגרף הוא עץ',g.op==='comp'?'רכיב קשירות של יער':'יער קשיר');
-    if(P('tr')==='y'&&ex1('lv')&&L('lv')===2&&L('n')>=2)T('העץ הוא מסלול','שני עלים בדיוק');if(P('tr')==='y'&&ex1('D')&&ex1('n')&&L('D')===L('n')-1&&L('n')>=3)T('העץ הוא כוכב','Δ = n − 1');
-    if(prop(g,'fo')!=='y'&&L('m')>H('n')-L('c'))T('יש בגרף מעגל, ולכן הוא אינו יער','m > n − c');
-    if(prop(g,'fo')!=='y'&&ex1('m')&&ex1('n')&&ex1('c')&&L('m')===L('n')-L('c'))T(L('c')===1?'הגרף הוא עץ':'הגרף הוא יער','m = n − c');
-    if(ex1('c')&&L('c')===1&&ex1('m')&&ex1('n')&&L('m')===L('n'))T('יש בגרף מעגל אחד בדיוק','קשיר, m = n');
-    if(L('n')>=3&&H('n')<Infinity&&2*L('dl')>=H('n'))T('הגרף המילטוני','דירק (3.3)');
-    if(ad!==null&&ad>=2&&ad%2===0&&ex1('c')&&L('c')===1)T('הגרף אוילרי','משפט 3.1');
-    if(ad!==null&&ad%2===1)T('מספר הצמתים זוגי','מסקנה מ־1.3');
-    if(L('dl')>=2)T(`יש מעגל פשוט על ${L('dl')+1} צמתים לפחות`,'פרק 1, שאלה 3');
-    if(prop(g,'pl')==='u'&&P('pl')==='u'){if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)')}
-    if(prop(g,'bp')==='u'&&P('bp')==='u'){if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)')}
-    if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
-    if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי')}
+  const N=St.N;N.length=0;const T=(t,r)=>N.push([t,r,take()]),ex1=k=>L(k)===H(k),ad=allDeg(g);
+  Z();if(!bad){K();
+    Z();if(ex1('c')&&L('c')===1&&prop(g,'conn')!=='y')T('הגרף קשיר',W.c[1]||W.c[0]);
+    Z();if(prop(g,'tr')==='y'&&g.tr!=='y')T('הגרף הוא עץ',g.op==='comp'?'רכיב קשירות של יער':'יער קשיר');
+    Z();if(P('tr')==='y'&&ex1('lv')&&L('lv')===2&&L('n')>=2)T('העץ הוא מסלול','שני עלים בדיוק');Z();if(P('tr')==='y'&&ex1('D')&&ex1('n')&&L('D')===L('n')-1&&L('n')>=3)T('העץ הוא כוכב','Δ = n − 1');
+    Z();if(prop(g,'fo')!=='y'&&L('m')>H('n')-L('c'))T('יש בגרף מעגל, ולכן הוא אינו יער','m > n − c');
+    Z();if(prop(g,'fo')!=='y'&&ex1('m')&&ex1('n')&&ex1('c')&&L('m')===L('n')-L('c'))T(L('c')===1?'הגרף הוא עץ':'הגרף הוא יער','m = n − c');
+    Z();if(ex1('c')&&L('c')===1&&ex1('m')&&ex1('n')&&L('m')===L('n'))T('יש בגרף מעגל אחד בדיוק','קשיר, m = n');
+    Z();if(L('n')>=3&&H('n')<Infinity&&2*L('dl')>=H('n'))T('הגרף המילטוני','דירק (3.3)');
+    Z();if(ad!==null&&ad>=2&&ad%2===0&&ex1('c')&&L('c')===1)T('הגרף אוילרי','משפט 3.1');
+    Z();if(ad!==null&&ad%2===1)T('מספר הצמתים זוגי','מסקנה מ־1.3');
+    Z();if(L('dl')>=2)T(`יש מעגל פשוט על ${L('dl')+1} צמתים לפחות`,'פרק 1, שאלה 3');
+    Z();if(prop(g,'pl')==='u'&&P('pl')==='u'){K();Z();if(L('n')>=3&&L('m')>3*H('n')-6)T('הגרף אינו מישורי','m > 3n − 6 (5.4)');else if(L('dl')>=6)T('הגרף אינו מישורי','δ ≥ 6 (5.5)');else if(L('chi')>=5)T('הגרף אינו מישורי','χ ≥ 5 (6.3)');E();}
+    Z();if(prop(g,'bp')==='u'&&P('bp')==='u'){K();Z();if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)');E();}
+    Z();if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
+    Z();if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי');E();}
   St.fo=P('fo')==='y';St.pl=P('pl')==='y';
   St.bad=bad;return moved||bad}
 /* all graphs together: each round lets every graph use what the others have reached, until nothing moves */
@@ -892,6 +898,12 @@ function solveAll(){const memo=new Map();let any=true,r=0;while(any&&r++<14){any
 const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 /* a reason mixes Hebrew words and formulas: each formula run is set left to right inside the Hebrew line */
 const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
+const EXPL=new Set();
+function tell(g,k,i,d,one){const v=d.B[k][i],r=d.W[k][i],u=one?[...d.U[k][0],...d.U[k][1]].filter((x,n,A)=>A.findIndex(y=>y.g===x.g&&y.k===x.k&&y.i===x.i)===n):d.U[k][i]||[];
+  const head=`<b>${one?'הערך':i?'החסם העליון':'החסם התחתון'}</b> <bdi dir="ltr" class="fx">${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}</bdi>: `;
+  const body=r==='נתון'?'הוזן בנתוני השאלה.':r==='מהפעולה'?`מתקבל ישירות מהפעולה שיצרה את ${g.name}, לפי מה שהוזן לגרף המקור.`:r==='מהנתונים'?'נובע ישירות מהנתונים שהוזנו.':r.startsWith('מ־')?`הועבר ${rz(r)}, דרך הפעולה שמקשרת בין שני הגרפים.`:`לפי: ${rz(r)}.`;
+  return `<p>${head}${body}${used(u)}</p>`}
+const used=u=>u.length?` נשען על: ${u.map(x=>`<bdi dir="ltr" class="fx">${SYM[x.k]+(by(x.g)?sub(by(x.g)):'')} ${x.i?'≤':'≥'} ${x.v}</bdi> (${rz(x.r)})`).join(', ')}.`:'';
 function digestHtml(){
   const G=graphs(),open=!COL.has('Σ'),memo=solveAll();
   const body=G.map(g=>{const d=memo.get(g),s=sub(g),rows=[];
@@ -900,8 +912,10 @@ function digestHtml(){
       if(lo===D0[k]&&hi===Infinity)continue;const given=val(g,k)!==null;
       const why=given?'נתון':[...new Set([lo>D0[k]?w[0]:null,hi<Infinity?w[1]:null].filter(Boolean))].map(rz).join(' · ');
       const f=lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`;
-      rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]} <span class="ref">${why}</span></div><div class="qf"><span class="fx qsub">${f}</span></div></div>`)}
-    for(const [t,r] of d.N)rows.push(`<div class="qi ins"><div class="qn">תובנה <span class="ref">${rz(r)}</span></div><div class="qins">${t}</div></div>`);
+      const key=g.name+'|'+k,opn=EXPL.has(key),one=lo===hi&&(w[0]===w[1]||lo===D0[k]);
+      const ex=opn?`<div class="qex">${one?tell(g,k,lo===D0[k]?1:0,d,true):(lo>D0[k]?tell(g,k,0,d):'')+(hi<Infinity?tell(g,k,1,d):'')}</div>`:'';
+      rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]} <span class="ref">${why}</span></div><div class="qf"><span class="fx qsub">${f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}
+    d.N.forEach(([t,r,u],n)=>{const key=g.name+'|i'+n,opn=EXPL.has(key);rows.push(`<div class="qi ins"><div class="qn">תובנה <span class="ref">${rz(r)}</span></div><div class="qf"><span class="qins">${t}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי: ${rz(r)}.${used(u||[])}</p></div>`:''}</div>`)});
     return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div></div>`}).join('');
   return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, ומאיזו נוסחה הוא התקבל</span></h3>${open?body:''}</section>`}
 function renderSheet(){
@@ -916,6 +930,7 @@ document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.datas
   else o[k]=t.type==='checkbox'?t.checked:t.value;
   if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);fixNames();renderObjs()}
   renderSheet()});
+document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-ex]');if(t){const k=t.dataset.ex;if(EXPL.has(k))EXPL.delete(k);else EXPL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-min]');if(t){const k=t.dataset.min;if(COLG.has(k))COLG.delete(k);else COLG.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
