@@ -930,7 +930,9 @@ function virtFor(g,d){
 function pairBase(g,d,memo){
   const L=k=>d.B[k][0],H=k=>d.B[k][1],CS=compsOf(g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),full=CS.length&&L('c')===H('c')&&CS.length===L('c');
   /* the largest component: all its neighbours stay inside it */
-  const cm=full?Math.max(...CS.map(x=>x.B.n[1])):H('n')-(L('c')-1),lo=2*L('dl'),hi=2*H('D');
+  const rest=L('c')-CS.length,known=CS.length?Math.max(...CS.map(x=>x.B.n[1])):0;
+  /* components that were not defined share the vertices the defined ones leave, at least one vertex each */
+  const cm=full?known:CS.length&&CS.length===compsOf(g).length&&rest>=1?Math.max(known,H('n')-CS.reduce((t,x)=>t+x.B.n[0],0)-(rest-1)):H('n')-(L('c')-1),lo=2*L('dl'),hi=2*H('D');
   const b=x=>`<bdi dir="ltr" class="fx">${x}</bdi>`,P={lo,hi,cm,adjLo:lo,nadjLo:lo,adjHi:hi,nadjHi:hi,eAdjHi:'',eNadjHi:'',eAdjLo:'',eNadjLo:''};
   const base=`כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית.`;P.eAdjHi=P.eNadjHi=P.eAdjLo=P.eNadjLo=base;
   if(cm<Infinity){const a=d.tf?cm:2*(cm-1);
