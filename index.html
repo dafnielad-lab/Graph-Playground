@@ -117,6 +117,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qt{background:var(--surface);border-radius:12px;padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .qwarn{border:2px solid var(--bad);border-radius:10px;padding:8px 12px;color:var(--bad);font-size:14px}.qwarn ul{margin:4px 0 0;padding-inline-start:20px}.qwarn li{margin:2px 0}
 .qcap{margin:0;font-size:15px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
 .qitems{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));column-gap:28px;min-width:0}
@@ -514,7 +515,13 @@ function renderObjs(){
     if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קשת ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
     return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה'],['cover','כיסוי בצמתים'],['side','צד בגרף דו-צדדי']],o.prop)}</select></div></div>`}).join('')}
 /* symbol of a graph quantity: the given value in colour, otherwise the symbol (with the graph's name unless it is G) */
-const sub=g=>g.name==='G'?'':`<sub>${g.name}</sub>`;
+/* with several graphs on the sheet every symbol carries the name of its graph */
+const sub=g=>O.filter(o=>o.t==='g').length<2?'':`<sub>${g.name}</sub>`;
+const MK=/(?<![A-Za-z])(?:deg|[nmcf])(?![A-Za-z])|[ΔδχανβρωℓΓ]/g;
+const mk=(x,g)=>{const s=sub(g);if(!s||!x)return x;return x.split(/(<[^>]*>)/).map((p,i,A)=>i%2?p:p.replace(MK,(a,o)=>o+a.length===p.length&&A[i+1]==='<sub>'?a:a+s)).join('')};
+/* operation formulas name the graph in brackets: n(H) becomes n with the name beneath */
+const fnSub=x=>{for(const h of O.filter(o=>o.t==='g'))x=x.split(`(${h.name})`).join(`<sub>${h.name}</sub>`);return x};
+const COLG=new Set();
 /* a vertex degree is exact, or a range with either end optional */
 const dLo=v=>v.dm==='rng'?(v.d1??null):v.d,dHi=v=>v.dm==='rng'?(v.d2??null):v.d,dEx=v=>dLo(v)!==null&&dLo(v)===dHi(v)?dLo(v):null;
 const allV=g=>O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='all'&&(dLo(o)!==null||dHi(o)!==null));
@@ -524,7 +531,7 @@ const rngTxt=(lo,mid,hi)=>`${lo!==null?V(lo)+' ≤ ':''}${mid}${hi!==null?' ≤ 
 const ext=(g,w)=>O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='one'&&o.w===w);
 const val=(g,k)=>{if(g[k]!==null&&g[k]!==undefined)return g[k];if(k!=='D'&&k!=='dl')return null;const a=allDeg(g);if(a!==null)return a;const v=ext(g,k==='D'?'max':'min');return v?dEx(v):null};
 const sy=(g,k)=>{const v=val(g,k);return v!==null?V(v):SYM[k]+sub(g)};
-const degOf=v=>dEx(v)!==null?V(dEx(v)):v.q==='one'&&v.w?(x=>x.includes('class="q')?x:`<span class="qs">${x}</span>`)(sx(by(v.in),v.w==='max'?'D':'dl')):`deg(${v.name})`;
+const degOf=v=>dEx(v)!==null?V(dEx(v)):v.q==='one'&&v.w?(x=>x.includes('class="q')?x:`<span class="qs">${x}</span>`)(sx(by(v.in),v.w==='max'?'D':'dl')):`deg${sub(by(v.in))}(${v.name})`;
 /* what is known about a quantity: its own value, or what the operation that built the graph makes of the source graph's quantities.
    num: a number; otherwise html is an expression in the remaining symbols */
 const NUM=v=>({num:v,html:V(v),atom:true}),EXP=h=>({num:null,html:h,atom:false}),OPD=e=>e.atom?e.html:`(${e.html})`;
@@ -626,9 +633,9 @@ function issues(g){
   return R}
 function sheetFor(g){
   const s=sub(g),q=k=>sx(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
-  let tp='קשרים מהפעולה';const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need,tp});
+  const cb=s?`χ<sub>${isBar(X)&&g.src?g.src:barName(X)}</sub>`:'χ(complement)';let tp='קשרים מהפעולה';const add=(t,r,gen,st,need)=>F.push({t,r,g:mk(gen,g),s:mk(st,g),need,tp});
   const src=g.op?by(g.src):null;
-  if(src){const n=sy(g,'n'),m=sy(g,'m'),c=sy(g,'c'),D=sy(g,'D'),Q=k=>sx(src,k),N=Q('n'),M=Q('m'),C=Q('c'),a=by(g.arg),P=src.name,rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:gn,s:st,rel:1,tp});
+  if(src){const n=sy(g,'n'),m=sy(g,'m'),c=sy(g,'c'),D=sy(g,'D'),Q=k=>sx(src,k),N=Q('n'),M=Q('m'),C=Q('c'),a=by(g.arg),P=src.name,rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:mk(fnSub(gn),src),s:mk(st,src),rel:1,tp});
     if(g.op==='delv'){rel('צמתים אחרי הסרת צומת',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('קשתות אחרי הסרת צומת',`m(${X}) = m(${P}) − deg(${a.name})`,`${m} = ${M} − ${degOf(a)}`);
       rel('רכיבי קשירות אחרי הסרת צומת',`c(${X}) ≤ c(${P}) + deg(${a.name}) − 1`,`${c} ≤ ${C} + ${degOf(a)} − 1`);if(dEx(a)===null&&(dLo(a)!==null||dHi(a)!==null))rel('קשתות אחרי הסרת צומת, לפי טווח הדרגה',`m(${P}) − max deg ≤ m(${X}) ≤ m(${P}) − min deg`,`${dHi(a)!==null?M+' − '+V(dHi(a))+' ≤ ':''}${m}${dLo(a)!==null?' ≤ '+M+' − '+V(dLo(a)):''}`);
       if(a.cut)rel(`${a.name} צומת מפריד`,`c(${X}) ≥ c(${P}) + 1`,`${c} ≥ ${C} + 1`)}
@@ -639,7 +646,7 @@ function sheetFor(g){
     if(g.op==='adde'){rel('צמתים אחרי הוספת קשת',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות אחרי הוספת קשת',`m(${X}) = m(${P}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי הוספת קשת',`c(${P}) − 1 ≤ c(${X}) ≤ c(${P})`,`${C} − 1 ≤ ${c} ≤ ${C}`)}
     if(g.op==='contr'){rel('צמתים אחרי כיווץ קשת',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('קשתות אחרי כיווץ קשת (שכנים משותפים מתאחדים)',`m(${X}) ≤ m(${P}) − 1`,`${m} ≤ ${M} − 1`);rel('רכיבי קשירות אחרי כיווץ',`c(${X}) = c(${P})`,`${c} = ${C}`)}
     if(g.op==='subd'){rel('צמתים אחרי העדנת קשת',`n(${X}) = n(${P}) + 1`,`${n} = ${N} + 1`);rel('קשתות אחרי העדנת קשת',`m(${X}) = m(${P}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי העדנה',`c(${X}) = c(${P})`,`${c} = ${C}`);F.push({tp,t:'העדנה שומרת על מישוריות',r:'טענה 5.7',g:`${X} planar ⇔ ${P} planar`,s:'',rel:1,text:1})}
-    if(g.op==='compl'){rel('צמתים במשלים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בגרף ובמשלים',`m(${P}) + m(${X}) = n(n − 1) / 2`,`${M} + ${m} = ${N}·(${N} − 1) / 2`);const xd=allDeg(src);rel('דרגה במשלים',`deg in ${X} = n − 1 − deg in ${P}`,`deg in ${X} = ${N} − 1 − ${xd!==null?V(xd):'deg in '+P}`);
+    if(g.op==='compl'){rel('צמתים במשלים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בגרף ובמשלים',`m(${P}) + m(${X}) = n(n − 1) / 2`,`${M} + ${m} = ${N}·(${N} − 1) / 2`);const xd=allDeg(src);rel('דרגה במשלים',`deg${s}(u) = n − 1 − deg(u)`,`deg${s}(u) = ${N} − 1 − ${xd!==null?V(xd):'deg(u)'}`);
       rel('דרגה מקסימלית במשלים',`Δ(${X}) = n − 1 − δ(${P})`,`${D} = ${N} − 1 − ${Q('dl')}`);rel('קליקה במשלים היא קבוצה בלתי תלויה בגרף',`ω(${X}) = α(${P})`,`ω${s} = ${Q('al')}`)}
     if(g.op==='ind'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים בתת-גרף מושרה',`n(${X}) = |${a.name}|`,`${n} = ${k}`);rel('קשתות בתת-גרף מושרה',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('צביעה של תת-גרף',`χ(${X}) ≤ χ(${P})`,`${q('chi')} ≤ ${Q('chi')}`);
       if(a.prop==='indep')rel('מושרה על קבוצה בלתי תלויה',`m(${X}) = 0`,`${m} = ${V(0)}`);if(a.prop==='clique')rel('מושרה על קליקה',`m(${X}) = |${a.name}|(|${a.name}| − 1) / 2`,`${m} = ${k}·(${k} − 1) / 2`)}
@@ -684,7 +691,7 @@ function sheetFor(g){
   add('סדרת פרופר: מספר ההופעות של צומת','פרק 2','appearances of u = deg(u) − 1','',[['tr','y']]);
   add('קשיר, ומספר הקשתות כמספר הצמתים: מעגל יחיד','מסקנה מ־2.5','connected, m = n ⇒ exactly one cycle',`${m} = ${n}`,[['conn','y']]);
   add('הרבה קשתות מבטיחות קשירות','מסקנה','m > (n − 1)(n − 2) / 2 ⇒ connected',`${m} > (${n} − 1)·(${n} − 2) / 2`);
-  add('הגרף או המשלים שלו קשיר','מסקנה','G or its complement is connected','');
+  add('הגרף או המשלים שלו קשיר','מסקנה',`${X} or its complement is connected`,'');
   /* bipartite */
   tp='דו-צדדי';
   add('דו-צדדי: אין מעגל באורך אי-זוגי','משפט 1.6','no odd cycle','',[['bp','y']]);
@@ -734,7 +741,7 @@ function sheetFor(g){
   add('משפט ברוקס (פרט לרכיב שהוא גרף מלא או מעגל אי-זוגי)','משפט 6.2','χ ≤ Δ',`${q('chi')} ≤ ${D}`);
   add('כל צבע הוא קבוצה בלתי תלויה','מההגדרה','n ≤ χ·α',`${n} ≤ ${q('chi')}·${q('al')}`);
   add('מספר הצביעה לפחות הקליקה המקסימלית','מההגדרה','χ ≥ ω',`${q('chi')} ≥ ${q('om')}`);
-  add('צביעה של הגרף ושל המשלים','מסקנה','χ(G)·χ(complement) ≥ n',`${q('chi')}·χ(complement) ≥ ${n}`);
+  add('צביעה של הגרף ושל המשלים','מסקנה',`χ·${cb} ≥ n`,`${q('chi')}·${cb} ≥ ${n}`);
   add('איזומורפי למשלים','מסקנה','n mod 4 ∈ {0, 1},  m = n(n − 1) / 4',`${m} = ${n}·(${n} − 1) / 4`,[['sc','y']]);
   /* status of each formula: applies, hidden (a needed property is given as the opposite), or conditional (unknown) */
   const st=f=>{if(!f.need)return 'on';let u=false;for(const [k,w] of f.need){const p=prop(g,k);if(p==='u')u=true;else if(p!==w)return 'hide'}return u?'hide':'on'};
@@ -744,11 +751,12 @@ function sheetFor(g){
   const vis=F.filter(f=>st(f)!=='hide');
   const tps=[...new Set(vis.map(f=>f.tp))];
   const bad=issues(g);
-  return `<section class="qt"><h3 class="qcap"><span class="name">${X}</span> ${title}</h3>${bad.length?`<div class="qwarn" role="alert"><b>הנתונים של ${X} לא מתיישבים:</b><ul>${bad.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
+  const shut=COLG.has(X);
+  return `<section class="qt"><h3 class="qcap"><button class="qmin" data-min="${X}" aria-expanded="${!shut}" title="${shut?'הצג את כל הסעיפים':'מזער את כל הסעיפים'}">${shut?'◂':'▾'}</button><span class="name">${X}</span> ${title}${shut?` <span class="lab">${vis.length} נוסחאות מוסתרות</span>`:''}</h3>${shut?'':(bad.length?`<div class="qwarn" role="alert"><b>הנתונים של ${X} לא מתיישבים:</b><ul>${bad.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'')+tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;{const e=ex(g,k).num,iv=e===null?interval(g,k):null;L.push([SYM[k]+s,DEF[k]+' של '+g.name,e!==null?e:iv?`${iv[0]??'?'} … ${iv[1]??'?'}`:null])}}}
-  for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
+  for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg${sub(by(o.in))}(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
   L.push(['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
 document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb'))return;const o=O[i];
@@ -757,6 +765,7 @@ document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.datas
   else o[k]=t.type==='checkbox'?t.checked:t.value;
   if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);fixNames();renderObjs()}
   renderSheet()});
+document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-min]');if(t){const k=t.dataset.min;if(COLG.has(k))COLG.delete(k);else COLG.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
   if(mo){const o=O[Number(mo.dataset.more)];o.more=!o.more}
