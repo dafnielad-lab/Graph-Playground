@@ -120,6 +120,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qt tbody tr{border-top:1px solid var(--track)}.qt tr.rel th{color:var(--accent)}
 .qt td.gen{font-size:14px;color:var(--muted)}.qt td.qsub{font-size:16px;color:var(--ink)}
 .qt .ref{white-space:nowrap}
+.qt tr.tp th{padding:6px 8px 2px;background:var(--bg)}.qt tr.tp button{border:0;background:transparent;font-weight:700;font-size:13px;color:var(--ink);padding:2px 4px;display:flex;gap:8px;align-items:baseline}
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .qgrid .gt{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:6px 0 0;font-size:15px}
 .f{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -186,12 +187,12 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>מוסיפים תנאים</h3><p>לוחצים על "הוסף תנאי" ובוחרים תכונה. מחוון קובע את הערך, והמתג מכבה ומדליק את התנאי. המספר ליד כל תנאי הוא כמה גרפים נשארו אחריו. החיצים משנים את סדר התנאים.</p></div>
 <div><h3>קוראים את התוצאה</h3><p>המונה הגדול מראה כמה גרפים מקיימים את כל התנאים. כשיש חמישים או פחות, כולם מצוירים. הבורר "גרפים להצגה" משנה את המגבלה, עד אלף. מעל חמישים הציורים נטענים בהשהיה קצרה, ולא תוך כדי גרירת מחוון.</p></div>
 <div><h3>כשאין תוצאות</h3><p>התנאי שרוקן את הרשימה מסומן באדום. שורה כחולה מראה איזה שינוי בתנאי אחד מחזיר תוצאות, או אילו שני תנאים צריך לשנות יחד.</p></div>
-<div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה, ואז התכונות של התת-גרף המושרה מוצגות לצד התכונות של הגרף. בכלי הזיווג לוחצים על צלעות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
+<div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה, ואז התכונות של התת-גרף המושרה מוצגות לצד התכונות של הגרף. בכלי הזיווג לוחצים על קשתות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
 <div><h3>טווח צמתים</h3><p>הכפתור "טווח" ליד מספר הצמתים פותח שדה שני. הספירה והגלריה כוללות אז את כל הגרפים מכל מספר צמתים בטווח.</p></div>
-<div><h3>תנאים מדרגה שנייה</h3><p>התנאי "אחרי הסרת צלעות או צמתים" מחלק את הרשימה. התנאים שמעליו נבדקים על הגרף, והתנאים שמתחתיו נבדקים על מה שנשאר אחרי הסרת צלעות או צמתים. בוחרים כמה מסירים, ואם מספיק שקיימת הסרה מתאימה או שנדרש שכל הסרה תתאים. בכרטיס הגרף מסומנת באדום הסרה לדוגמה.</p></div>
-<div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי צלעות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
+<div><h3>תנאים מדרגה שנייה</h3><p>התנאי "אחרי הסרת קשתות או צמתים" מחלק את הרשימה. התנאים שמעליו נבדקים על הגרף, והתנאים שמתחתיו נבדקים על מה שנשאר אחרי הסרת קשתות או צמתים. בוחרים כמה מסירים, ואם מספיק שקיימת הסרה מתאימה או שנדרש שכל הסרה תתאים. בכרטיס הגרף מסומנת באדום הסרה לדוגמה.</p></div>
+<div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי קשתות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
-<div><h3>דף נוסחאות</h3><p>מצב בלי הגבלה על מספר הצמתים. מגדירים את האובייקטים שבשאלה: הגרף הנתון, צמתים, צלעות, קבוצות צמתים, וגרפים שנוצרים מפעולות כמו הסרה, משלים או תת-גרף מושרה. כל ערך שממלאים מוצב בכל הנוסחאות שבהן הוא מופיע, ומה שלא נתון נשאר כסמל. לכל תכונה כמו מישוריות בוחרים כן, לא או לא ידוע, ומוצגות רק הנוסחאות שחלות לפי מה שנתון.</p></div>
+<div><h3>דף נוסחאות</h3><p>מצב בלי הגבלה על מספר הצמתים. מגדירים את האובייקטים שבשאלה: הגרף הנתון, צמתים, קשתות, קבוצות צמתים, וגרפים שנוצרים מפעולות כמו הסרה, משלים או תת-גרף מושרה. כל ערך שממלאים מוצב בכל הנוסחאות שבהן הוא מופיע, ומה שלא נתון נשאר כסמל. לכל תכונה כמו מישוריות בוחרים כן, לא או לא ידוע, ומוצגות רק הנוסחאות שחלות לפי מה שנתון.</p></div>
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>
 </div>
 </section>
@@ -420,14 +421,14 @@ const KIND={
   tree:{cat:'מבנה',label:'עץ',type:'bool',prop:'tree'},
   forest:{cat:'מבנה',label:'חסר מעגלים',type:'bool',prop:'forest'},
   bip:{cat:'מבנה',label:'דו-צדדי',type:'bool',prop:'bip'},
-  edges:{cat:'מבנה',label:'מספר צלעות',type:'num',prop:'edges',max:n=>n*(n-1)/2,def:n=>n-1,op:'eq'},
+  edges:{cat:'מבנה',label:'מספר קשתות',type:'num',prop:'edges',max:n=>n*(n-1)/2,def:n=>n-1,op:'eq'},
   comps:{cat:'מבנה',label:'מספר רכיבי קשירות',type:'num',prop:'comps',min:1,max:n=>n,def:n=>1,op:'eq'},
   diam:{cat:'מבנה',label:'קוטר',type:'num',prop:'diam',max:n=>n-1,def:n=>2,op:'le'},
   girth:{cat:'מבנה',label:'אורך המעגל הקצר ביותר',type:'num',prop:'girth',min:3,max:n=>Math.max(3,n),def:n=>3,op:'eq'},
   tri:{cat:'מבנה',label:'מספר משולשים',type:'num',prop:'tri',max:n=>choose(n,3),def:n=>0,op:'eq'},
   planar:{cat:'מבנה',label:'מישורי',type:'bool',prop:'planar'},
   cutv:{cat:'מבנה',label:'מספר צמתים מפרידים',type:'num',prop:'cutv',max:n=>Math.max(0,n-2),def:n=>1,op:'ge',hint:'צומת מפריד: הסרתו מגדילה את מספר רכיבי הקשירות'},
-  cycles:{cat:'מבנה',label:'מספר מעגלים',type:'num',prop:'cycles',max:maxCycles,def:n=>1,op:'eq',hint:'שני מעגלים שנבדלים בצלע אחת לפחות נספרים בנפרד'},
+  cycles:{cat:'מבנה',label:'מספר מעגלים',type:'num',prop:'cycles',max:maxCycles,def:n=>1,op:'eq',hint:'שני מעגלים שנבדלים בקשת אחת לפחות נספרים בנפרד'},
   euler:{cat:'מבנה',label:'יש מעגל אוילר',type:'bool',prop:'euler'},
   ham:{cat:'מבנה',label:'יש מעגל המילטון',type:'bool',prop:'ham'},
   chi:{cat:'מבנה',label:'מספר צביעה',type:'num',prop:'chi',min:1,max:n=>n,def:n=>2,op:'eq'},
@@ -442,10 +443,10 @@ const KIND={
   mm:{cat:'זיווגים',label:'גודל זיווג מקסימלי',type:'num',prop:'mm',max:n=>n>>1,def:n=>n>>1,op:'eq'},
   pm:{cat:'זיווגים',label:'קיים זיווג מושלם',type:'bool',prop:'pm'},
   pmc:{cat:'זיווגים',label:'מספר זיווגים מושלמים',type:'num',prop:'pmc',max:n=>n%2?0:[1,1,3,15,105,945,10395][n/2],def:n=>1,op:'eq'},
-  stuck:{cat:'זיווגים',label:'קיים זיווג תקוע עם מסלול שיפור',type:'bool',prop:'stuck',hint:'זיווג שאי אפשר להוסיף לו צלע, אבל הוא לא מקסימלי'},
+  stuck:{cat:'זיווגים',label:'קיים זיווג תקוע עם מסלול שיפור',type:'bool',prop:'stuck',hint:'זיווג שאי אפשר להוסיף לו קשת, אבל הוא לא מקסימלי'},
   selfc:{cat:'משלים',label:'איזומורפי למשלים שלו',type:'bool',prop:'selfc',noTarget:true},
   ind:{cat:'תת-גרפים מושרים',label:'תת-קבוצות צמתים עם תכונה',type:'ind',noTarget:true},
-  cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת צלעות או צמתים',type:'cut',noTarget:true}
+  cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת קשתות או צמתים',type:'cut',noTarget:true}
 };
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
 if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV};
@@ -455,15 +456,16 @@ const SHEET=(()=>{
 const V=x=>`<span class="qv">${x}</span>`;
 /* objects of the question, in order; a derived graph may only use objects defined above it.
    graph properties are tri-state: 'y' given true, 'n' given false, 'u' unknown */
-const newG=(name,o)=>Object.assign({t:'g',name,n:null,m:null,c:null,D:null,dl:null,f:null,chi:null,al:null,nu:null,be:null,rho:null,pl:'u',tr:'u',bp:'u',more:false},o);
+const newG=(name,o)=>Object.assign({t:'g',name,n:null,m:null,c:null,D:null,dl:null,f:null,chi:null,al:null,nu:null,be:null,rho:null,lv:null,om:null,pl:'u',tr:'u',bp:'u',fo:'u',tf:'u',sc:'u',more:false},o);
 let O=[newG('G',{n:10,c:1,pl:'y'}),
        {t:'v',name:'v',in:'G',q:'one',d:3,cut:false},
        newG('H',{op:'delv',src:'G',arg:'v',c:2})];
 const NAMES={v:['v','u','w','x','y','z'],e:['e','e₂','e₃','e₄'],s:['S','T','A','B'],g:['H','K','L','M','N']};
-const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הצלע','e'],delS:['הסרת קבוצת הצמתים','s'],adde:['הוספת צלע',null],contr:['כיווץ הצלע','e'],subd:['העדנת הצלע','e'],compl:['המשלים',null],ind:['תת-גרף מושרה על','s'],comp:['רכיב קשירות',null],span:['תת-גרף פורש',null]};
-const SYM={n:'n',m:'m',c:'c',D:'Δ',dl:'δ',f:'f',chi:'χ',al:'α',nu:'ν',be:'β',rho:'ρ'};
-const DEF={n:'מספר הצמתים',m:'מספר הצלעות',c:'מספר רכיבי הקשירות',D:'הדרגה המקסימלית',dl:'הדרגה המינימלית',f:'מספר הפאות בשיכון מישורי',chi:'מספר הצביעה',al:'גודל קבוצה בלתי תלויה מקסימלית',nu:'גודל זיווג מקסימום',be:'גודל מינימלי של כיסוי בצמתים',rho:'גודל מינימלי של כיסוי בצלעות'};
-const PROPS={pl:'מישורי',tr:'עץ',bp:'דו-צדדי',conn:'קשיר'};
+const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הקשת','e'],delS:['הסרת קבוצת הצמתים','s'],adde:['הוספת קשת',null],contr:['כיווץ הקשת','e'],subd:['העדנת הקשת','e'],compl:['המשלים',null],ind:['תת-גרף מושרה על','s'],comp:['רכיב קשירות',null],span:['תת-גרף פורש',null]};
+const SYM={n:'n',m:'m',c:'c',D:'Δ',dl:'δ',f:'f',chi:'χ',al:'α',nu:'ν',be:'β',rho:'ρ',om:'ω',lv:'ℓ'};
+const DEF={n:'מספר הצמתים',m:'מספר הקשתות',c:'מספר רכיבי הקשירות',D:'הדרגה המקסימלית',dl:'הדרגה המינימלית',f:'מספר הפאות בשיכון מישורי',chi:'מספר הצביעה',al:'גודל קבוצה בלתי תלויה מקסימלית',nu:'גודל זיווג מקסימום',be:'גודל מינימלי של כיסוי בצמתים',rho:'גודל מינימלי של כיסוי בקשתות',om:'גודל קליקה מקסימלית',lv:'מספר העלים'};
+const PROPS={pl:'מישורי',tr:'עץ',bp:'דו-צדדי',conn:'קשיר',fo:'יער',tf:'בלי משולשים',sc:'איזומורפי למשלים'};
+const COL=new Set();
 const by=n=>O.find(o=>o.name===n),graphs=()=>O.filter(o=>o.t==='g');
 const fresh=t=>NAMES[t].find(n=>!by(n))||NAMES[t][0]+O.length;
 function ensureArg(g){const need=OPS[g.op][1];if(!need){g.arg=null;return}
@@ -479,12 +481,12 @@ const chk=(i,k,val,lab)=>`<label class="cell">${lab}<input type="checkbox" data-
 function renderObjs(){
   document.getElementById('qobjs').innerHTML=O.map((o,i)=>{const gs=opt(graphs().filter(g=>o.t!=='g'||O.indexOf(g)<i).map(g=>[g.name,g.name]),o.t==='g'?o.src:o.in),x=o.name==='G'?'':`<button class="x" data-del="${o.name}" aria-label="הסר את ${o.name}">×</button>`;
     if(o.t==='g')return `<div class="qbox"><div class="qrow"><span class="name">${o.name}</span>${o.op?`<span>=</span><select data-i="${i}" data-k="op" id="f${i}op" aria-label="פעולה">${opt(Object.entries(OPS).map(([k,v])=>[k,v[0]]),o.op)}</select>${o.arg?`<select data-i="${i}" data-k="arg" id="f${i}arg" aria-label="על מה">${opt(O.filter(a=>a.t===OPS[o.op][1]&&a.in===o.src&&O.indexOf(a)<i).map(a=>[a.name,a.name]),o.arg)}</select>`:''}<span>${o.op==='compl'||o.op==='comp'||o.op==='span'?'של':'מתוך'}</span><select data-i="${i}" data-k="src" id="f${i}src" aria-label="גרף מקור">${gs}</select>`:'<span>הגרף הנתון</span>'}${x}</div>
-      <div class="qrow">${num(i,'n',o.n,'צמתים')}${num(i,'m',o.m,'צלעות')}${num(i,'c',o.c,'רכיבים')}</div>
+      <div class="qrow">${num(i,'n',o.n,'צמתים')}${num(i,'m',o.m,'קשתות')}${num(i,'c',o.c,'רכיבים')}</div>
       <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}${tri(i,'tr',o.tr,'עץ')}${tri(i,'bp',o.bp,'דו-צדדי')}</div>
-      ${o.more?`<div class="qrow">${['D','dl','f','chi','al','nu','be','rho'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div>`:''}
-      <button class="link" data-more="${i}">${o.more?'הסתר גדלים נוספים':'גדלים נוספים: דרגות, פאות, צביעה, זיווג'}</button></div>`;
+      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'fo',o.fo,'יער')}${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}</div>`:''}
+      <button class="link" data-more="${i}">${o.more?'הסתר גדלים ותכונות נוספים':'גדלים ותכונות נוספים'}</button></div>`;
     if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow"><span class="cell">דרגה</span><select data-i="${i}" data-k="dm" id="f${i}dm" aria-label="סוג הנתון על הדרגה">${opt([['eq','בדיוק'],['rng','בטווח']],o.dm||'eq')}</select>${o.dm==='rng'?num(i,'d1',o.d1,'מ־')+num(i,'d2',o.d2,'עד'):num(i,'d',o.d,'')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
-    if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>צלע ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
+    if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קשת ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
     return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה'],['cover','כיסוי בצמתים'],['side','צד בגרף דו-צדדי']],o.prop)}</select></div></div>`}).join('')}
 /* symbol of a graph quantity: the given value in colour, otherwise the symbol (with the graph's name unless it is G) */
 const sub=g=>g.name==='G'?'':`<sub>${g.name}</sub>`;
@@ -517,29 +519,30 @@ function ex(g,k,depth){
   if((k==='D'||k==='dl')&&op==='compl'){const N=E('n'),d=E(k==='D'?'dl':'D');return N.num!==null&&d.num!==null?NUM(N.num-1-d.num):EXP(`${OPD(N)} − 1 − ${OPD(d)}`)}
   return me}
 const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<span class="qs">${OPD(e)}</span>`};
-const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':g.c!==null&&g.c>1?'n':'u'):g[k];
+const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':g.c!==null&&g.c>1?'n':'u'):k==='fo'&&g.tr==='y'?'y':k==='tf'&&(g.bp==='y'||g.tr==='y'||g.fo==='y')?'y':g[k];
 function sheetFor(g){
   const s=sub(g),q=k=>sx(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
-  const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need});
+  let tp='קשרים מהפעולה';const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need,tp});
   const src=g.op?by(g.src):null;
-  if(src){const n=sy(g,'n'),m=sy(g,'m'),c=sy(g,'c'),D=sy(g,'D'),Q=k=>sx(src,k),N=Q('n'),M=Q('m'),C=Q('c'),a=by(g.arg),P=src.name,rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:gn,s:st,rel:1});
-    if(g.op==='delv'){rel('צמתים אחרי הסרת צומת',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('צלעות אחרי הסרת צומת',`m(${X}) = m(${P}) − deg(${a.name})`,`${m} = ${M} − ${degOf(a)}`);
-      rel('רכיבי קשירות אחרי הסרת צומת',`c(${X}) ≤ c(${P}) + deg(${a.name}) − 1`,`${c} ≤ ${C} + ${degOf(a)} − 1`);if(dEx(a)===null&&(dLo(a)!==null||dHi(a)!==null))rel('צלעות אחרי הסרת צומת, לפי טווח הדרגה',`m(${P}) − max deg ≤ m(${X}) ≤ m(${P}) − min deg`,`${dHi(a)!==null?M+' − '+V(dHi(a))+' ≤ ':''}${m}${dLo(a)!==null?' ≤ '+M+' − '+V(dLo(a)):''}`);
+  if(src){const n=sy(g,'n'),m=sy(g,'m'),c=sy(g,'c'),D=sy(g,'D'),Q=k=>sx(src,k),N=Q('n'),M=Q('m'),C=Q('c'),a=by(g.arg),P=src.name,rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:gn,s:st,rel:1,tp});
+    if(g.op==='delv'){rel('צמתים אחרי הסרת צומת',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('קשתות אחרי הסרת צומת',`m(${X}) = m(${P}) − deg(${a.name})`,`${m} = ${M} − ${degOf(a)}`);
+      rel('רכיבי קשירות אחרי הסרת צומת',`c(${X}) ≤ c(${P}) + deg(${a.name}) − 1`,`${c} ≤ ${C} + ${degOf(a)} − 1`);if(dEx(a)===null&&(dLo(a)!==null||dHi(a)!==null))rel('קשתות אחרי הסרת צומת, לפי טווח הדרגה',`m(${P}) − max deg ≤ m(${X}) ≤ m(${P}) − min deg`,`${dHi(a)!==null?M+' − '+V(dHi(a))+' ≤ ':''}${m}${dLo(a)!==null?' ≤ '+M+' − '+V(dLo(a)):''}`);
       if(a.cut)rel(`${a.name} צומת מפריד`,`c(${X}) ≥ c(${P}) + 1`,`${c} ≥ ${C} + 1`)}
-    if(g.op==='dele'){rel('צמתים אחרי הסרת צלע',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('צלעות אחרי הסרת צלע',`m(${X}) = m(${P}) − 1`,`${m} = ${M} − 1`);
-      if(a.bridge)rel(`${a.name} גשר`,`c(${X}) = c(${P}) + 1`,`${c} = ${C} + 1`);else rel('רכיבי קשירות אחרי הסרת צלע',`c(${P}) ≤ c(${X}) ≤ c(${P}) + 1`,`${C} ≤ ${c} ≤ ${C} + 1`)}
-    if(g.op==='delS'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים אחרי הסרת קבוצה',`n(${X}) = n(${P}) − |${a.name}|`,`${n} = ${N} − ${k}`);rel('צלעות אחרי הסרת קבוצה',`m(${X}) ≥ m(${P}) − |${a.name}|·Δ(${P})`,`${m} ≥ ${M} − ${k}·${Q('D')}`);
-      if(a.prop==='indep')rel('הקבוצה בלתי תלויה: כל צלע שנוגעת בה נספרת פעם אחת',`m(${X}) = m(${P}) − Σ deg(u), u ∈ ${a.name}`,`${m} = ${M} − Σ deg(u), u ∈ ${a.name}`)}
-    if(g.op==='adde'){rel('צמתים אחרי הוספת צלע',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('צלעות אחרי הוספת צלע',`m(${X}) = m(${P}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי הוספת צלע',`c(${P}) − 1 ≤ c(${X}) ≤ c(${P})`,`${C} − 1 ≤ ${c} ≤ ${C}`)}
-    if(g.op==='contr'){rel('צמתים אחרי כיווץ צלע',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('צלעות אחרי כיווץ צלע (שכנים משותפים מתאחדים)',`m(${X}) ≤ m(${P}) − 1`,`${m} ≤ ${M} − 1`);rel('רכיבי קשירות אחרי כיווץ',`c(${X}) = c(${P})`,`${c} = ${C}`)}
-    if(g.op==='subd'){rel('צמתים אחרי העדנת צלע',`n(${X}) = n(${P}) + 1`,`${n} = ${N} + 1`);rel('צלעות אחרי העדנת צלע',`m(${X}) = m(${P}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי העדנה',`c(${X}) = c(${P})`,`${c} = ${C}`);F.push({t:'העדנה שומרת על מישוריות',r:'טענה 5.7',g:`${X} planar ⇔ ${P} planar`,s:'',rel:1,text:1})}
-    if(g.op==='compl'){rel('צמתים במשלים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('צלעות בגרף ובמשלים',`m(${P}) + m(${X}) = n(n − 1) / 2`,`${M} + ${m} = ${N}·(${N} − 1) / 2`);const xd=allDeg(src);rel('דרגה במשלים',`deg in ${X} = n − 1 − deg in ${P}`,`deg in ${X} = ${N} − 1 − ${xd!==null?V(xd):'deg in '+P}`);
+    if(g.op==='dele'){rel('צמתים אחרי הסרת קשת',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות אחרי הסרת קשת',`m(${X}) = m(${P}) − 1`,`${m} = ${M} − 1`);
+      if(a.bridge)rel(`${a.name} גשר`,`c(${X}) = c(${P}) + 1`,`${c} = ${C} + 1`);else rel('רכיבי קשירות אחרי הסרת קשת',`c(${P}) ≤ c(${X}) ≤ c(${P}) + 1`,`${C} ≤ ${c} ≤ ${C} + 1`)}
+    if(g.op==='delS'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים אחרי הסרת קבוצה',`n(${X}) = n(${P}) − |${a.name}|`,`${n} = ${N} − ${k}`);rel('קשתות אחרי הסרת קבוצה',`m(${X}) ≥ m(${P}) − |${a.name}|·Δ(${P})`,`${m} ≥ ${M} − ${k}·${Q('D')}`);
+      if(a.prop==='indep')rel('הקבוצה בלתי תלויה: כל קשת שנוגעת בה נספרת פעם אחת',`m(${X}) = m(${P}) − Σ deg(u), u ∈ ${a.name}`,`${m} = ${M} − Σ deg(u), u ∈ ${a.name}`)}
+    if(g.op==='adde'){rel('צמתים אחרי הוספת קשת',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות אחרי הוספת קשת',`m(${X}) = m(${P}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי הוספת קשת',`c(${P}) − 1 ≤ c(${X}) ≤ c(${P})`,`${C} − 1 ≤ ${c} ≤ ${C}`)}
+    if(g.op==='contr'){rel('צמתים אחרי כיווץ קשת',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('קשתות אחרי כיווץ קשת (שכנים משותפים מתאחדים)',`m(${X}) ≤ m(${P}) − 1`,`${m} ≤ ${M} − 1`);rel('רכיבי קשירות אחרי כיווץ',`c(${X}) = c(${P})`,`${c} = ${C}`)}
+    if(g.op==='subd'){rel('צמתים אחרי העדנת קשת',`n(${X}) = n(${P}) + 1`,`${n} = ${N} + 1`);rel('קשתות אחרי העדנת קשת',`m(${X}) = m(${P}) + 1`,`${m} = ${M} + 1`);rel('רכיבי קשירות אחרי העדנה',`c(${X}) = c(${P})`,`${c} = ${C}`);F.push({tp,t:'העדנה שומרת על מישוריות',r:'טענה 5.7',g:`${X} planar ⇔ ${P} planar`,s:'',rel:1,text:1})}
+    if(g.op==='compl'){rel('צמתים במשלים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בגרף ובמשלים',`m(${P}) + m(${X}) = n(n − 1) / 2`,`${M} + ${m} = ${N}·(${N} − 1) / 2`);const xd=allDeg(src);rel('דרגה במשלים',`deg in ${X} = n − 1 − deg in ${P}`,`deg in ${X} = ${N} − 1 − ${xd!==null?V(xd):'deg in '+P}`);
       rel('דרגה מקסימלית במשלים',`Δ(${X}) = n − 1 − δ(${P})`,`${D} = ${N} − 1 − ${Q('dl')}`);rel('קליקה במשלים היא קבוצה בלתי תלויה בגרף',`ω(${X}) = α(${P})`,`ω${s} = ${Q('al')}`)}
-    if(g.op==='ind'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים בתת-גרף מושרה',`n(${X}) = |${a.name}|`,`${n} = ${k}`);rel('צלעות בתת-גרף מושרה',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('צביעה של תת-גרף',`χ(${X}) ≤ χ(${P})`,`${q('chi')} ≤ ${Q('chi')}`);
+    if(g.op==='ind'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים בתת-גרף מושרה',`n(${X}) = |${a.name}|`,`${n} = ${k}`);rel('קשתות בתת-גרף מושרה',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('צביעה של תת-גרף',`χ(${X}) ≤ χ(${P})`,`${q('chi')} ≤ ${Q('chi')}`);
       if(a.prop==='indep')rel('מושרה על קבוצה בלתי תלויה',`m(${X}) = 0`,`${m} = ${V(0)}`);if(a.prop==='clique')rel('מושרה על קליקה',`m(${X}) = |${a.name}|(|${a.name}| − 1) / 2`,`${m} = ${k}·(${k} − 1) / 2`)}
-    if(g.op==='comp'){rel('רכיב קשירות הוא קשיר',`c(${X}) = 1`,`${c} = ${V(1)}`);rel('צמתים ברכיב',`n(${X}) ≤ n(${P})`,`${n} ≤ ${N}`);rel('צלעות ברכיב',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`)}
-    if(g.op==='span'){rel('תת-גרף פורש: אותם צמתים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('צלעות בתת-גרף פורש',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('רכיבי קשירות בתת-גרף פורש',`c(${X}) ≥ c(${P})`,`${c} ≥ ${C}`);F.push({t:'כל גרף קשיר מכיל עץ פורש',r:'טענה 2.6',g:`${P} connected ⇒ exists spanning tree`,s:'',rel:1,text:1})}}
+    if(g.op==='comp'){rel('רכיב קשירות הוא קשיר',`c(${X}) = 1`,`${c} = ${V(1)}`);rel('צמתים ברכיב',`n(${X}) ≤ n(${P})`,`${n} ≤ ${N}`);rel('קשתות ברכיב',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`)}
+    if(g.op==='span'){rel('תת-גרף פורש: אותם צמתים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בתת-גרף פורש',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('רכיבי קשירות בתת-גרף פורש',`c(${X}) ≥ c(${P})`,`${c} ≥ ${C}`);F.push({tp,t:'כל גרף קשיר מכיל עץ פורש',r:'טענה 2.6',g:`${P} connected ⇒ exists spanning tree`,s:'',rel:1,text:1})}}
   /* degrees */
+  tp='דרגות';
   const av=allV(g),aLo=av?dLo(av):null,aHi=av?dHi(av):null;
   add('סכום הדרגות','טענה 1.3','Σ deg(u) = 2m',`${ad!==null?V(ad)+'·'+n:'Σ deg(u)'} = 2·${m}`);
   if(av&&ad===null){add('סכום הדרגות כשכל הדרגות בטווח','טענה 1.3','n·min deg ≤ 2m ≤ n·max deg',`${aLo!==null?n+'·'+V(aLo)+' ≤ ':''}2·${m}${aHi!==null?' ≤ '+n+'·'+V(aHi):''}`);
@@ -551,22 +554,42 @@ function sheetFor(g){
     if(dEx(v)===null&&(dLo(v)!==null||dHi(v)!==null))add(`טווח הדרגה של ${v.name}`,'נתון',`min ≤ ${S0} ≤ max`,rngTxt(dLo(v),S0+s,dHi(v)))}
   for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'&&!(o.q==='one'&&o.w))){add(v.q==='ex'?'קיים צומת בדרגה נתונה':`הדרגה של ${v.name}`,'מההגדרה',`δ ≤ deg(${v.name}) ≤ Δ`,dEx(v)!==null||(dLo(v)===null&&dHi(v)===null)?`${dl} ≤ ${degOf(v)} ≤ ${D}`:[dHi(v)!==null?`${dl} ≤ ${V(dHi(v))}`:'',dLo(v)!==null?`${V(dLo(v))} ≤ ${D}`:''].filter(Boolean).join(',   '));
     if(dEx(v)===null&&(dLo(v)!==null||dHi(v)!==null))add(`טווח הדרגה של ${v.name}`,'נתון',`min ≤ deg(${v.name}) ≤ max`,rngTxt(dLo(v),`deg(${v.name})`,dHi(v)))}
+  add('מספר הצמתים מדרגה אי-זוגית הוא זוגי','מסקנה מ־1.3','#{u : deg(u) odd} is even',ad!==null&&ad%2?`${V(ad)} odd ⇒ ${n} even`:'');
+  add('יש שני צמתים מאותה דרגה (שני צמתים לפחות)','מסקנה','deg(u) = deg(w) for some u ≠ w','');
+  add('דרגה מינימלית גדולה מבטיחה קשירות','מסקנה','δ ≥ (n − 1) / 2 ⇒ connected',`${dl} ≥ (${n} − 1) / 2`);
+  add('מסלול ומעגל ארוכים לפי הדרגה המינימלית','פרק 1, שאלה 3','simple path of length ≥ δ,  simple cycle on ≥ δ + 1 vertices (δ ≥ 2)',`path ≥ ${dl},  cycle ≥ ${dl} + 1`);
   /* edges, components, trees */
-  add('מספר הצלעות המרבי בגרף פשוט','מההגדרה','m ≤ n(n − 1) / 2',`${m} ≤ ${n}·(${n} − 1) / 2`);
-  add('מספר הצלעות המזערי לפי רכיבי הקשירות','פרק 2','m ≥ n − c',`${m} ≥ ${n} − ${c}`);
-  add('עץ: מספר הצלעות','משפט 2.5','m = n − 1',`${m} = ${n} − 1`,[['tr','y']]);
+  tp='קשתות, קשירות ועצים';
+  add('מספר הקשתות המרבי בגרף פשוט','מההגדרה','m ≤ n(n − 1) / 2',`${m} ≤ ${n}·(${n} − 1) / 2`);
+  add('מספר הקשתות המזערי לפי רכיבי הקשירות','פרק 2','m ≥ n − c',`${m} ≥ ${n} − ${c}`);
+  add('עץ: מספר הקשתות','משפט 2.5','m = n − 1',`${m} = ${n} − 1`,[['tr','y']]);
   add('עץ עם שני צמתים לפחות: יש עלה','טענה 2.3','δ = 1',`${dl} = ${V(1)}`,[['tr','y']]);
   add('מספר העצים המתויגים על אותם צמתים','משפט 2.9 (קיילי)','nⁿ⁻²',`${n} ^ (${n} − 2)`,[['tr','y']]);
+  add('יער: מספר הקשתות','מסקנה מ־2.5','m = n − c',`${m} = ${n} − ${c}`,[['fo','y']]);
+  add('עץ: שני עלים לפחות, ולפחות כדרגה המקסימלית','מסקנה מ־2.3','ℓ ≥ 2,  ℓ ≥ Δ',`${q('lv')} ≥ ${V(2)},  ${q('lv')} ≥ ${D}`,[['tr','y']]);
+  add('עץ: מספר העלים לפי הדרגות','מסקנה מ־1.3 ומ־2.5','ℓ = 2 + Σ (deg(u) − 2), deg(u) ≥ 3',q('lv').includes('class=')?`${q('lv')} = 2 + Σ (deg(u) − 2), deg(u) ≥ 3`:'',[['tr','y']]);
+  add('סדרת פרופר: מספר ההופעות של צומת','פרק 2','appearances of u = deg(u) − 1','',[['tr','y']]);
+  add('קשיר, ומספר הקשתות כמספר הצמתים: מעגל יחיד','מסקנה מ־2.5','connected, m = n ⇒ exactly one cycle',`${m} = ${n}`,[['conn','y']]);
+  add('הרבה קשתות מבטיחות קשירות','מסקנה','m > (n − 1)(n − 2) / 2 ⇒ connected',`${m} > (${n} − 1)·(${n} − 2) / 2`);
+  add('הגרף או המשלים שלו קשיר','מסקנה','G or its complement is connected','');
   /* bipartite */
+  tp='דו-צדדי';
   add('דו-צדדי: אין מעגל באורך אי-זוגי','משפט 1.6','no odd cycle','',[['bp','y']]);
   add('דו-צדדי: שני צבעים מספיקים','משפט 1.6','χ ≤ 2',`${q('chi')} ≤ ${V(2)}`,[['bp','y']]);
+  add('דו-צדדי: חסם על מספר הקשתות','מסקנה','m ≤ n² / 4',`${m} ≤ ${n}² / 4`,[['bp','y']]);
+  add('דו-צדדי: סכום הדרגות בכל צד','מההגדרה','Σ deg(a), a ∈ A  =  Σ deg(b), b ∈ B  =  m',`Σ deg(a) = Σ deg(b) = ${m}`,[['bp','y']]);
+  if(ad!==null&&ad>=1)add('דו-צדדי רגולרי: צדדים שווים וזיווג מושלם','מסקנה מ־4.7','k-regular, k ≥ 1 ⇒ |A| = |B| = n / 2,  ν = n / 2',`|A| = |B| = ${n} / 2,  ${q('nu')} = ${n} / 2`,[['bp','y']]);
   /* Euler, Hamilton */
+  tp='אוילר והמילטון';
+  add('מסלול אוילר שאינו מעגל','פרק 3','Euler path ⇔ exactly 2 vertices of odd degree','',[['conn','y']]);
   add('אוילרי, אם ורק אם כל הדרגות זוגיות','משפט 3.1','Eulerian ⇔ deg(u) even for all u',ad!==null?`Eulerian ⇔ ${V(ad)} even`:'',[['conn','y']]);
   add('תנאי אור: לכל שני צמתים לא שכנים (שלושה צמתים לפחות)','משפט 3.2','deg(u) + deg(w) ≥ n ⇒ Hamiltonian',`${ad!==null?V(ad)+' + '+V(ad):'deg(u) + deg(w)'} ≥ ${n}`);
   add('תנאי דירק להמילטוניות (שלושה צמתים לפחות)','משפט 3.3','δ ≥ n / 2 ⇒ Hamiltonian',`${dl} ≥ ${n} / 2`);
   /* matchings and covers */
-  add('זיווג מכסה שני צמתים לכל צלע','מההגדרה','ν ≤ n / 2',`${q('nu')} ≤ ${n} / 2`);
-  add('כיסוי בצלעות וזיווג (בלי צמתים מבודדים)','משפט 4.10','ρ = n − ν',`${q('rho')} = ${n} − ${q('nu')}`);
+  tp='זיווגים וכיסויים';
+  add('משפט ברג׳: זיווג מקסימום ומסלול שיפור','משפט 4.6','M is maximum ⇔ no augmenting path','');
+  add('זיווג מכסה שני צמתים לכל קשת','מההגדרה','ν ≤ n / 2',`${q('nu')} ≤ ${n} / 2`);
+  add('כיסוי בקשתות וזיווג (בלי צמתים מבודדים)','משפט 4.10','ρ = n − ν',`${q('rho')} = ${n} − ${q('nu')}`);
   add('קבוצה בלתי תלויה וכיסוי בצמתים','טענה 4.14','α + β = n',`${q('al')} + ${q('be')} = ${n}`);
   add('כיסוי בצמתים מול זיווג','טענה 4.15','β ≥ ν',`${q('be')} ≥ ${q('nu')}`);
   add('דו-צדדי: כיסוי בצמתים שווה לזיווג','משפט 4.16 (קניג)','β = ν',`${q('be')} = ${q('nu')}`,[['bp','y']]);
@@ -574,40 +597,51 @@ function sheetFor(g){
     if(S.prop==='indep')add('קבוצה בלתי תלויה נתונה','מההגדרה',`α ≥ |${A}|`,`${q('al')} ≥ ${k}`);
     if(S.prop==='clique')add('קליקה נתונה','מההגדרה',`χ ≥ ω ≥ |${A}|`,`${q('chi')} ≥ ω${s} ≥ ${k}`);
     if(S.prop==='cover')add('כיסוי בצמתים נתון','מההגדרה',`β ≤ |${A}|`,`${q('be')} ≤ ${k}`);
-    if(S.prop==='side'){add(`כל צלע נוגעת בצומת אחד של ${A}`,'מההגדרה',`Σ deg(u) = m, u ∈ ${A}`,`Σ deg(u) = ${m}, u ∈ ${A}`,[['bp','y']]);
+    if(S.prop==='side'){add(`כל קשת נוגעת בצומת אחד של ${A}`,'מההגדרה',`Σ deg(u) = m, u ∈ ${A}`,`Σ deg(u) = ${m}, u ∈ ${A}`,[['bp','y']]);
       add(`תנאי הול לזיווג שמכסה את ${A}`,'משפט 4.7 (הול)',`|Γ(X)| ≥ |X| for all X ⊆ ${A}  ⇔  ν = |${A}|`,`|Γ(X)| ≥ |X| for all X ⊆ ${A}  ⇔  ${q('nu')} = ${k}`,[['bp','y']]);
       add('זיווג מושלם בגרף דו-צדדי','מסקנה 4.8',`perfect matching ⇔ |${A}| = n − |${A}| and Hall`,`${k} = ${n} − ${k}`,[['bp','y']])}}
+  add('כיסוי בצמתים לכל היותר פעמיים הזיווג','מסקנה','β ≤ 2ν',`${q('be')} ≤ 2·${q('nu')}`);
+  add('קבוצה בלתי תלויה לפי הדרגה המקסימלית','מסקנה','α ≥ n / (Δ + 1)',`${q('al')} ≥ ${n} / (${D} + 1)`);
   /* planarity */
+  tp='מישוריות';
   add('נוסחת אוילר','משפט 5.3','f = m − n + 2',`${q('f')} = ${m} − ${n} + 2`,[['pl','y'],['conn','y']]);
   add('נוסחת אוילר לגרף מישורי כלשהו','הכללה של 5.3','f = m − n + c + 1',`${q('f')} = ${m} − ${n} + ${c} + 1`,[['pl','y']]);
-  add('חסם הצלעות בגרף מישורי (שלושה צמתים לפחות)','מסקנה 5.4','m ≤ 3n − 6',`${m} ≤ 3·${n} − 6`,[['pl','y']]);
-  add('כל פאה תחומה בשלוש צלעות לפחות','פרק 5','3f ≤ 2m',`3·${q('f')} ≤ 2·${m}`,[['pl','y']]);
+  add('חסם הקשתות בגרף מישורי (שלושה צמתים לפחות)','מסקנה 5.4','m ≤ 3n − 6',`${m} ≤ 3·${n} − 6`,[['pl','y']]);
+  add('כל פאה תחומה בשלוש קשתות לפחות','פרק 5','3f ≤ 2m',`3·${q('f')} ≤ 2·${m}`,[['pl','y']]);
   add('סכום אורכי הפאות','פרק 5','Σ len(face) = 2m',`Σ len(face) = 2·${m}`,[['pl','y']]);
   add('בגרף מישורי יש צומת מדרגה קטנה','מסקנה 5.5','δ ≤ 5',`${dl} ≤ ${V(5)}`,[['pl','y']]);
   add('משפט ארבעת הצבעים','משפט 6.3','χ ≤ 4',`${q('chi')} ≤ ${V(4)}`,[['pl','y']]);
   add('לא מישורי: מכיל העדנה של K₅ או של K₃,₃','משפט 5.8 (קורטובסקי)','contains a subdivision of K₅ or K₃,₃','',[['pl','n']]);
   add('לא מישורי: גדלים מזעריים','משפט 5.8','n ≥ 5,  m ≥ 9',`${n} ≥ 5,  ${m} ≥ 9`,[['pl','n']]);
+  add('מישורי בלי משולשים (שלושה צמתים לפחות)','מסקנה מ־5.3','m ≤ 2n − 4',`${m} ≤ 2·${n} − 4`,[['pl','y'],['tf','y']]);
+  add('משפט חמשת הצבעים','משפט 6.4','χ ≤ 5',`${q('chi')} ≤ ${V(5)}`,[['pl','y']]);
   /* colouring */
+  tp='צביעה ומשלים';
   add('חסם על מספר הצביעה','פרק 6, שאלה 1','χ ≤ Δ + 1',`${q('chi')} ≤ ${D} + 1`);
   add('משפט ברוקס (פרט לרכיב שהוא גרף מלא או מעגל אי-זוגי)','משפט 6.2','χ ≤ Δ',`${q('chi')} ≤ ${D}`);
   add('כל צבע הוא קבוצה בלתי תלויה','מההגדרה','n ≤ χ·α',`${n} ≤ ${q('chi')}·${q('al')}`);
+  add('מספר הצביעה לפחות הקליקה המקסימלית','מההגדרה','χ ≥ ω',`${q('chi')} ≥ ${q('om')}`);
+  add('צביעה של הגרף ושל המשלים','מסקנה','χ(G)·χ(complement) ≥ n',`${q('chi')}·χ(complement) ≥ ${n}`);
+  add('איזומורפי למשלים','מסקנה','n mod 4 ∈ {0, 1},  m = n(n − 1) / 4',`${m} = ${n}·(${n} − 1) / 4`,[['sc','y']]);
   /* status of each formula: applies, hidden (a needed property is given as the opposite), or conditional (unknown) */
   const st=f=>{if(!f.need)return 'on';let u=false;for(const [k,w] of f.need){const p=prop(g,k);if(p==='u')u=true;else if(p!==w)return 'hide'}return u?'hide':'on'};
   const cond=f=>f.need.filter(([k])=>prop(g,k)==='u').map(([k,w])=>(w==='n'?'לא ':'')+PROPS[k]).join(' ו');
   const card=f=>`<tr class="${f.rel?'rel':''}"><th scope="row">${f.t} <span class="ref">${f.r}</span></th><td class="fx gen">${f.g}</td><td class="fx qsub">${f.s&&/class="q[vs]"/.test(f.s)?f.s:''}</td></tr>`;
   const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
   const vis=F.filter(f=>st(f)!=='hide');
-  return `<table class="qt"><caption><span class="name">${X}</span> ${title}</caption><thead><tr><th scope="col">נוסחה</th><th scope="col">צורה כללית</th><th scope="col">עם הנתונים</th></tr></thead><tbody>${vis.map(card).join('')}</tbody></table>`}
+  const tps=[...new Set(vis.map(f=>f.tp))];
+  return `<table class="qt"><caption><span class="name">${X}</span> ${title}</caption><thead><tr><th scope="col">נוסחה</th><th scope="col">צורה כללית</th><th scope="col">עם הנתונים</th></tr></thead>${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<tbody><tr class="tp"><th colspan="3"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button></th></tr>${open?rows.map(card).join(''):''}</tbody>`}).join('')}</table>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,ex(g,k).num])}}
   for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
-  L.push(['ω','גודל קליקה מקסימלית',null],['Γ(X)','קבוצת השכנים של צומתי X',null]);
+  L.push(['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
 document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb'))return;const o=O[i];
   o[k]=t.type==='checkbox'?t.checked:t.type==='number'?(t.value===''?null:Number(t.value)):t.value;
   if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);renderObjs()}
   renderSheet()});
+document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
   if(mo){const o=O[Number(mo.dataset.more)];o.more=!o.more}
   else if(d){removeObj(d.dataset.del)}
@@ -619,7 +653,7 @@ document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest
   else return;renderObjs();renderSheet()});
 return{render(){
   document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
-  <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ צלע</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
+  <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ קשת</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
   <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p></div></div>`;
   document.getElementById('main').innerHTML=`<div class="qsheet" id="qsheet"></div>`;
   document.getElementById('card').innerHTML=`<div class="cardhead"><h2>מקרא הסמלים</h2></div><dl id="qlegend" class="qleg"></dl><p class="hint">סמל צבוע הוא נתון. השאר לא נתונים, ומוצגים בנוסחאות לפי ההגדרה שלהם.</p>`;
@@ -857,7 +891,7 @@ const rng=(c,f,min,max,val)=>`<input type="range" id="c${c.id}-${f}" data-inp="$
 function condBody(c){
   const K=KIND[c.kind],n=nHi();let h='';
   if(K.type==='cut'){const sel=(f,opts)=>`<select id="c${c.id}-${f}" data-inp="${f}" data-id="${c.id}" aria-label="${f==='q'?'כמת':'מה מסירים'}">${opts.map(([v,l])=>`<option value="${v}" ${c[f]===v?'selected':''}>${l}</option>`).join('')}</select>`;
-    h+=`<div class="row">${sel('q',[['ex','קיימת הסרה של'],['all','לכל הסרה של']])}${rng(c,'k',1,numMax(c),c.k)}${sel('what',[['e','צלעות'],['v','צמתים']])}</div><div class="hint">התנאים שמעל נבדקים על הגרף עצמו. התנאים שמתחת נבדקים על מה שנשאר אחרי ההסרה.</div>`}
+    h+=`<div class="row">${sel('q',[['ex','קיימת הסרה של'],['all','לכל הסרה של']])}${rng(c,'k',1,numMax(c),c.k)}${sel('what',[['e','קשתות'],['v','צמתים']])}</div><div class="hint">התנאים שמעל נבדקים על הגרף עצמו. התנאים שמתחת נבדקים על מה שנשאר אחרי ההסרה.</div>`}
   if(K.type==='bool')h+=`<div class="row">${seg('bool',[['1','מתקיים'],['0','לא מתקיים']],String(c.value)).replace(/data-act="bool"/g,`data-act="bool" data-id="${c.id}"`)}</div>`;
   if(K.type==='num'){
     if(K.extra)h+=`<div class="row"><label for="c${c.id}-extra">${K.extra.label}</label>${rng(c,'extra',0,K.extra.max(n),c.extra)}</div>`;
@@ -923,8 +957,8 @@ function renderMain(){
   const m=$('#main');
   if(S.mode==='manual'){
     const a=manualGraph(),n=S.n;const pos=layout(new Array(n).fill(0),n,'circle');
-    m.innerHTML=`<div class="hero"><div class="big"><span class="t">גרף ידני</span></div><div class="pill">לחץ על שני צמתים כדי להוסיף או להסיר צלע ביניהם</div></div>
-    <div class="bar"><button class="btn" data-act="mclear">נקה צלעות</button><button class="btn" data-act="mcompl">הפוך למשלים</button></div>
+    m.innerHTML=`<div class="hero"><div class="big"><span class="t">גרף ידני</span></div><div class="pill">לחץ על שני צמתים כדי להוסיף או להסיר קשת ביניהם</div></div>
+    <div class="bar"><button class="btn" data-act="mclear">נקה קשתות</button><button class="btn" data-act="mcompl">הפוך למשלים</button></div>
     <div class="editor">${svgGraph(a,n,{pos,labels:true,hit:'vertex',pick:S.manualPick,r:10,cls:'big',aria:'עורך גרף'})}</div>`;
     return;
   }
@@ -1012,7 +1046,7 @@ function cardHead(){return `<div class="cardhead"><h2>כרטיס הגרף</h2><b
 const yn=b=>b?'כן':'לא';
 function propRows(a,n,aut){
   const co=compl(a,n),d=degs(a).sort((x,y)=>y-x),nc=nComps(a,n),pl=isPlanar(a,n),gi=girth(a,n);
-  const rows=[['צמתים',n],['צלעות',fmt(nEdges(a))],['צלעות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
+  const rows=[['צמתים',n],['קשתות',fmt(nEdges(a))],['קשתות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
     ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
     ['צמתים מפרידים',nCutV(a,n)],['מעגלים',n<=8?fmt(nCycles(a,n)):nEdges(a)===n-nc?0:'—'],['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
   if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
@@ -1025,7 +1059,7 @@ function renderCard(){
   let pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
   const E=embInfo(a,n),kur=!E&&S.kur?kuratowski(a,n):null,nc=nComps(a,n),stepper=(act,i,L)=>`<span class="stp"><button class="ib" data-act="${act}" data-v="-1" aria-label="הקודם" ${L>1?'':'disabled'}>›</button><b class="num">${i+1} / ${L}</b><button class="ib" data-act="${act}" data-v="1" aria-label="הבא" ${L>1?'':'disabled'}>‹</button></span>`;
   let pl=`<button class="btn sm" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>`;
-  if(!E)pl=`<div class="chips"><span class="tag no">הגרף לא מישורי</span></div><button class="btn sm" data-act="kur" aria-pressed="${!!S.kur}">הראה תת-גרף שמונע שיכון</button>${kur?`<p class="hint">הצלעות המסומנות הן חלוקה של <b class="num">${kur.type==='K5'?'K₅':'K₃,₃'}</b>, ולפי משפט קורטובסקי גרף שמכיל חלוקה כזו אינו מישורי.</p>`:''}`;
+  if(!E)pl=`<div class="chips"><span class="tag no">הגרף לא מישורי</span></div><button class="btn sm" data-act="kur" aria-pressed="${!!S.kur}">הראה תת-גרף שמונע שיכון</button>${kur?`<p class="hint">הקשתות המסומנות הן חלוקה של <b class="num">${kur.type==='K5'?'K₅':'K₃,₃'}</b>, ולפי משפט קורטובסקי גרף שמכיל חלוקה כזו אינו מישורי.</p>`:''}`;
   else if(S.layout==='planar'){
     const L=E.list.length,ei=Math.min(S.emb||0,L-1),rot=E.list[ei],oc=outerChoices(rot,n,E.auts),oi=nc===1?(S.outer||0)%oc.reps.length:0,of=oc.reps[oi];
     pos=planarLayout(a,n,rot,nc===1?of:undefined);
@@ -1056,11 +1090,11 @@ function renderCard(){
     const k=pc(S.subset);
     if(!k)tool=`<p class="hint">לחץ על צמתים בציור כדי לבחור תת-קבוצה ולראות את התת-גרף המושרה.</p>`;
     else{let e=0;for(let i=0;i<n;i++)if(S.subset>>i&1)e+=pc(a[i]&S.subset);e/=2;const props=Object.keys(IND).filter(p=>IND[p](a,S.subset,k)).map(p=>IND_LABEL[p]);
-      tool=`<div class="kv"><span>צמתים שנבחרו</span><b class="num">${k}</b></div><div class="kv"><span>צלעות בתת-גרף המושרה</span><b class="num">${e}</b></div><div class="kv"><span>צלעות במושרה של המשלים</span><b class="num">${k*(k-1)/2-e}</b></div>
+      tool=`<div class="kv"><span>צמתים שנבחרו</span><b class="num">${k}</b></div><div class="kv"><span>קשתות בתת-גרף המושרה</span><b class="num">${e}</b></div><div class="kv"><span>קשתות במושרה של המשלים</span><b class="num">${k*(k-1)/2-e}</b></div>
       <div class="chips">${props.map(p=>`<span class="tag">${p}</span>`).join('')||'<span class="hint">לא קליקה, לא בלתי תלויה, לא קשירה</span>'}</div><button class="btn sm" data-act="clrsub">נקה בחירה</button>`}
   }else{
     const isMax=M.size===mm,ap=isMax?null:augmenting(a,n,M);
-    tool=`<p class="hint">לחץ על צלעות בציור כדי לבנות זיווג.</p><div class="kv"><span>גודל הזיווג שסימנת</span><b class="num">${M.size}</b></div><div class="kv"><span>גודל זיווג מקסימלי</span><b class="num">${mm}</b></div>
+    tool=`<p class="hint">לחץ על קשתות בציור כדי לבנות זיווג.</p><div class="kv"><span>גודל הזיווג שסימנת</span><b class="num">${M.size}</b></div><div class="kv"><span>גודל זיווג מקסימלי</span><b class="num">${mm}</b></div>
     <div class="chips"><span class="tag ${isMax?'ok':''}">${isMax?'הזיווג מקסימלי, אין מסלול שיפור':'קיים מסלול שיפור'}</span></div>
     <div class="bar"><button class="btn sm" data-act="showaug" ${ap?'':'disabled'}>הראה מסלול שיפור</button><button class="btn sm" data-act="applyaug" ${S.augPath?'':'disabled'}>בצע שיפור</button><button class="btn sm" data-act="clrmatch">נקה</button></div>`;
   }

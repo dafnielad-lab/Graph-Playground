@@ -229,7 +229,7 @@ const rng=(c,f,min,max,val)=>`<input type="range" id="c${c.id}-${f}" data-inp="$
 function condBody(c){
   const K=KIND[c.kind],n=nHi();let h='';
   if(K.type==='cut'){const sel=(f,opts)=>`<select id="c${c.id}-${f}" data-inp="${f}" data-id="${c.id}" aria-label="${f==='q'?'כמת':'מה מסירים'}">${opts.map(([v,l])=>`<option value="${v}" ${c[f]===v?'selected':''}>${l}</option>`).join('')}</select>`;
-    h+=`<div class="row">${sel('q',[['ex','קיימת הסרה של'],['all','לכל הסרה של']])}${rng(c,'k',1,numMax(c),c.k)}${sel('what',[['e','צלעות'],['v','צמתים']])}</div><div class="hint">התנאים שמעל נבדקים על הגרף עצמו. התנאים שמתחת נבדקים על מה שנשאר אחרי ההסרה.</div>`}
+    h+=`<div class="row">${sel('q',[['ex','קיימת הסרה של'],['all','לכל הסרה של']])}${rng(c,'k',1,numMax(c),c.k)}${sel('what',[['e','קשתות'],['v','צמתים']])}</div><div class="hint">התנאים שמעל נבדקים על הגרף עצמו. התנאים שמתחת נבדקים על מה שנשאר אחרי ההסרה.</div>`}
   if(K.type==='bool')h+=`<div class="row">${seg('bool',[['1','מתקיים'],['0','לא מתקיים']],String(c.value)).replace(/data-act="bool"/g,`data-act="bool" data-id="${c.id}"`)}</div>`;
   if(K.type==='num'){
     if(K.extra)h+=`<div class="row"><label for="c${c.id}-extra">${K.extra.label}</label>${rng(c,'extra',0,K.extra.max(n),c.extra)}</div>`;
@@ -295,8 +295,8 @@ function renderMain(){
   const m=$('#main');
   if(S.mode==='manual'){
     const a=manualGraph(),n=S.n;const pos=layout(new Array(n).fill(0),n,'circle');
-    m.innerHTML=`<div class="hero"><div class="big"><span class="t">גרף ידני</span></div><div class="pill">לחץ על שני צמתים כדי להוסיף או להסיר צלע ביניהם</div></div>
-    <div class="bar"><button class="btn" data-act="mclear">נקה צלעות</button><button class="btn" data-act="mcompl">הפוך למשלים</button></div>
+    m.innerHTML=`<div class="hero"><div class="big"><span class="t">גרף ידני</span></div><div class="pill">לחץ על שני צמתים כדי להוסיף או להסיר קשת ביניהם</div></div>
+    <div class="bar"><button class="btn" data-act="mclear">נקה קשתות</button><button class="btn" data-act="mcompl">הפוך למשלים</button></div>
     <div class="editor">${svgGraph(a,n,{pos,labels:true,hit:'vertex',pick:S.manualPick,r:10,cls:'big',aria:'עורך גרף'})}</div>`;
     return;
   }
@@ -384,7 +384,7 @@ function cardHead(){return `<div class="cardhead"><h2>כרטיס הגרף</h2><b
 const yn=b=>b?'כן':'לא';
 function propRows(a,n,aut){
   const co=compl(a,n),d=degs(a).sort((x,y)=>y-x),nc=nComps(a,n),pl=isPlanar(a,n),gi=girth(a,n);
-  const rows=[['צמתים',n],['צלעות',fmt(nEdges(a))],['צלעות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
+  const rows=[['צמתים',n],['קשתות',fmt(nEdges(a))],['קשתות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
     ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
     ['צמתים מפרידים',nCutV(a,n)],['מעגלים',n<=8?fmt(nCycles(a,n)):nEdges(a)===n-nc?0:'—'],['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
   if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
@@ -397,7 +397,7 @@ function renderCard(){
   let pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
   const E=embInfo(a,n),kur=!E&&S.kur?kuratowski(a,n):null,nc=nComps(a,n),stepper=(act,i,L)=>`<span class="stp"><button class="ib" data-act="${act}" data-v="-1" aria-label="הקודם" ${L>1?'':'disabled'}>›</button><b class="num">${i+1} / ${L}</b><button class="ib" data-act="${act}" data-v="1" aria-label="הבא" ${L>1?'':'disabled'}>‹</button></span>`;
   let pl=`<button class="btn sm" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>`;
-  if(!E)pl=`<div class="chips"><span class="tag no">הגרף לא מישורי</span></div><button class="btn sm" data-act="kur" aria-pressed="${!!S.kur}">הראה תת-גרף שמונע שיכון</button>${kur?`<p class="hint">הצלעות המסומנות הן חלוקה של <b class="num">${kur.type==='K5'?'K₅':'K₃,₃'}</b>, ולפי משפט קורטובסקי גרף שמכיל חלוקה כזו אינו מישורי.</p>`:''}`;
+  if(!E)pl=`<div class="chips"><span class="tag no">הגרף לא מישורי</span></div><button class="btn sm" data-act="kur" aria-pressed="${!!S.kur}">הראה תת-גרף שמונע שיכון</button>${kur?`<p class="hint">הקשתות המסומנות הן חלוקה של <b class="num">${kur.type==='K5'?'K₅':'K₃,₃'}</b>, ולפי משפט קורטובסקי גרף שמכיל חלוקה כזו אינו מישורי.</p>`:''}`;
   else if(S.layout==='planar'){
     const L=E.list.length,ei=Math.min(S.emb||0,L-1),rot=E.list[ei],oc=outerChoices(rot,n,E.auts),oi=nc===1?(S.outer||0)%oc.reps.length:0,of=oc.reps[oi];
     pos=planarLayout(a,n,rot,nc===1?of:undefined);
@@ -428,11 +428,11 @@ function renderCard(){
     const k=pc(S.subset);
     if(!k)tool=`<p class="hint">לחץ על צמתים בציור כדי לבחור תת-קבוצה ולראות את התת-גרף המושרה.</p>`;
     else{let e=0;for(let i=0;i<n;i++)if(S.subset>>i&1)e+=pc(a[i]&S.subset);e/=2;const props=Object.keys(IND).filter(p=>IND[p](a,S.subset,k)).map(p=>IND_LABEL[p]);
-      tool=`<div class="kv"><span>צמתים שנבחרו</span><b class="num">${k}</b></div><div class="kv"><span>צלעות בתת-גרף המושרה</span><b class="num">${e}</b></div><div class="kv"><span>צלעות במושרה של המשלים</span><b class="num">${k*(k-1)/2-e}</b></div>
+      tool=`<div class="kv"><span>צמתים שנבחרו</span><b class="num">${k}</b></div><div class="kv"><span>קשתות בתת-גרף המושרה</span><b class="num">${e}</b></div><div class="kv"><span>קשתות במושרה של המשלים</span><b class="num">${k*(k-1)/2-e}</b></div>
       <div class="chips">${props.map(p=>`<span class="tag">${p}</span>`).join('')||'<span class="hint">לא קליקה, לא בלתי תלויה, לא קשירה</span>'}</div><button class="btn sm" data-act="clrsub">נקה בחירה</button>`}
   }else{
     const isMax=M.size===mm,ap=isMax?null:augmenting(a,n,M);
-    tool=`<p class="hint">לחץ על צלעות בציור כדי לבנות זיווג.</p><div class="kv"><span>גודל הזיווג שסימנת</span><b class="num">${M.size}</b></div><div class="kv"><span>גודל זיווג מקסימלי</span><b class="num">${mm}</b></div>
+    tool=`<p class="hint">לחץ על קשתות בציור כדי לבנות זיווג.</p><div class="kv"><span>גודל הזיווג שסימנת</span><b class="num">${M.size}</b></div><div class="kv"><span>גודל זיווג מקסימלי</span><b class="num">${mm}</b></div>
     <div class="chips"><span class="tag ${isMax?'ok':''}">${isMax?'הזיווג מקסימלי, אין מסלול שיפור':'קיים מסלול שיפור'}</span></div>
     <div class="bar"><button class="btn sm" data-act="showaug" ${ap?'':'disabled'}>הראה מסלול שיפור</button><button class="btn sm" data-act="applyaug" ${S.augPath?'':'disabled'}>בצע שיפור</button><button class="btn sm" data-act="clrmatch">נקה</button></div>`;
   }

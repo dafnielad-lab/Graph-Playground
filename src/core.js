@@ -215,14 +215,14 @@ const KIND={
   tree:{cat:'מבנה',label:'עץ',type:'bool',prop:'tree'},
   forest:{cat:'מבנה',label:'חסר מעגלים',type:'bool',prop:'forest'},
   bip:{cat:'מבנה',label:'דו-צדדי',type:'bool',prop:'bip'},
-  edges:{cat:'מבנה',label:'מספר צלעות',type:'num',prop:'edges',max:n=>n*(n-1)/2,def:n=>n-1,op:'eq'},
+  edges:{cat:'מבנה',label:'מספר קשתות',type:'num',prop:'edges',max:n=>n*(n-1)/2,def:n=>n-1,op:'eq'},
   comps:{cat:'מבנה',label:'מספר רכיבי קשירות',type:'num',prop:'comps',min:1,max:n=>n,def:n=>1,op:'eq'},
   diam:{cat:'מבנה',label:'קוטר',type:'num',prop:'diam',max:n=>n-1,def:n=>2,op:'le'},
   girth:{cat:'מבנה',label:'אורך המעגל הקצר ביותר',type:'num',prop:'girth',min:3,max:n=>Math.max(3,n),def:n=>3,op:'eq'},
   tri:{cat:'מבנה',label:'מספר משולשים',type:'num',prop:'tri',max:n=>choose(n,3),def:n=>0,op:'eq'},
   planar:{cat:'מבנה',label:'מישורי',type:'bool',prop:'planar'},
   cutv:{cat:'מבנה',label:'מספר צמתים מפרידים',type:'num',prop:'cutv',max:n=>Math.max(0,n-2),def:n=>1,op:'ge',hint:'צומת מפריד: הסרתו מגדילה את מספר רכיבי הקשירות'},
-  cycles:{cat:'מבנה',label:'מספר מעגלים',type:'num',prop:'cycles',max:maxCycles,def:n=>1,op:'eq',hint:'שני מעגלים שנבדלים בצלע אחת לפחות נספרים בנפרד'},
+  cycles:{cat:'מבנה',label:'מספר מעגלים',type:'num',prop:'cycles',max:maxCycles,def:n=>1,op:'eq',hint:'שני מעגלים שנבדלים בקשת אחת לפחות נספרים בנפרד'},
   euler:{cat:'מבנה',label:'יש מעגל אוילר',type:'bool',prop:'euler'},
   ham:{cat:'מבנה',label:'יש מעגל המילטון',type:'bool',prop:'ham'},
   chi:{cat:'מבנה',label:'מספר צביעה',type:'num',prop:'chi',min:1,max:n=>n,def:n=>2,op:'eq'},
@@ -237,10 +237,10 @@ const KIND={
   mm:{cat:'זיווגים',label:'גודל זיווג מקסימלי',type:'num',prop:'mm',max:n=>n>>1,def:n=>n>>1,op:'eq'},
   pm:{cat:'זיווגים',label:'קיים זיווג מושלם',type:'bool',prop:'pm'},
   pmc:{cat:'זיווגים',label:'מספר זיווגים מושלמים',type:'num',prop:'pmc',max:n=>n%2?0:[1,1,3,15,105,945,10395][n/2],def:n=>1,op:'eq'},
-  stuck:{cat:'זיווגים',label:'קיים זיווג תקוע עם מסלול שיפור',type:'bool',prop:'stuck',hint:'זיווג שאי אפשר להוסיף לו צלע, אבל הוא לא מקסימלי'},
+  stuck:{cat:'זיווגים',label:'קיים זיווג תקוע עם מסלול שיפור',type:'bool',prop:'stuck',hint:'זיווג שאי אפשר להוסיף לו קשת, אבל הוא לא מקסימלי'},
   selfc:{cat:'משלים',label:'איזומורפי למשלים שלו',type:'bool',prop:'selfc',noTarget:true},
   ind:{cat:'תת-גרפים מושרים',label:'תת-קבוצות צמתים עם תכונה',type:'ind',noTarget:true},
-  cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת צלעות או צמתים',type:'cut',noTarget:true}
+  cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת קשתות או צמתים',type:'cut',noTarget:true}
 };
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
 if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV};
