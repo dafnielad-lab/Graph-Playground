@@ -126,7 +126,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qex{direction:rtl;font-size:13px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:6px;padding:4px 8px;margin-top:2px}.qex p{margin:2px 0}.qex .fx{font-size:13px}.qi.ins .qf{direction:rtl}
 .qmv{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start;cursor:pointer;margin-top:4px}
 .qitems.one{grid-template-columns:minmax(0,1fr)}.qi.wide .qf{gap:0 18px}
-.qpf{direction:ltr;display:grid;grid-template-columns:auto auto 1fr;gap:2px 12px;align-items:baseline;margin:3px 0}.qpf .fx{white-space:normal;font-size:13.5px}.qpf .pn{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.qpf .pj{direction:rtl;text-align:right;color:var(--muted);font-size:12px}
+.qpf{margin:3px 0;display:flex;flex-direction:column;gap:5px}.qpf .ps{min-width:0}.qpf .pf{direction:ltr;text-align:left;display:flex;gap:8px;align-items:baseline}.qpf .fx{white-space:normal;font-size:13.5px;min-width:0}.qpf .pn{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums;flex:none}.qpf .pj{direction:rtl;text-align:right;color:var(--muted);font-size:12px;line-height:1.4}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
@@ -1005,7 +1005,7 @@ function pairInfo(g,d,memo){
   P.ore=L('n')>=3&&H('n')<Infinity&&P.nadjLo>=H('n');
   return P}
 /* a derivation: formula on the left, its justification on the right; the last line is the conclusion */
-const prf=lines=>`<div class="qpf">${lines.map(([f,j],n)=>`<span class="pn">${n+1}</span><span class="fx">${f}</span><span class="pj">${j||''}</span>`).join('')}</div>`;
+const prf=lines=>`<div class="qpf">${lines.map(([f,j],n)=>`<div class="ps"><div class="pf"><span class="pn">${n+1}.</span><span class="fx">${f}</span></div>${j?`<div class="pj">${j}</div>`:''}</div>`).join('')}</div>`;
 function pairRows(g,d,memo){
   const P=pairInfo(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),sb=`<sub>${g.name}</sub>`,R=[],dg=`deg${s}(u) + deg${s}(w)`,dgf=`deg${sb}(u) + deg${sb}(w)`,row=(t,f,e)=>R.push({t,f,e});
   const rng=(lo,hi)=>`${lo>0?V(lo)+' ≤ ':''}${dg}${hi<Infinity?' ≤ '+V(hi):''}`;

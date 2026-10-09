@@ -530,7 +530,7 @@ function pairInfo(g,d,memo){
   P.ore=L('n')>=3&&H('n')<Infinity&&P.nadjLo>=H('n');
   return P}
 /* a derivation: formula on the left, its justification on the right; the last line is the conclusion */
-const prf=lines=>`<div class="qpf">${lines.map(([f,j],n)=>`<span class="pn">${n+1}</span><span class="fx">${f}</span><span class="pj">${j||''}</span>`).join('')}</div>`;
+const prf=lines=>`<div class="qpf">${lines.map(([f,j],n)=>`<div class="ps"><div class="pf"><span class="pn">${n+1}.</span><span class="fx">${f}</span></div>${j?`<div class="pj">${j}</div>`:''}</div>`).join('')}</div>`;
 function pairRows(g,d,memo){
   const P=pairInfo(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),sb=`<sub>${g.name}</sub>`,R=[],dg=`deg${s}(u) + deg${s}(w)`,dgf=`deg${sb}(u) + deg${sb}(w)`,row=(t,f,e)=>R.push({t,f,e});
   const rng=(lo,hi)=>`${lo>0?V(lo)+' ≤ ':''}${dg}${hi<Infinity?' ≤ '+V(hi):''}`;
