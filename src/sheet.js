@@ -72,6 +72,9 @@ const ownB=(o,k)=>val(o,k)!==null?[val(o,k),val(o,k)]:rgOf(o,k);
 function ex(g,k,depth){
   const own=val(g,k);if(own!==null)return NUM(own);
   const me={num:null,html:SYM[k]+sub(g),atom:true,self:true};
+  /* a tree or a forest fixes the number of edges from the vertices and components */
+  if(k==='m'&&(depth||0)<=12){const t=prop(g,'tr');if(t==='y'||prop(g,'fo')==='y'){const N={...ex(g,'n',(depth||0)+1),self:false};if(t==='y')return plus(N,-1);
+    const C=ex(g,'c',(depth||0)+1);return N.num!==null&&C.num!==null?NUM(N.num-C.num):C.num!==null?plus(N,-C.num):EXP(`${OPD(N)} − ${C.html}`)}}
   if(!g.op||(depth||0)>12)return me;
   const src=by(g.src),a=by(g.arg),E=x=>({...ex(src,x,(depth||0)+1),self:false}),op=g.op;
   if(k==='n'){if(op==='delv'||op==='contr')return plus(E('n'),-1);if(op==='subd')return plus(E('n'),1);if(['dele','adde','compl','span'].includes(op))return E('n');
@@ -161,10 +164,10 @@ function sheetFor(g){
   tp='קשתות, קשירות ועצים';
   add('מספר הקשתות המרבי בגרף פשוט','מההגדרה','m ≤ n(n − 1) / 2',`${m} ≤ ${n}·(${n} − 1) / 2`);
   add('מספר הקשתות המזערי לפי רכיבי הקשירות','פרק 2','m ≥ n − c',`${m} ≥ ${n} − ${c}`);
-  add('עץ: מספר הקשתות','משפט 2.5','m = n − 1',`${m} = ${n} − 1`,[['tr','y']]);
+  add('עץ: מספר הקשתות','משפט 2.5','m = n − 1',`${sy(g,'m')} = ${n} − 1`,[['tr','y']]);
   add('עץ עם שני צמתים לפחות: יש עלה','טענה 2.3','δ = 1',`${dl} = ${V(1)}`,[['tr','y']]);
   add('מספר העצים המתויגים על אותם צמתים','משפט 2.9 (קיילי)','nⁿ⁻²',`${n} ^ (${n} − 2)`,[['tr','y']]);
-  add('יער: מספר הקשתות','מסקנה מ־2.5','m = n − c',`${m} = ${n} − ${c}`,[['fo','y']]);
+  add('יער: מספר הקשתות','מסקנה מ־2.5','m = n − c',`${sy(g,'m')} = ${n} − ${c}`,[['fo','y']]);
   add('עץ: שני עלים לפחות, ולפחות כדרגה המקסימלית','מסקנה מ־2.3','ℓ ≥ 2,  ℓ ≥ Δ',`${q('lv')} ≥ ${V(2)},  ${q('lv')} ≥ ${D}`,[['tr','y']]);
   add('עץ: מספר העלים לפי הדרגות','מסקנה מ־1.3 ומ־2.5','ℓ = 2 + Σ (deg(u) − 2), deg(u) ≥ 3',q('lv').includes('class=')?`${q('lv')} = 2 + Σ (deg(u) − 2), deg(u) ≥ 3`:'',[['tr','y']]);
   add('סדרת פרופר: מספר ההופעות של צומת','פרק 2','appearances of u = deg(u) − 1','',[['tr','y']]);
