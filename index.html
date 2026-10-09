@@ -126,6 +126,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qex{direction:rtl;font-size:13px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:6px;padding:4px 8px;margin-top:2px}.qex p{margin:2px 0}.qex .fx{font-size:13px}.qi.ins .qf{direction:rtl}
 .qmv{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start;cursor:pointer;margin-top:4px}
 .qitems.one{grid-template-columns:minmax(0,1fr)}.qi.wide .qf{gap:0 18px}
+.qpf{direction:ltr;display:grid;grid-template-columns:auto auto 1fr;gap:2px 12px;align-items:baseline;margin:3px 0}.qpf .fx{white-space:normal;font-size:13.5px}.qpf .pn{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.qpf .pj{direction:rtl;text-align:right;color:var(--muted);font-size:12px}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
@@ -979,44 +980,96 @@ function pairBase(g,d,memo){
   const rest=L('c')-CS.length,known=CS.length?Math.max(...CS.map(x=>x.B.n[1])):0;
   /* components that were not defined share the vertices the defined ones leave, at least one vertex each */
   const cm=full?known:CS.length&&CS.length===compsOf(g).length&&rest>=1?Math.max(known,H('n')-CS.reduce((t,x)=>t+x.B.n[0],0)-(rest-1)):H('n')-(L('c')-1),lo=2*L('dl'),hi=2*H('D');
-  const b=x=>`<bdi dir="ltr" class="fx">${x}</bdi>`,P={lo,hi,cm,adjLo:lo,nadjLo:lo,adjHi:hi,nadjHi:hi,eAdjHi:'',eNadjHi:'',eAdjLo:'',eNadjLo:''};
-  const base=`כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית.`;P.eAdjHi=P.eNadjHi=P.eAdjLo=P.eNadjLo=base;
+  const X=g.name,sb=`<sub>${X}</sub>`,dg=x=>`deg${sb}(${x})`,P={lo,hi,cm,adjLo:lo,nadjLo:lo,adjHi:hi,nadjHi:hi,X};
+  /* every explanation is a list of formal lines: [formula, justification] */
+  const base=[[`δ${sb} ≤ ${dg('x')} ≤ Δ${sb}  for all x`,'הגדרת הדרגה המינימלית והמקסימלית'],[`δ${sb} ≥ ${L('dl')}${H('D')<Infinity?`,  Δ${sb} ≤ ${H('D')}`:''}`,'מהתמצית']];
+  P.eAdjHi=P.eNadjHi=P.eAdjLo=P.eNadjLo=base;
   if(cm<Infinity){const a=d.tf?cm:2*(cm-1);
-    if(a<P.adjHi){P.adjHi=a;P.eAdjHi=d.tf?`ב־${b(g.name)} אין משולשים, ולכן לשני שכנים אין שכן משותף. כל השכנים שלהם נמצאים ברכיב הקשירות שלהם, ולכן סכום הדרגות לא עובר את מספר הצמתים ברכיב. ברכיב הגדול ביותר יש לכל היותר ${b(cm)} צמתים.`:`כל השכנים של צומת נמצאים ברכיב הקשירות שלו, שיש בו לכל היותר ${b(cm)} צמתים.`}
+    if(a<P.adjHi){P.adjHi=a;P.eAdjHi=d.tf?[[`uw ∈ E(${X}),  no triangle in ${X}  ⇒  Γ(u) ∩ Γ(w) = ∅`,'שכן משותף היה סוגר משולש'],[`Γ(u) ∪ Γ(w) ⊆ U,   U the component of u, w`,'שכנים נמצאים באותו רכיב קשירות'],
+        [`${dg('u')} + ${dg('w')} = |Γ(u)| + |Γ(w)| = |Γ(u) ∪ Γ(w)| ≤ |U|`,'הקבוצות זרות'],[`|U| ≤ ${cm}`,'הרכיב הגדול ביותר, מהתמצית']]
+      :[[`Γ(x) ⊆ U ∖ {x},   U the component of x  ⇒  ${dg('x')} ≤ |U| − 1`,'שכנים נמצאים באותו רכיב קשירות'],[`|U| ≤ ${cm}`,'הרכיב הגדול ביותר, מהתמצית']]}
     const n2=Math.min(2*(H('n')-2),L('c')>=2?2*(cm-1):Infinity);
-    if(n2<P.nadjHi&&n2>=0){P.nadjHi=n2;P.eNadjHi=`שני צמתים לא שכנים יכולים להיות שכנים רק של שאר הצמתים, ורק בתוך רכיב הקשירות שלהם.`}}
+    if(n2<P.nadjHi&&n2>=0){P.nadjHi=n2;P.eNadjHi=[[`uw ∉ E(${X})  ⇒  Γ(u) ⊆ V ∖ {u, w}  ⇒  ${dg('u')} ≤ n − 2`,'צומת אינו שכן של עצמו ולא של w'],[`Γ(x) ⊆ U ∖ {x}  ⇒  ${dg('x')} ≤ |U| − 1`,'שכנים נמצאים באותו רכיב קשירות'],[`n${sb} ≤ ${H('n')},  |U| ≤ ${cm}`,'מהתמצית']]}}
   return P}
 function pairInfo(g,d,memo){
-  const P=pairBase(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],b=x=>`<bdi dir="ltr" class="fx">${x}</bdi>`;
+  const P=pairBase(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],X=g.name;
   const h=g.op==='compl'?by(g.src):O.find(o=>o.t==='g'&&o.op==='compl'&&o.src===g.name),q=h&&memo.get(h);
-  if(q&&!q.bad){const Q=pairBase(h,q,memo),nl=2*(L('n')-1),nh=2*(H('n')-1),hn=`<bdi dir="ltr" class="fx">${h.name}</bdi>`;
-    const say=(kind,there,v)=>`שני צמתים ${kind} כאן הם ${there} ב־${hn}. הדרגה של צומת כאן היא ${b('n − 1')} פחות הדרגה שלו שם, ולכן הסכום כאן הוא ${b('2(n − 1)')} פחות הסכום שם. הסכום שם הוא ${v}. `;
-    if(Q.adjHi<Infinity&&nl-Q.adjHi>P.nadjLo){P.nadjLo=nl-Q.adjHi;P.eNadjLo=say('לא שכנים','שכנים',`לכל היותר ${b(Q.adjHi)}`)+Q.eAdjHi}
-    if(Q.nadjHi<Infinity&&nl-Q.nadjHi>P.adjLo){P.adjLo=nl-Q.nadjHi;P.eAdjLo=say('שכנים','לא שכנים',`לכל היותר ${b(Q.nadjHi)}`)+Q.eNadjHi}
-    if(nh<Infinity&&nh-Q.adjLo<P.nadjHi){P.nadjHi=nh-Q.adjLo;P.eNadjHi=say('לא שכנים','שכנים',`לפחות ${b(Q.adjLo)}`)+Q.eAdjLo}
-    if(nh<Infinity&&nh-Q.nadjLo<P.adjHi){P.adjHi=nh-Q.nadjLo;P.eAdjHi=say('שכנים','לא שכנים',`לפחות ${b(Q.nadjLo)}`)+Q.eNadjLo}}
+  if(q&&!q.bad){const Q=pairBase(h,q,memo),nl=2*(L('n')-1),nh=2*(H('n')-1),Y=h.name,dx=x=>`deg<sub>${X}</sub>(${x})`,dy=x=>`deg<sub>${Y}</sub>(${x})`,sx=`${dx('u')} + ${dx('w')}`,sy=`${dy('u')} + ${dy('w')}`;
+    const via=(here,there,lines,rel,v,side,nn,res)=>[[`uw ${here} E(${X})  ⇔  uw ${there} E(${Y})`,'הגדרת המשלים'],[`${dx('x')} = n − 1 − ${dy('x')}  for all x`,'הגדרת המשלים'],...lines,[`${sy} ${rel} ${v}`,`מהשורות הקודמות, ב־${Y}`],
+      [`${sx} = 2(n − 1) − (${sy}) ${side} 2·(${nn} − 1) − ${v} = ${res}`,'הצבה']];
+    if(Q.adjHi<Infinity&&nl-Q.adjHi>P.nadjLo){P.nadjLo=nl-Q.adjHi;P.eNadjLo=via('∉','∈',Q.eAdjHi,'≤',Q.adjHi,'≥',L('n'),P.nadjLo)}
+    if(Q.nadjHi<Infinity&&nl-Q.nadjHi>P.adjLo){P.adjLo=nl-Q.nadjHi;P.eAdjLo=via('∈','∉',Q.eNadjHi,'≤',Q.nadjHi,'≥',L('n'),P.adjLo)}
+    if(nh<Infinity&&nh-Q.adjLo<P.nadjHi){P.nadjHi=nh-Q.adjLo;P.eNadjHi=via('∉','∈',Q.eAdjLo,'≥',Q.adjLo,'≤',H('n'),P.nadjHi)}
+    if(nh<Infinity&&nh-Q.nadjLo<P.adjHi){P.adjHi=nh-Q.nadjLo;P.eAdjHi=via('∈','∉',Q.eNadjLo,'≥',Q.nadjLo,'≤',H('n'),P.adjHi)}}
   /* Ore: every two non-neighbours with degree sum at least n */
   P.ore=L('n')>=3&&H('n')<Infinity&&P.nadjLo>=H('n');
   return P}
+/* a derivation: formula on the left, its justification on the right; the last line is the conclusion */
+const prf=lines=>`<div class="qpf">${lines.map(([f,j],n)=>`<span class="pn">${n+1}</span><span class="fx">${f}</span><span class="pj">${j||''}</span>`).join('')}</div>`;
 function pairRows(g,d,memo){
-  const P=pairInfo(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),R=[],dg=`deg${s}(u) + deg${s}(w)`,row=(t,f,e)=>R.push({t,f,e});
-  const rng=(lo,hi)=>`${lo>0?V(lo)+' ≤ ':''}${dg}${hi<Infinity?' ≤ '+V(hi):''}`,two=(a,c)=>a===c?`<p>${a}</p>`:`<p><b>החסם התחתון:</b> ${a}</p><p><b>החסם העליון:</b> ${c}</p>`;
-  if(P.lo>0||P.hi<Infinity)row('סכום הדרגות של שני צמתים כלשהם',rng(P.lo,P.hi),'<p>כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית, ולכן הסכום של שתיים נמצא בין פעמיים המינימלית לפעמיים המקסימלית.</p>');
-  if(P.adjLo>0||P.adjHi<Infinity)row('סכום הדרגות של שני שכנים',rng(P.adjLo,P.adjHi),two(P.eAdjLo,P.eAdjHi));
-  if(P.nadjLo>0||P.nadjHi<Infinity)row('סכום הדרגות של שני צמתים לא שכנים',rng(P.nadjLo,P.nadjHi),two(P.eNadjLo,P.eNadjHi));
-  if(H('n')<Infinity){const cn=P.nadjLo-H('n')+2;if(cn>=1)row('שכנים משותפים לשני צמתים לא שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(cn)}`,'<p>שתי קבוצות השכנים נמצאות בתוך שאר הצמתים. כשסכום הדרגות גדול ממספרם, הקבוצות חייבות להיחתך. מכאן שבין כל שני צמתים יש מסלול באורך שתיים לכל היותר.</p>');
-    const ct=P.adjLo-H('n');if(ct>=1)row('שכנים משותפים לשני צמתים שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(ct)}`,'<p>מכל קבוצת שכנים מורידים את הצומת השני, ושתיהן נמצאות בתוך שאר הצמתים. כשהסכום גדול ממספרם יש שכן משותף, ולכן כל קשת נמצאת במשולש.</p>')}
+  const P=pairInfo(g,d,memo),L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),sb=`<sub>${g.name}</sub>`,R=[],dg=`deg${s}(u) + deg${s}(w)`,dgf=`deg${sb}(u) + deg${sb}(w)`,row=(t,f,e)=>R.push({t,f,e});
+  const rng=(lo,hi)=>`${lo>0?V(lo)+' ≤ ':''}${dg}${hi<Infinity?' ≤ '+V(hi):''}`;
+  const two=(lo,hi,eLo,eHi,who)=>(lo>0?`<p><b>החסם התחתון</b></p>`+prf([...eLo,[`∴  ${dgf} ≥ ${lo}   for all ${who}`,'']]):'')+(hi<Infinity?`<p><b>החסם העליון</b></p>`+prf([...eHi,[`∴  ${dgf} ≤ ${hi}   for all ${who}`,'']]):'');
+  if(P.lo>0||P.hi<Infinity)row('סכום הדרגות של שני צמתים כלשהם',rng(P.lo,P.hi),prf([[`δ${sb} ≤ deg${sb}(x) ≤ Δ${sb}  for all x`,'הגדרת הדרגה המינימלית והמקסימלית'],[`2δ${sb} ≤ ${dgf} ≤ 2Δ${sb}`,'חיבור שני אי-שוויונים'],[`∴  ${P.lo} ≤ ${dgf}${P.hi<Infinity?' ≤ '+P.hi:''}`,'הצבה מהתמצית']]));
+  if(P.adjLo>0||P.adjHi<Infinity)row('סכום הדרגות של שני שכנים',rng(P.adjLo,P.adjHi),two(P.adjLo,P.adjHi,P.eAdjLo,P.eAdjHi,`uw ∈ E(${g.name})`));
+  if(P.nadjLo>0||P.nadjHi<Infinity)row('סכום הדרגות של שני צמתים לא שכנים',rng(P.nadjLo,P.nadjHi),two(P.nadjLo,P.nadjHi,P.eNadjLo,P.eNadjHi,`uw ∉ E(${g.name})`));
+  if(H('n')<Infinity){const cn=P.nadjLo-H('n')+2;if(cn>=1)row('שכנים משותפים לשני צמתים לא שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(cn)}`,prf([[`uw ∉ E  ⇒  Γ(u) ∪ Γ(w) ⊆ V ∖ {u, w}`,'צומת אינו שכן של עצמו ולא של השני'],[`|Γ(u) ∩ Γ(w)| = |Γ(u)| + |Γ(w)| − |Γ(u) ∪ Γ(w)| ≥ ${dgf} − (n − 2)`,'הכלה והפרדה'],[`${dgf} ≥ ${P.nadjLo},   n ≤ ${H('n')}`,'מהשורה של צמתים לא שכנים'],[`∴  |Γ(u) ∩ Γ(w)| ≥ ${P.nadjLo} − ${H('n')-2} = ${cn}`,'הצבה'],[`∴  dist(u, w) ≤ 2  for all u, w`,'שכן משותף נותן מסלול באורך שתיים']]));
+    const ct=P.adjLo-H('n');if(ct>=1)row('שכנים משותפים לשני צמתים שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(ct)}`,prf([[`uw ∈ E  ⇒  (Γ(u) ∖ {w}) ∪ (Γ(w) ∖ {u}) ⊆ V ∖ {u, w}`,''],[`|Γ(u) ∩ Γ(w)| ≥ (${dgf} − 2) − (n − 2)`,'הכלה והפרדה'],[`${dgf} ≥ ${P.adjLo},   n ≤ ${H('n')}`,'מהשורה של שני שכנים'],[`∴  |Γ(u) ∩ Γ(w)| ≥ ${P.adjLo} − ${H('n')} = ${ct}`,'הצבה'],[`∴  every edge lies on a triangle`,'']]))}
   return R}
 
 const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 /* a reason mixes Hebrew words and formulas: each formula run is set left to right inside the Hebrew line */
 const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
 const EXPL=new Set(),OPN=new Set();
+/* the formal statement behind every rule the solver names in words */
+const FORM={'סכום הדרגות (1.3)':'Σ deg(u) = 2m  ⇒  n·δ ≤ 2m ≤ n·Δ','נוסחת אוילר (5.3)':'planar  ⇒  f = m − n + c + 1','עץ (2.5)':'tree  ⇒  m = n − 1','עלה בעץ (2.3)':'tree, n ≥ 2  ⇒  δ = 1','עץ הוא דו-צדדי':'tree, n ≥ 2  ⇒  χ = 2',
+ 'עץ או יער: m = n − c':'forest  ⇒  m = n − c','יער: m = n − c':'forest  ⇒  m = n − c','עץ':'tree  ⇒  c = 1','בעץ: ℓ ≥ 2, ℓ ≥ Δ':'tree, n ≥ 2  ⇒  ℓ ≥ max(2, Δ)','בעץ: ℓ ≥ Δ':'tree  ⇒  Δ ≤ ℓ','בעץ: לא כל הצמתים עלים':'tree, n ≥ 3  ⇒  ℓ ≤ n − 1',
+ 'בעץ: הצמתים שאינם עלים מכסים את כל הקשתות':'tree, n ≥ 3  ⇒  β ≤ n − ℓ','בעץ: סכום הדרגות קובע כמה עלים אפשריים':'2(n − 1) = Σ deg(u) ≤ ℓ + (n − ℓ)·Δ  ⇒  ℓ ≤ (2 + n(Δ − 2)) / (Δ − 1)','כיסוי בצמתים של עץ: β ≥ m / Δ, קניג':'tree  ⇒  ν = β ≥ m / Δ',
+ 'ביער יש צומת מדרגה קטנה':'forest  ⇒  δ ≤ 1','רכיב עם קשת ביער הוא עץ: שני עלים':'forest, m ≥ 1  ⇒  ℓ ≥ 2','כל רכיב ביער הוא עץ: שני עלים לרכיב':'forest, δ ≥ 1  ⇒  ℓ ≥ 2c','אין מעגלים: פאה אחת':'forest  ⇒  f = 1',
+ 'קשיר':'connected  ⇒  c = 1;   n ≥ 2  ⇒  δ ≥ 1','קשיר, שלושה צמתים לפחות':'connected, n ≥ 3  ⇒  Δ ≥ 2','יש קשת':'m ≥ 1  ⇒  Δ ≥ 1,  χ ≥ 2,  ω ≥ 2,  ν ≥ 1,  c ≤ n − 1','אין קשתות':'m = 0  ⇒  Δ = 0,  χ = 1,  ν = 0',
+ 'כל הדרגות בטווח':'a ≤ deg(u) ≤ b  for all u  ⇒  δ ≥ a,  Δ ≤ b','ארבעת הצבעים (6.3)':'planar  ⇒  χ ≤ 4','מישורי: m ≤ 3n − 6 (5.4)':'planar, n ≥ 3  ⇒  m ≤ 3n − 6','מישורי בלי משולשים: m ≤ 2n − 4':'planar, no triangle, n ≥ 3  ⇒  m ≤ 2n − 4','מישורי: δ ≤ 5 (5.5)':'planar  ⇒  δ ≤ 5','3f ≤ 2m':'planar, n ≥ 3  ⇒  3f ≤ 2m',
+ 'דו-צדדי (1.6)':'bipartite  ⇒  χ ≤ 2','דו-צדדי: m ≤ n² / 4':'bipartite (A, B)  ⇒  m ≤ |A|·|B| ≤ n² / 4','דו-צדדי: צד אחד הוא בלתי תלוי':'bipartite (A, B)  ⇒  α ≥ max(|A|, |B|) ≥ n / 2','קניג (4.16)':'bipartite  ⇒  β = ν',
+ 'בלי משולשים':'no triangle  ⇒  ω ≤ 2','בלי משולשים: m ≤ n² / 4':'no triangle  ⇒  m ≤ n² / 4','צומת מכסה לכל היותר Δ קשתות':'m ≤ β·Δ','קשת בזיווג חוסמת לכל היותר 2Δ − 1 קשתות':'m ≤ ν·(2Δ − 1)','כל קשת בזיווג מחברת שני צמתים':'c ≤ n − ν','צומת מכל רכיב: קבוצה בלתי תלויה':'α ≥ c',
+ 'קליקה: ω(ω − 1) / 2 קשתות':'m ≥ ω(ω − 1) / 2','צביעה ב־χ צבעים דורשת קשת בין כל שני צבעים':'m ≥ χ(χ − 1) / 2','אין צמתים מבודדים':'δ ≥ 1  ⇒  ν ≥ 1','המילטוני (דירק 3.3)':'δ ≥ n / 2  ⇒  Hamiltonian  ⇒  ν = ⌊n / 2⌋',
+ 'דרגות אי-זוגיות: מספר צמתים זוגי':'Σ deg(u) = 2m,  deg(u) odd for all u  ⇒  n even','כל הדרגות זוגיות':'deg(u) even for all u  ⇒  δ, Δ even','כל הדרגות אי-זוגיות':'deg(u) odd for all u  ⇒  δ, Δ odd',
+ 'אוילרי: קשיר':'Eulerian  ⇒  c = 1','אוילרי: כל הדרגות זוגיות, ואין צומת מבודד':'Eulerian, n ≥ 2  ⇒  deg(u) even,  deg(u) ≥ 1  ⇒  δ ≥ 2','אוילרי: כל דרגה שתיים לפחות':'δ ≥ 2  ⇒  2m = Σ deg(u) ≥ 2n  ⇒  m ≥ n',
+ 'המילטוני: קשיר':'Hamiltonian  ⇒  c = 1','מעגל המילטון':'Hamiltonian  ⇒  n ≥ 3','המילטוני: כל צומת על המעגל':'Hamiltonian  ⇒  δ ≥ 2','המילטוני: קשתות המעגל':'Hamiltonian  ⇒  m ≥ n','המילטוני: זיווג מתוך המעגל':'Hamiltonian  ⇒  ν = ⌊n / 2⌋','המילטוני: לכל היותר כל צומת שני על המעגל':'Hamiltonian  ⇒  α ≤ n / 2',
+ 'דו-צדדי המילטוני: מעגל באורך זוגי':'bipartite, Hamiltonian  ⇒  n even','זיווג מושלם':'perfect matching  ⇒  ν = n / 2','זיווג מושלם: אין צומת מבודד':'perfect matching  ⇒  δ ≥ 1','זיווג מושלם: מספר צמתים זוגי':'perfect matching  ⇒  n even',
+ 'גרף או המשלים שלו קשיר, והם איזומורפיים':'G ≅ complement  ⇒  c = 1','איזומורפי למשלים':'G ≅ complement  ⇒  m = n(n − 1) / 4','איזומורפי למשלים: Δ + δ = n − 1':'G ≅ complement  ⇒  Δ + δ = n − 1','איזומורפי למשלים: קליקה כאן היא קבוצה בלתי תלויה במשלים':'G ≅ complement  ⇒  ω = α',
+ 'לא דו-צדדי (1.6)':'not bipartite  ⇒  χ ≥ 3','לא דו-צדדי: מעגל אי-זוגי':'not bipartite  ⇒  odd cycle  ⇒  n ≥ 3,  m ≥ 3','לא מישורי (5.8)':'not planar  ⇒  subdivision of K₅ or K₃,₃  ⇒  n ≥ 5,  m ≥ 9,  Δ ≥ 3',
+ 'אין שני צמתים לא שכנים: גרף מלא':'α = 1  ⇒  ω = n,  δ = n − 1','גרף מלא':'ω = n  ⇒  m = n(n − 1) / 2','כל קשת חסרה מורידה דרגה אחת לכל היותר לצומת':'δ ≥ (n − 1) − (n(n − 1) / 2 − m)','המשלים של גרף לא קשיר הוא קשיר':'c(G) ≥ 2  ⇒  c(complement) = 1',
+ 'סכום על רכיבי הקשירות':'x(G) = Σ x(Cᵢ)   for x ∈ {n, m, α, ν, β}','לפי רכיבי הקשירות':'Δ(G) = max Δ(Cᵢ),  δ(G) = min δ(Cᵢ),  χ(G) = max χ(Cᵢ),  ω(G) = max ω(Cᵢ)','רכיבי הקשירות שהוגדרו':'c ≥ number of defined components',
+ 'קשתות ברכיבים שהוגדרו, ועוד כל מה שנכנס בצמתים שנותרו':'m ≤ Σ m(Cᵢ) + r(r − 1) / 2,   r vertices left','הסרת צומת מעץ: רכיב לכל שכן':'T tree  ⇒  c(T − v) = deg(v)','בגרף אוילרי אין גשר: כל קשת על מעגל':'Eulerian  ⇒  c(G − e) = c(G)',
+ 'בגרף המילטוני: מה שנשאר מהמעגל מחבר את כל הצמתים':'Hamiltonian  ⇒  c(G − v) = c(G − e) = 1','בגרף המילטוני: הסרת קבוצה מפרקת את המעגל לכל היותר למספר חלקים כגודלה':'Hamiltonian  ⇒  c(G − S) ≤ |S|',
+ 'שני שכנים בגרף בלי משולשים: אין להם שכן משותף':'uw ∈ E, no triangle  ⇒  Γ(u) ∩ Γ(w) = ∅  ⇒  deg(u) + deg(w) ≤ n','דירק (3.3)':'δ ≥ n / 2,  n ≥ 3  ⇒  Hamiltonian','מסקנה מ־1.3':'Σ deg(u) = 2m,  deg(u) odd for all u  ⇒  n even','משפט 3.1':'connected, deg(u) even for all u  ⇔  Eulerian',
+ 'קשיר, m = n':'connected, m = n  ⇒  exactly one cycle','רכיב קשירות של יער':'forest, connected  ⇒  tree','יער קשיר':'forest, connected  ⇒  tree','שני עלים בדיוק':'tree, ℓ = 2  ⇒  Δ ≤ 2  ⇒  path','מספר צמתים אי-זוגי':'n odd  ⇒  ν ≤ (n − 1) / 2 < n / 2',
+ 'פרק 1, שאלה 3':'δ ≥ 2  ⇒  simple cycle on at least δ + 1 vertices','מכיל תת-גרף לא דו-צדדי':'H ⊆ G,  H not bipartite  ⇒  G not bipartite','מכיל תת-גרף לא מישורי, או נוצר מהעדנה של גרף לא מישורי':'H ⊆ G,  H not planar  ⇒  G not planar'};
+/* the formal reading of each insight */
+const INSF={'הגרף קשיר':'c = 1','הגרף המילטוני':'Hamiltonian','הגרף אוילרי':'Eulerian','הגרף אינו מישורי':'not planar','הגרף אינו דו-צדדי':'not bipartite','הגרף הוא עץ':'tree','הגרף הוא יער':'forest','יש זיווג מושלם':'ν = n / 2','אין זיווג מושלם':'ν < n / 2',
+ 'יש בגרף מעגל אחד בדיוק':'exactly one cycle','הגרף מלא':'m = n(n − 1) / 2','יש בגרף מעגל, ולכן הוא אינו יער':'m > n − c  ⇒  not a forest','מספר הצמתים זוגי':'n even','העץ הוא מסלול':'path','העץ הוא כוכב':'star','הגרף אינו אוילרי: כל הדרגות אי-זוגיות':'not Eulerian'};
+/* what each operation does to the quantities; x′ is the quantity after the operation */
+const OPF={compl:"n′ = n,   m + m′ = n(n − 1) / 2,   Δ′ = n − 1 − δ,   δ′ = n − 1 − Δ,   ω′ = α,   α′ = ω",
+ delv:"n′ = n − 1,   m′ = m − deg(v),   χ − 1 ≤ χ′ ≤ χ,   α − 1 ≤ α′ ≤ α,   ν − 1 ≤ ν′ ≤ ν,   δ′ ≥ δ − 1,   Δ′ ≤ Δ",
+ dele:"n′ = n,   m′ = m − 1,   c ≤ c′ ≤ c + 1,   χ − 1 ≤ χ′ ≤ χ,   ν − 1 ≤ ν′ ≤ ν,   α ≤ α′ ≤ α + 1",
+ adde:"n′ = n,   m′ = m + 1,   c − 1 ≤ c′ ≤ c,   χ ≤ χ′ ≤ χ + 1,   ν ≤ ν′ ≤ ν + 1,   α − 1 ≤ α′ ≤ α",
+ delS:"n′ = n − |S|,   x′ ≤ x  for x ∈ {m, Δ, χ, ω, ν, α},   χ′ ≥ χ − |S|,   ν′ ≥ ν − |S|",
+ ind:"H ⊆ G  ⇒  x(H) ≤ x(G)  for x ∈ {n, m, Δ, χ, ω, ν, α}",span:"H ⊆ G, V(H) = V(G)  ⇒  n′ = n,   m′ ≤ m,   c′ ≥ c,   α′ ≥ α,   χ′ ≤ χ",
+ comp:"C component of G  ⇒  c(C) = 1,   δ(C) ≥ δ(G),   x(C) ≤ x(G)  for x ∈ {n, m, Δ, χ, ω, ν, α}",subd:"n′ = n + 1,   m′ = m + 1,   c′ = c",contr:"n′ = n − 1,   c′ = c,   m′ ≤ m − 1"};
+const hasHeb=x=>/[֐-׿]/.test(x);
+const symOf=x=>SYM[x.k]+(by(x.g)?sub(by(x.g)):`<sub>${x.g}</sub>`);
+/* premises, the rule in its formal form, and the conclusion */
+function derive(u,r,concl,name){
+  const lines=u.map(x=>[`${symOf(x)} ${x.i?'≤':'≥'} ${x.v}`,rz(x.r)]);
+  if(r==='נתון')return prf([[concl,'נתון']]);
+  if(r==='מהפעולה')return prf([...lines,[concl,`הפעולה שיצרה את ${name}, לפי נתוני גרף המקור`]]);
+  if(r==='מהנתונים')return prf([...lines,[concl,'ישירות מהנתונים']]);
+  if(r.startsWith('מ־')){const Y=r.slice(2),me=by(name),ot=by(Y),lk=me&&me.op&&me.src===Y?me:ot&&ot.op&&ot.src===name?ot:null;
+    if(lk&&OPF[lk.op]){lines.push([OPF[lk.op],`${OPS[lk.op][0]}: ${rz(lk.name)} מתוך ${rz(lk.src)}, והסימן ′ הוא הגודל ב־${rz(lk.name)}`]);lines.push([`∴  ${concl}`,'הצבה']);return prf(lines)}}
+  const f=FORM[r]||(hasHeb(r)?'':r.replace(/\s*\(\d+\.\d+\)$/,'')),ref=(r.match(/\((\d+\.\d+)\)$/)||[])[1];
+  if(f)lines.push([f,hasHeb(r)?rz(r):ref?`משפט ${ref}`:'כלל']);
+  lines.push([`∴  ${concl}`,f?'הצבה':rz(r)]);return prf(lines)}
 function tell(g,k,i,d,one){const v=d.B[k][i],r=d.W[k][i],u=one?[...d.U[k][0],...d.U[k][1]].filter((x,n,A)=>A.findIndex(y=>y.g===x.g&&y.k===x.k&&y.i===x.i)===n):d.U[k][i]||[];
-  const head=`<b>${one?'הערך':i?'החסם העליון':'החסם התחתון'}</b> <bdi dir="ltr" class="fx">${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}</bdi>: `;
-  const body=r==='נתון'?'הוזן בנתוני השאלה.':r==='מהפעולה'?`מתקבל ישירות מהפעולה שיצרה את ${g.name}, לפי מה שהוזן לגרף המקור.`:r==='מהנתונים'?'נובע ישירות מהנתונים שהוזנו.':r.startsWith('מ־')?`הועבר ${rz(r)}, דרך הפעולה שמקשרת בין שני הגרפים.`:`לפי: ${rz(r)}.`;
-  return `<p>${head}${body}${used(u)}</p>`}
-const used=u=>u.length?` נשען על: ${u.map(x=>`<bdi dir="ltr" class="fx">${SYM[x.k]+(by(x.g)?sub(by(x.g)):`<sub>${x.g}</sub>`)} ${x.i?'≤':'≥'} ${x.v}</bdi> (${rz(x.r)})`).join(', ')}.`:'';
+  return derive(u,r,`${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}`,g.name)}
 function digestHtml(){
   const G=graphs(),open=!COL.has('Σ'),first=solveAll(),VR=new Map();
   for(const g of G){const d=first.get(g);if(d&&!d.bad)VR.set(g,virtFor(g,d))}
@@ -1030,9 +1083,9 @@ function digestHtml(){
       const key=g.name+'|'+k,opn=EXPL.has(key),one=lo===hi&&(w[0]===w[1]||lo===D0[k]);
       const ex=opn?`<div class="qex">${one?tell(g,k,lo===D0[k]?1:0,d,true):(lo>D0[k]?tell(g,k,0,d):'')+(hi<Infinity?tell(g,k,1,d):'')}</div>`:'';
       rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]}</div><div class="qf"><span class="fx qsub">${f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}
-    d.N.forEach(([t,r,u],n)=>{const key=g.name+'|i'+n,opn=EXPL.has(key);rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">${t}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי: ${rz(r)}.${used(u||[])}</p></div>`:''}</div>`)});
+    d.N.forEach(([t,r,u],n)=>{const key=g.name+'|i'+n,opn=EXPL.has(key);rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">${t}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex">${derive(u||[],r,`${g.name}:  ${INSF[t]||t.replace(/^יש מעגל פשוט על (\d+) צמתים לפחות$/,'simple cycle on ≥ $1 vertices')}`,g.name)}</div>`:''}</div>`)});
     { const P=pairInfo(g,d,memo);if(P.ore&&g.ha!=='y'&&!d.N.some(x=>x[0]==='הגרף המילטוני')){const key=g.name+'|ore',opn=EXPL.has(key);
-        rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">הגרף המילטוני</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי משפט אור (3.2): לכל שני צמתים לא שכנים, סכום הדרגות הוא לפחות <bdi dir="ltr" class="fx">${P.nadjLo}</bdi>, וזה לפחות מספר הצמתים.</p><p>${P.eNadjLo}</p></div>`:''}</div>`)}}
+        rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">הגרף המילטוני</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex">${prf([...P.eNadjLo,[`deg<sub>${g.name}</sub>(u) + deg<sub>${g.name}</sub>(w) ≥ ${P.nadjLo} ≥ ${d.B.n[1]} ≥ n   for all uw ∉ E(${g.name})`,'מהשורות הקודמות'],[`deg(u) + deg(w) ≥ n  for all uw ∉ E,  n ≥ 3  ⇒  Hamiltonian`,'משפט אור (3.2)'],[`∴  ${g.name} Hamiltonian`,'']])}</div>`:''}</div>`)}}
     /* the standard moves on this graph */
     const mv=[],oo=OPN.has(g.name);
     if(oo){for(const r of pairRows(g,d,memo)){const key=g.name+'|p'+mv.length,opn=EXPL.has(key);mv.push(`<div class="qi der"><div class="qn">${r.t}</div><div class="qf"><span class="fx qsub">${r.f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex">${r.e}</div>`:''}</div>`)}
@@ -1071,7 +1124,7 @@ document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest
 return{
 /* for tests: solve a list of objects without touching the page */
 solve(list){const keep=O.slice();O.splice(0,O.length,...list.map(o=>o.t==='g'?newG(o.name,o):o));
-  try{const m=solveAll();return graphs().map(g=>{const d=m.get(g);return{name:g.name,bad:d.bad,B:JSON.parse(JSON.stringify(d.B,(k,v)=>v===Infinity?'inf':v)),N:d.N.map(x=>x[0]),ore:!d.bad&&pairInfo(g,d,m).ore}})}finally{O.splice(0,O.length,...keep)}},
+  try{const m=solveAll();return graphs().map(g=>{const d=m.get(g);return{name:g.name,bad:d.bad,B:JSON.parse(JSON.stringify(d.B,(k,v)=>v===Infinity?'inf':v)),N:d.N.map(x=>x[0]),P:d.bad?null:(q=>({adjLo:q.adjLo,adjHi:q.adjHi===Infinity?'inf':q.adjHi,nadjLo:q.nadjLo,nadjHi:q.nadjHi===Infinity?'inf':q.nadjHi,ore:q.ore}))(pairInfo(g,d,m)),ore:!d.bad&&pairInfo(g,d,m).ore}})}finally{O.splice(0,O.length,...keep)}},
 render(){
   document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
   <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ קשת</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
