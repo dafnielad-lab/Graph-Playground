@@ -130,8 +130,8 @@ function sheetFor(g){
   tp='אוילר והמילטון';
   add('מסלול אוילר שאינו מעגל','פרק 3','Euler path ⇔ exactly 2 vertices of odd degree','',[['conn','y']]);
   add('אוילרי, אם ורק אם כל הדרגות זוגיות','משפט 3.1','Eulerian ⇔ deg(u) even for all u',ad!==null?`Eulerian ⇔ ${V(ad)} even`:'',[['conn','y']]);
-  add('תנאי אור: לכל שני צמתים לא שכנים (שלושה צמתים לפחות)','משפט 3.2','deg(u) + deg(w) ≥ n ⇒ Hamiltonian',`${ad!==null?V(ad)+' + '+V(ad):'deg(u) + deg(w)'} ≥ ${n}`);
-  add('תנאי דירק להמילטוניות (שלושה צמתים לפחות)','משפט 3.3','δ ≥ n / 2 ⇒ Hamiltonian',`${dl} ≥ ${n} / 2`);
+  add('תנאי אור, לכל שני צמתים לא שכנים','משפט 3.2','deg(u) + deg(w) ≥ n ⇒ Hamiltonian',`${ad!==null?V(ad)+' + '+V(ad):'deg(u) + deg(w)'} ≥ ${n}`);
+  add('תנאי דירק להמילטוניות','משפט 3.3','δ ≥ n / 2 ⇒ Hamiltonian',`${dl} ≥ ${n} / 2`);
   /* matchings and covers */
   tp='זיווגים וכיסויים';
   add('משפט ברג׳: זיווג מקסימום ומסלול שיפור','משפט 4.6','M is maximum ⇔ no augmenting path','');
@@ -173,11 +173,11 @@ function sheetFor(g){
   /* status of each formula: applies, hidden (a needed property is given as the opposite), or conditional (unknown) */
   const st=f=>{if(!f.need)return 'on';let u=false;for(const [k,w] of f.need){const p=prop(g,k);if(p==='u')u=true;else if(p!==w)return 'hide'}return u?'hide':'on'};
   const cond=f=>f.need.filter(([k])=>prop(g,k)==='u').map(([k,w])=>(w==='n'?'לא ':'')+PROPS[k]).join(' ו');
-  const card=f=>`<tr class="${f.rel?'rel':''}"><th scope="row">${f.t} <span class="ref">${f.r}</span></th><td class="fx gen">${f.g}</td><td class="fx qsub">${f.s&&/class="q[vs]"/.test(f.s)?f.s:''}</td></tr>`;
+  const card=f=>{const sb=f.s&&/class="q[vs]"/.test(f.s)?f.s:'';return `<div class="qi${f.rel?' rel':''}"><div class="qn">${f.t} <span class="ref">${f.r}</span></div><div class="qf"><span class="fx gen">${f.g}</span>${sb?`<span class="fx qsub">${sb}</span>`:''}</div></div>`};
   const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
   const vis=F.filter(f=>st(f)!=='hide');
   const tps=[...new Set(vis.map(f=>f.tp))];
-  return `<table class="qt"><caption><span class="name">${X}</span> ${title}</caption><thead><tr><th scope="col">נוסחה</th><th scope="col">צורה כללית</th><th scope="col">עם הנתונים</th></tr></thead>${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<tbody><tr class="tp"><th colspan="3"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button></th></tr>${open?rows.map(card).join(''):''}</tbody>`}).join('')}</table>`}
+  return `<section class="qt"><h3 class="qcap"><span class="name">${X}</span> ${title}</h3>${tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,ex(g,k).num])}}

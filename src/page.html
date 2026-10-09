@@ -107,15 +107,16 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qb .link{border:0;background:transparent;color:var(--accent);padding:0;font-weight:500;text-align:start;font-size:13px}.cell select{padding:4px 6px}
 .qhero{flex-direction:column;align-items:flex-start;gap:4px}.qhero p{margin:0;max-width:75ch}.qhero b{color:var(--hero-2)}
 .qsheet{display:flex;flex-direction:column;gap:12px;min-width:0}
-.qt{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden}
-.qt caption{text-align:start;font-weight:700;padding:8px 12px;background:var(--surface);caption-side:top}
-.qt thead th{font-size:12px;color:var(--muted);font-weight:500;padding:2px 12px 4px;text-align:start}
-.qt tbody th{font-weight:400;font-size:13px;text-align:start;padding:4px 12px;color:var(--muted);vertical-align:baseline}
-.qt td{padding:4px 12px;font-size:15px;text-align:left;vertical-align:baseline}
-.qt tbody tr{border-top:1px solid var(--track)}.qt tr.rel th{color:var(--accent)}
-.qt td.gen{font-size:14px;color:var(--muted)}.qt td.qsub{font-size:16px;color:var(--ink)}
+.qt{background:var(--surface);border-radius:12px;padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.qcap{margin:0;font-size:15px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
+.qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
+.qitems{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));column-gap:28px;min-width:0}
+.qi{padding:3px 4px;border-bottom:1px solid var(--track);min-width:0}
+.qn{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}.qi.rel .qn{color:var(--accent)}
+.qf{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;gap:0 22px;direction:ltr;line-height:1.4}.qf .fx{white-space:normal;min-width:0}
+.qf .gen{font-size:14px;color:var(--muted)}.qf .qsub{font-size:15px;color:var(--ink)}
 .qt .ref{white-space:nowrap}
-.qt tr.tp th{padding:6px 8px 2px;background:var(--bg)}.qt tr.tp button{border:0;background:transparent;font-weight:700;font-size:13px;color:var(--ink);padding:2px 4px;display:flex;gap:8px;align-items:baseline}
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .qgrid .gt{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:6px 0 0;font-size:15px}
 .f{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -167,7 +168,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 .kv{font-size:12px}.props .kv{padding:5px 0}.toolbox{padding:8px}.tag{font-size:11px}
 .sig{font-size:11px;padding-block:0}
 .prseq select{font-size:13px;min-height:32px}
-.qt thead{display:none}.qt tbody th,.qt td{display:block;padding:1px 8px}.qt tbody th{padding-top:5px}.qt td{white-space:normal}.qt td.qsub:empty{display:none}.qt td.qsub{font-size:14px;padding-bottom:4px}.qt td.gen{font-size:12px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input[type=number]{width:46px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
+.qitems{grid-template-columns:minmax(0,1fr)}.qn{white-space:normal}.qf .gen{font-size:12px}.qf .qsub{font-size:13px}.qf .fx{white-space:normal}.qt{padding:6px 8px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input[type=number]{width:46px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
 }
 
 </style>
