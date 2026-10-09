@@ -799,6 +799,12 @@ function digest(g,memo){
     Z();if(op==='span'){K();same('n',0);ge('al',sl('al'),r);ge('c',sl('c'),r);le('dl',sh('dl'),r);E();}
     Z();if(op==='comp'){K();ge('dl',sl('dl'),r);Z();if(S.B.c[0]===1&&S.B.c[1]===1)for(const k in SYM){ge(k,sl(k),r);le(k,sh(k),r)};E();}
     Z();if(op==='ind'||op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(op==='delS'){K();Z();if(b[1]!==null)ge('n',sl('n')-b[1],r);Z();if(b[0]!==null)le('n',sh('n')-b[0],r);Z();if(b[1]!==null){K();ge('chi',sl('chi')-b[1],r);ge('nu',sl('nu')-b[1],r);ge('dl',sl('dl')-b[1],r);E();};E();};E();}
+    /* removing a set whose inner structure is known: a clique (all adjacent) or an independent set (none adjacent) */
+    Z();if(op==='delS'&&a){const b=ownB(a,'k')||[null,null],k0=b[0],k1=b[1],c2=x=>x*(x-1)/2,cq=a.prop==='clique',ind=a.prop==='indep',w=cq?`הסרת הקליקה ${a.name}`:ind?`הסרת הקבוצה הבלתי תלויה ${a.name}`:`הסרת הקבוצה ${a.name}`;
+      Z();if(k1!==null){ge('om',sl('om')-(ind?1:k1),w);ge('al',sl('al')-(cq?1:k1),w);ge('m',sl('m')-k1*sh('D')+(cq&&k0!==null?c2(k0):0),w)}
+      Z();if(ind)ge('chi',sl('chi')-1,w);
+      Z();if(k0!==null&&k1!==null)le('m',sh('m')-k0*sl('dl')+(ind?0:c2(k1)),w);
+      Z();if(cq&&k0===2&&k1===2&&prop(src,'tf')==='y')ge('m',sl('m')-(sh('n')-1),'שני שכנים בגרף בלי משולשים: אין להם שכן משותף')}
     Z();if(op==='subd'){K();same('n',1);same('m',1);same('c',0);ge('D',sl('D'),r);le('D',Math.max(2,sh('D')),r);le('dl',Math.min(2,sh('dl')),r);E();}
     Z();if(op==='contr'){K();same('n',-1);same('c',0);le('m',sh('m')-1,r);le('chi',sh('chi')+1,r);E();}
     Z();if(op==='compl'){K();same('n',0);ge('m',sl('n')*(sl('n')-1)/2-sh('m'),r);Z();if(sh('n')<Infinity)le('m',sh('n')*(sh('n')-1)/2-sl('m'),r);ge('D',sl('n')-1-sh('dl'),r);le('D',sh('n')-1-sl('dl'),r);ge('dl',sl('n')-1-sh('D'),r);le('dl',sh('n')-1-sl('D'),r);
@@ -806,6 +812,7 @@ function digest(g,memo){
   /* a component among the components of its graph: what the others take is not available to it */
   Z();if(S&&!S.bad&&g.op==='comp'){K();const sib=compsOf(src).filter(x=>x!==g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(src).length,cs=S.B.c,full=cs[0]===cs[1]&&cs[0]===all,hid=Math.max(0,cs[0]-all),r=`שאר הרכיבים של ${src.name}`;
     Z();if(sib.length===all-1)for(const k of ['n','m','al','nu','be']){const lo=sib.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),hi=sib.reduce((t,x)=>t+x.B[k][1],0);le(k,S.B[k][1]-lo,r);Z();if(full)ge(k,S.B[k][0]-hi,r)};E();}
+  const P0=k=>prop(g,k);
   /* back from the graphs made of this one: what is known about them limits this graph too */
   for(const h of O.filter(o=>o.t==='g'&&o.op&&o.src===X)){const C=memo.get(h);Z();if(!C||C.bad)continue;const cl=k=>{note(h.name,C.W,k,0,C.B[k][0]);return C.B[k][0]},chh=k=>{note(h.name,C.W,k,1,C.B[k][1]);return C.B[k][1]},op=h.op,a=by(h.arg),r=`מ־${h.name}`,back=(k,c)=>{ge(k,cl(k)+c,r);le(k,chh(k)+c,r)};
     Z();if(SUBG.includes(op)){K();for(const k of ['n','m','D','chi','om','nu'])ge(k,cl(k),r);Z();if(op!=='span'&&op!=='dele')ge('al',cl('al'),r);E();}
@@ -814,6 +821,12 @@ function digest(g,memo){
     Z();if(op==='adde'){K();back('n',0);back('m',-1);ge('chi',cl('chi')-1,r);le('chi',chh('chi'),r);ge('D',cl('D')-1,r);le('D',chh('D'),r);ge('dl',cl('dl')-1,r);le('dl',chh('dl'),r);ge('nu',cl('nu')-1,r);le('nu',chh('nu'),r);ge('al',cl('al'),r);le('al',chh('al')+1,r);ge('c',cl('c'),r);le('c',chh('c')+1,r);le('om',chh('om'),r);E();}
     Z();if(op==='span'){K();back('n',0);le('al',chh('al'),r);le('c',chh('c'),r);ge('dl',cl('dl'),r);E();}
     Z();if(op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(b[0]!==null)ge('n',cl('n')+b[0],r);Z();if(b[1]!==null){K();le('n',chh('n')+b[1],r);le('chi',chh('chi')+b[1],r);le('nu',chh('nu')+b[1],r);E();};E();}
+    Z();if(op==='delS'&&a){const b=ownB(a,'k')||[null,null],k0=b[0],k1=b[1],c2=x=>x*(x-1)/2,cq=a.prop==='clique',ind=a.prop==='indep',w=cq?`החזרת הקליקה ${a.name} אל ${h.name}`:ind?`החזרת הקבוצה הבלתי תלויה ${a.name} אל ${h.name}`:`החזרת הקבוצה ${a.name} אל ${h.name}`;
+      Z();if(k1!==null){le('om',chh('om')+(ind?1:k1),w);le('al',chh('al')+(cq?1:k1),w);le('m',chh('m')+k1*H('D')-(cq&&k0!==null?c2(k0):0),w)}
+      Z();if(ind)le('chi',chh('chi')+1,w);
+      Z();if(cq&&k0!==null){ge('nu',cl('nu')+dn(k0/2),w);ge('m',cl('m')+c2(k0),w);ge('chi',k0,w)}
+      Z();if(k0!==null&&k1!==null)ge('m',cl('m')+k0*L('dl')-(ind?0:c2(k1)),w);
+      Z();if(cq&&k0===2&&k1===2&&P0('tf')==='y')le('m',chh('m')+H('n')-1,'שני שכנים בגרף בלי משולשים: אין להם שכן משותף')}
     Z();if(op==='subd'){K();back('n',-1);back('m',-1);back('c',0);E();}
     Z();if(op==='contr'){K();back('n',1);back('c',0);ge('m',cl('m')+1,r);ge('chi',cl('chi')-1,r);E();}
     Z();if(op==='compl'){K();back('n',0);ge('m',cl('n')*(cl('n')-1)/2-chh('m'),r);Z();if(chh('n')<Infinity)le('m',chh('n')*(chh('n')-1)/2-cl('m'),r);ge('D',cl('n')-1-chh('dl'),r);le('D',chh('n')-1-cl('dl'),r);ge('dl',cl('n')-1-chh('D'),r);le('dl',chh('n')-1-cl('D'),r);
@@ -870,7 +883,7 @@ function digest(g,memo){
     le('chi',H('D')+1,'χ ≤ Δ + 1');ge('D',L('chi')-1,'χ ≤ Δ + 1');
     Z();if(H('al')<Infinity)ge('chi',up(L('n')/H('al')),'n ≤ χ·α');Z();if(H('chi')<Infinity)ge('al',up(L('n')/H('chi')),'n ≤ χ·α');Z();if(H('chi')<Infinity&&H('al')<Infinity)le('n',H('chi')*H('al'),'n ≤ χ·α');
     ge('chi',L('om'),'χ ≥ ω');le('om',H('chi'),'χ ≥ ω');le('chi',H('n'),'χ ≤ n');le('al',H('n'),'α ≤ n');
-    Z();if(P('tf')==='y')le('om',2,'בלי משולשים');
+    Z();if(P('tf')==='y'){le('om',2,'בלי משולשים');Z();if(H('n')<Infinity)le('m',dn(H('n')*H('n')/4),'בלי משולשים: m ≤ n² / 4')}
     for(const S of ss){const b=ownB(S,'k');Z();if(!b)continue;Z();if(S.prop==='indep'&&b[0]!==null)ge('al',b[0],`הקבוצה ${S.name}`);Z();if(S.prop==='clique'&&b[0]!==null)ge('om',b[0],`הקליקה ${S.name}`);Z();if(S.prop==='cover'&&b[1]!==null)le('be',b[1],`הכיסוי ${S.name}`)}
     Z();if(P('sc')==='y'&&L('n')===H('n'))eq('m',L('n')*(L('n')-1)/4,'איזומורפי למשלים');
     for(const k in SYM)if(B[k][0]>B[k][1]){bad=true;ch=false}}
