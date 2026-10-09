@@ -497,13 +497,32 @@ const rngTxt=(lo,mid,hi)=>`${lo!==null?V(lo)+' ≤ ':''}${mid}${hi!==null?' ≤ 
 const ext=(g,w)=>O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='one'&&o.w===w);
 const val=(g,k)=>{if(g[k]!==null&&g[k]!==undefined)return g[k];if(k!=='D'&&k!=='dl')return null;const a=allDeg(g);if(a!==null)return a;const v=ext(g,k==='D'?'max':'min');return v?dEx(v):null};
 const sy=(g,k)=>{const v=val(g,k);return v!==null?V(v):SYM[k]+sub(g)};
-const degOf=v=>dEx(v)!==null?V(dEx(v)):v.q==='one'&&v.w?(x=>x.includes('class="qv"')?x:`<span class="qs">${x}</span>`)(sy(by(v.in),v.w==='max'?'D':'dl')):`deg(${v.name})`;
+const degOf=v=>dEx(v)!==null?V(dEx(v)):v.q==='one'&&v.w?(x=>x.includes('class="q')?x:`<span class="qs">${x}</span>`)(sx(by(v.in),v.w==='max'?'D':'dl')):`deg(${v.name})`;
+/* what is known about a quantity: its own value, or what the operation that built the graph makes of the source graph's quantities.
+   num: a number; otherwise html is an expression in the remaining symbols */
+const NUM=v=>({num:v,html:V(v),atom:true}),EXP=h=>({num:null,html:h,atom:false}),OPD=e=>e.atom?e.html:`(${e.html})`;
+const plus=(e,c)=>e.num!==null?NUM(e.num+c):EXP(`${OPD(e)} ${c<0?'−':'+'} ${V(Math.abs(c))}`);
+function ex(g,k,depth){
+  const own=val(g,k);if(own!==null)return NUM(own);
+  const me={num:null,html:SYM[k]+sub(g),atom:true,self:true};
+  if(!g.op||(depth||0)>12)return me;
+  const src=by(g.src),a=by(g.arg),E=x=>({...ex(src,x,(depth||0)+1),self:false}),op=g.op;
+  if(k==='n'){if(op==='delv'||op==='contr')return plus(E('n'),-1);if(op==='subd')return plus(E('n'),1);if(['dele','adde','compl','span'].includes(op))return E('n');
+    if(op==='delS')return a.k!==null?plus(E('n'),-a.k):EXP(`${OPD(E('n'))} − |${a.name}|`);if(op==='ind')return a.k!==null?NUM(a.k):{num:null,html:`|${a.name}|`,atom:true}}
+  if(k==='m'){if(op==='delv'){const d=dEx(a);return d!==null?plus(E('m'),-d):EXP(`${OPD(E('m'))} − ${degOf(a)}`)}
+    if(op==='dele')return plus(E('m'),-1);if(op==='adde'||op==='subd')return plus(E('m'),1);
+    if(op==='compl'){const N=E('n'),M=E('m');return N.num!==null&&M.num!==null?NUM(N.num*(N.num-1)/2-M.num):EXP(`${OPD(N)}·(${N.html} − 1) / 2 − ${OPD(M)}`)}
+    if(op==='ind'){if(a.prop==='indep')return NUM(0);if(a.prop==='clique'&&a.k!==null)return NUM(a.k*(a.k-1)/2)}}
+  if(k==='c'){if(op==='dele'&&a.bridge)return plus(E('c'),1);if(op==='contr'||op==='subd')return E('c');if(op==='comp')return NUM(1)}
+  if((k==='D'||k==='dl')&&op==='compl'){const N=E('n'),d=E(k==='D'?'dl':'D');return N.num!==null&&d.num!==null?NUM(N.num-1-d.num):EXP(`${OPD(N)} − 1 − ${OPD(d)}`)}
+  return me}
+const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<span class="qs">${OPD(e)}</span>`};
 const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':g.c!==null&&g.c>1?'n':'u'):g[k];
 function sheetFor(g){
-  const s=sub(g),q=k=>sy(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
+  const s=sub(g),q=k=>sx(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
   const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need});
   const src=g.op?by(g.src):null;
-  if(src){const Q=k=>sy(src,k),N=Q('n'),M=Q('m'),C=Q('c'),a=by(g.arg),P=src.name,rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:gn,s:st,rel:1});
+  if(src){const n=sy(g,'n'),m=sy(g,'m'),c=sy(g,'c'),D=sy(g,'D'),Q=k=>sx(src,k),N=Q('n'),M=Q('m'),C=Q('c'),a=by(g.arg),P=src.name,rel=(t,gn,st)=>F.push({t,r:'מהפעולה',g:gn,s:st,rel:1});
     if(g.op==='delv'){rel('צמתים אחרי הסרת צומת',`n(${X}) = n(${P}) − 1`,`${n} = ${N} − 1`);rel('צלעות אחרי הסרת צומת',`m(${X}) = m(${P}) − deg(${a.name})`,`${m} = ${M} − ${degOf(a)}`);
       rel('רכיבי קשירות אחרי הסרת צומת',`c(${X}) ≤ c(${P}) + deg(${a.name}) − 1`,`${c} ≤ ${C} + ${degOf(a)} − 1`);if(dEx(a)===null&&(dLo(a)!==null||dHi(a)!==null))rel('צלעות אחרי הסרת צומת, לפי טווח הדרגה',`m(${P}) − max deg ≤ m(${X}) ≤ m(${P}) − min deg`,`${dHi(a)!==null?M+' − '+V(dHi(a))+' ≤ ':''}${m}${dLo(a)!==null?' ≤ '+M+' − '+V(dLo(a)):''}`);
       if(a.cut)rel(`${a.name} צומת מפריד`,`c(${X}) ≥ c(${P}) + 1`,`${c} ≥ ${C} + 1`)}
@@ -581,7 +600,7 @@ function sheetFor(g){
   return `<table class="qt"><caption><span class="name">${X}</span> ${title}</caption><thead><tr><th scope="col">נוסחה</th><th scope="col">צורה כללית</th><th scope="col">עם הנתונים</th></tr></thead><tbody>${vis.map(card).join('')}</tbody></table>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
-  const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,val(g,k)])}}
+  const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,ex(g,k).num])}}
   for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
   L.push(['ω','גודל קליקה מקסימלית',null],['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
