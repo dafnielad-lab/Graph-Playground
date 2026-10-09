@@ -51,7 +51,7 @@ function renderObjs(){
     return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה'],['cover','כיסוי בצמתים'],['side','צד בגרף דו-צדדי']],o.prop)}</select></div></div>`}).join('')}
 /* symbol of a graph quantity: the given value in colour, otherwise the symbol (with the graph's name unless it is G) */
 /* with several graphs on the sheet every symbol carries the name of its graph */
-const sub=g=>O.filter(o=>o.t==='g').length<2?'':`<sub>${g.name}</sub>`;
+const sub=g=>!g.virt&&O.filter(o=>o.t==='g'&&!o.virt).length<2?'':`<sub>${g.name}</sub>`;
 const MK=/(?<![A-Za-z])(?:deg|[nmcf])(?![A-Za-z])|[ΔδχανβρωℓΓ]/g;
 const mk=(x,g)=>{const s=sub(g);if(!s||!x)return x;return x.split(/(<[^>]*>)/).map((p,i,A)=>i%2?p:p.replace(MK,(a,o)=>o+a.length===p.length&&A[i+1]==='<sub>'?a:a+s)).join('')};
 /* operation formulas name the graph in brackets: n(H) becomes n with the name beneath */
@@ -432,21 +432,48 @@ function digest(g,memo){
     Z();if(prop(g,'bp')==='u'&&P('bp')==='u'){K();Z();if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)');E();}
     Z();if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
     Z();if(ex1('n')&&L('n')%2===1)T('אין זיווג מושלם','מספר צמתים אי-זוגי');E();}
-  St.fo=P('fo')==='y';St.pl=P('pl')==='y';
+  St.fo=P('fo')==='y';St.pl=P('pl')==='y';St.tf=P('tf')==='y';
   St.bad=bad;return moved||bad}
 /* all graphs together: each round lets every graph use what the others have reached, until nothing moves */
-function solveAll(){const memo=new Map();let any=true,r=0;while(any&&r++<14){any=false;for(const g of graphs())any=digest(g,memo)||any}return memo}
+function solveAll(extra){const memo=new Map(),x=extra||[];O.push(...x);
+  try{let any=true,r=0;while(any&&r++<14){any=false;for(const g of graphs())any=digest(g,memo)||any}}finally{if(x.length)O.splice(O.length-x.length,x.length)}
+  return memo}
+/* the standard moves, tried on every graph without the user defining them: what is left after removing any vertex, any edge,
+   two adjacent or two non-adjacent vertices, after adding an edge, and the complement. Each is a real object for the solver. */
+function virtFor(g,d){
+  const X=g.name,L=k=>d.B[k][0],H=k=>d.B[k][1],out=[],fin=x=>x===Infinity?null:x;
+  const mk=(title,name,op,arg)=>{if(by(name))return;const h=newG(name,{op,src:X,arg:arg?arg.name:null,virt:true});if(arg)arg.virt=true;out.push({title,h,arg})};
+  const far=(H('m')<L('n')*(L('n')-1)/2&&L('n')>=2)||L('c')>=2;
+  if(L('n')>=2)mk('הסרת צומת כלשהו',`${X}−v`,'delv',{t:'v',name:`v∈${X}`,in:X,q:'one',d:null,dm:'rng',d1:L('dl'),d2:fin(H('D')),cut:false});
+  if(L('m')>=1){mk('הסרת קשת כלשהי',`${X}−e`,'dele',{t:'e',name:`e∈${X}`,in:X,bridge:false});
+    mk('הסרת שני צמתים שכנים',`${X}−uw`,'delS',{t:'s',name:`שני שכנים ב־${X}`,in:X,k:2,prop:'clique'})}
+  if(far&&L('n')>=3){mk('הסרת שני צמתים לא שכנים',`${X}−u,w`,'delS',{t:'s',name:`שני לא שכנים ב־${X}`,in:X,k:2,prop:'indep'});
+    mk('הוספת קשת בין שני צמתים לא שכנים',`${X}+e`,'adde',{t:'e',name:`e∉${X}`,in:X,bridge:false})}
+  if(!isBar(X)&&!O.some(o=>o.t==='g'&&o.op==='compl'&&o.src===X))mk('המשלים',barName(X),'compl',null);
+  return out}
+/* bounds on a pair of vertices, straight from the settled ranges */
+function pairRows(g,d){
+  const L=k=>d.B[k][0],H=k=>d.B[k][1],s=sub(g),R=[],dg=`deg${s}(u) + deg${s}(w)`,row=(t,f,e)=>R.push({t,f,e});
+  const lo=2*L('dl'),hi=H('D')<Infinity?2*H('D'):null;
+  if(lo>0||hi!==null)row('סכום הדרגות של שני צמתים כלשהם',`${lo>0?V(lo)+' ≤ ':''}${dg}${hi!==null?' ≤ '+V(hi):''}`,'כל דרגה נמצאת בין הדרגה המינימלית לדרגה המקסימלית, ולכן הסכום של שתיים נמצא בין פעמיים המינימלית לפעמיים המקסימלית.');
+  if(H('n')<Infinity){const a=Math.min(hi??Infinity,2*(H('n')-2));if(L('n')>=3&&a>=0)row('סכום הדרגות של שני צמתים לא שכנים',`${dg} ≤ ${V(a)}`,'שני צמתים לא שכנים יכולים להיות שכנים רק של שאר הצמתים, ולכן כל דרגה היא לכל היותר מספר הצמתים פחות שתיים.');
+    if(d.tf)row('סכום הדרגות של שני שכנים, בגרף בלי משולשים',`${dg} ≤ ${V(Math.min(hi??Infinity,H('n')))}`,'בגרף בלי משולשים לשני שכנים אין שכן משותף, ולכן קבוצות השכנים שלהם זרות וביחד לא עוברות את מספר הצמתים.');
+    const cn=lo-H('n')+2;if(cn>=1)row('שכנים משותפים לשני צמתים לא שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(cn)}`,'שתי קבוצות השכנים נמצאות בתוך שאר הצמתים. כשסכום הדרגות גדול ממספרם, הקבוצות חייבות להיחתך. מכאן שבין כל שני צמתים יש מסלול באורך שתיים לכל היותר.');
+    const ct=lo-H('n');if(ct>=1)row('שכנים משותפים לשני צמתים שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(ct)}`,'מכל קבוצת שכנים מורידים את הצומת השני, ושתיהן נמצאות בתוך שאר הצמתים. כשהסכום גדול ממספרם יש שכן משותף, ולכן כל קשת נמצאת במשולש.')}
+  return R}
 const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 /* a reason mixes Hebrew words and formulas: each formula run is set left to right inside the Hebrew line */
 const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
-const EXPL=new Set();
+const EXPL=new Set(),OPN=new Set();
 function tell(g,k,i,d,one){const v=d.B[k][i],r=d.W[k][i],u=one?[...d.U[k][0],...d.U[k][1]].filter((x,n,A)=>A.findIndex(y=>y.g===x.g&&y.k===x.k&&y.i===x.i)===n):d.U[k][i]||[];
   const head=`<b>${one?'הערך':i?'החסם העליון':'החסם התחתון'}</b> <bdi dir="ltr" class="fx">${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}</bdi>: `;
   const body=r==='נתון'?'הוזן בנתוני השאלה.':r==='מהפעולה'?`מתקבל ישירות מהפעולה שיצרה את ${g.name}, לפי מה שהוזן לגרף המקור.`:r==='מהנתונים'?'נובע ישירות מהנתונים שהוזנו.':r.startsWith('מ־')?`הועבר ${rz(r)}, דרך הפעולה שמקשרת בין שני הגרפים.`:`לפי: ${rz(r)}.`;
   return `<p>${head}${body}${used(u)}</p>`}
-const used=u=>u.length?` נשען על: ${u.map(x=>`<bdi dir="ltr" class="fx">${SYM[x.k]+(by(x.g)?sub(by(x.g)):'')} ${x.i?'≤':'≥'} ${x.v}</bdi> (${rz(x.r)})`).join(', ')}.`:'';
+const used=u=>u.length?` נשען על: ${u.map(x=>`<bdi dir="ltr" class="fx">${SYM[x.k]+(by(x.g)?sub(by(x.g)):`<sub>${x.g}</sub>`)} ${x.i?'≤':'≥'} ${x.v}</bdi> (${rz(x.r)})`).join(', ')}.`:'';
 function digestHtml(){
-  const G=graphs(),open=!COL.has('Σ'),memo=solveAll();
+  const G=graphs(),open=!COL.has('Σ'),first=solveAll(),VR=new Map();
+  for(const g of G){const d=first.get(g);if(d&&!d.bad)VR.set(g,virtFor(g,d))}
+  const memo=solveAll([...VR.values()].flat().flatMap(x=>x.arg?[x.arg,x.h]:[x.h]));
   const body=G.map(g=>{const d=memo.get(g),s=sub(g),rows=[];
     if(d.bad)return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b></div><div class="qwarn">הנתונים של ${g.name} סותרים זה את זה, ולכן אין תמצית.</div></div>`;
     for(const k in SYM){if(k==='f'&&!d.pl)continue;if(k==='lv'&&!d.fo)continue;if(k==='c'&&g.op==='comp')continue;const [lo,hi]=d.B[k],w=d.W[k],sym=SYM[k]+s;
@@ -457,7 +484,15 @@ function digestHtml(){
       const ex=opn?`<div class="qex">${one?tell(g,k,lo===D0[k]?1:0,d,true):(lo>D0[k]?tell(g,k,0,d):'')+(hi<Infinity?tell(g,k,1,d):'')}</div>`:'';
       rows.push(`<div class="qi${given?'':' der'}"><div class="qn">${DEF[k]}</div><div class="qf"><span class="fx qsub">${f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}
     d.N.forEach(([t,r,u],n)=>{const key=g.name+'|i'+n,opn=EXPL.has(key);rows.push(`<div class="qi ins"><div class="qn">תובנה</div><div class="qf"><span class="qins">${t}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>לפי: ${rz(r)}.${used(u||[])}</p></div>`:''}</div>`)});
-    return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div></div>`}).join('');
+    /* the standard moves on this graph */
+    const mv=[],oo=OPN.has(g.name);
+    if(oo){for(const r of pairRows(g,d)){const key=g.name+'|p'+mv.length,opn=EXPL.has(key);mv.push(`<div class="qi der"><div class="qn">${r.t}</div><div class="qf"><span class="fx qsub">${r.f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex"><p>${r.e}</p></div>`:''}</div>`)}
+      for(const v of VR.get(g)||[]){const e=memo.get(v.h);if(!e)continue;const key=g.name+'|v'+v.h.name,opn=EXPL.has(key),ks=['n','m','c','D','dl','chi','al','nu','om'].filter(k=>!(e.B[k][0]===D0[k]&&e.B[k][1]===Infinity));
+        const fs=e.bad?'<span class="qins">הפעולה סותרת את הנתונים</span>':ks.map(k=>{const [lo,hi]=e.B[k],sym=SYM[k]+sub(v.h);return `<span class="fx qsub">${lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`}</span>`}).join('');
+        const ex=opn&&!e.bad?`<div class="qex">${ks.map(k=>{const [lo,hi]=e.B[k],one=lo===hi&&(e.W[k][0]===e.W[k][1]||lo===D0[k]);return one?tell(v.h,k,lo===D0[k]?1:0,e,true):(lo>D0[k]?tell(v.h,k,0,e):'')+(hi<Infinity?tell(v.h,k,1,e):'')}).join('')}</div>`:'';
+        mv.push(`<div class="qi der wide"><div class="qn">${v.title} <span class="ref"><bdi dir="ltr" class="fx">${v.h.name}</bdi></span></div><div class="qf">${fs}<button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}}
+    const moves=`<button class="qmv" data-mv="${g.name}" aria-expanded="${oo}">${oo?'▾':'◂'} פעולות על ${g.name} <span class="lab">זוגות צמתים, הסרות, הוספת קשת ומשלים, בלי להגדיר אותן</span></button>${oo?`<div class="qitems one">${mv.join('')}</div>`:''}`;
+    return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div>${moves}</div>`}).join('');
   return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, עם הסבר לכל חסם</span></h3>${open?body:''}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('')+digestHtml();
@@ -471,6 +506,7 @@ document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.datas
   else o[k]=t.type==='checkbox'?t.checked:t.value;
   if(['op','src','in','arg','dm','q'].includes(k)){if(o.t==='g'&&o.op)ensureArg(o);O.filter(g=>g.t==='g'&&g.op).forEach(ensureArg);fixNames();renderObjs()}
   renderSheet()});
+document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-mv]');if(t){const k=t.dataset.mv;if(OPN.has(k))OPN.delete(k);else OPN.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-ex]');if(t){const k=t.dataset.ex;if(EXPL.has(k))EXPL.delete(k);else EXPL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-min]');if(t){const k=t.dataset.min;if(COLG.has(k))COLG.delete(k);else COLG.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
