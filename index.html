@@ -63,7 +63,8 @@ select{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background
 .btn.sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:10px}
 .game{background:var(--surface);border-radius:16px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;border:2px solid transparent}
 .game.won{border-color:var(--good)}.game input{width:110px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
-.meta.pr{flex-direction:column;gap:2px;align-items:flex-end}.meta.pr .num{white-space:nowrap}.meta.pr span.num{white-space:normal;text-align:left}#help{background:var(--surface);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 24px}.hgrid h3{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--accent)}.hgrid p{margin:0;font-size:14px;line-height:1.55;max-width:60ch}.sig{text-align:center;font-size:13px;color:var(--muted);padding-block:4px}.prseq{display:flex;flex-wrap:wrap;gap:6px}.prseq select{font-size:16px;font-weight:500;min-height:40px}.tnum{font-size:26px}.res{font-weight:700}.res.ok{color:var(--good)}.res.no{color:var(--bad)}
+.meta.pr{flex-direction:column;gap:2px;align-items:flex-end}.meta.pr .num{white-space:nowrap}.meta.pr span.num{white-space:normal;text-align:left}#help{background:var(--surface);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 24px}.hgrid h3{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--accent)}.hgrid p{margin:0;font-size:14px;line-height:1.55;max-width:60ch}.sig{text-align:center;font-size:13px;color:var(--muted);padding-block:4px}.pvr{display:flex;align-items:center;gap:5px;background:var(--bg);border-radius:8px;padding:4px 8px}.game .pvr input{width:58px;padding:5px}
+.prseq{display:flex;flex-wrap:wrap;gap:6px}.prseq select{font-size:16px;font-weight:500;min-height:40px}.tnum{font-size:26px}.res{font-weight:700}.res.ok{color:var(--good)}.res.no{color:var(--bad)}
 .showsel{margin-inline-start:auto}.slow{color:var(--accent)}
 .galload{grid-column:1/-1;display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:12px;padding:12px 14px;font-weight:500}
 .spin{width:18px;height:18px;border-radius:50%;border:3px solid var(--track);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}@keyframes spin{to{transform:rotate(360deg)}}
@@ -192,9 +193,9 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>טווח צמתים</h3><p>הכפתור "טווח" ליד מספר הצמתים פותח שדה שני. הספירה והגלריה כוללות אז את כל הגרפים מכל מספר צמתים בטווח.</p></div>
 <div><h3>תנאים מדרגה שנייה</h3><p>התנאי "אחרי הסרת קשתות או צמתים" מחלק את הרשימה. התנאים שמעליו נבדקים על הגרף, והתנאים שמתחתיו נבדקים על מה שנשאר אחרי הסרת קשתות או צמתים. בוחרים כמה מסירים, ואם מספיק שקיימת הסרה מתאימה או שנדרש שכל הסרה תתאים. בכרטיס הגרף מסומנת באדום הסרה לדוגמה.</p></div>
 <div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי קשתות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
-<div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד שני משתנים.</p></div>
+<div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד ארבעה משתנים, ולכל משתנה טווח ערכים.</p></div>
 <div><h3>דף נוסחאות</h3><p>מצב בלי הגבלה על מספר הצמתים. מגדירים את האובייקטים שבשאלה: הגרף הנתון, צמתים, קשתות, קבוצות צמתים, וגרפים שנוצרים מפעולות כמו הסרה, משלים או תת-גרף מושרה. כל ערך שממלאים מוצב בכל הנוסחאות שבהן הוא מופיע, ומה שלא נתון נשאר כסמל. לכל תכונה כמו מישוריות בוחרים כן, לא או לא ידוע, ומוצגות רק הנוסחאות שחלות לפי מה שנתון.</p></div>
-<div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים וסדרות פרופר עד שנים-עשר.</p></div>
+<div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים עד שנים-עשר, וסדרות פרופר עד עשרים צמתים.</p></div>
 </div>
 </section>
 <div class="cols"><aside id="conds" aria-label="תנאים"></aside><div class="side"><section id="main" aria-label="תוצאות"><div class="game" id="boot"><p class="hint" style="font-size:15px">הקוד לא רץ בחלון הזה. אם הקובץ נפתח בתצוגה מקדימה (וואטסאפ, מייל, אפליקציית קבצים), צריך לפתוח אותו בדפדפן עצמו, למשל Chrome או Safari.</p><p class="hint" id="booterr" dir="ltr"></p></div></section><aside id="card" aria-label="כרטיס הגרף"></aside></div></div>
@@ -233,14 +234,20 @@ function isBip(a,n){const col=new Int8Array(n).fill(-1);for(let s=0;s<n;s++){if(
 function diam(a,n){const full=(1<<n)-1;let best=0;for(let s=0;s<n;s++){let seen=1<<s,fr=seen,d=0;for(;;){let nx=0,f=fr;while(f){const v=low(f);f&=f-1;nx|=a[v]}nx&=~seen;if(!nx)break;d++;seen|=nx;fr=nx}if(seen!==full)return Infinity;if(d>best)best=d}return best}
 function girth(a,n){let best=Infinity;for(let s=0;s<n;s++){const dist=new Int8Array(n).fill(-1),par=new Int8Array(n).fill(-1);dist[s]=0;const q=[s];for(let h=0;h<q.length;h++){const v=q[h];let nb=a[v];while(nb){const u=low(nb);nb&=nb-1;if(dist[u]<0){dist[u]=dist[v]+1;par[u]=v;q.push(u)}else if(par[v]!==u){const c=dist[u]+dist[v]+1;if(c<best)best=c}}}}return best}
 function nTri(a,n){let t=0;for(let i=0;i<n;i++){let nb=a[i]>>>(i+1)<<(i+1);while(nb){const j=low(nb);nb&=nb-1;t+=pc(a[i]&a[j]&~((1<<(j+1))-1))}}return t}
-function maxMatch(a,n){const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};return f((1<<n)-1)}
-function maxMatchEdges(a,n){const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};
+/* forests: a leaf can always be matched to its neighbour, so large trees need no subset tables */
+const isForest=(a,n)=>nEdges(a)===n-nComps(a,n);
+function forestMatch(a,n){const b=a.slice(),res=[];let ch=true;
+  while(ch){ch=false;for(let v=0;v<n;v++)if(pc(b[v])===1){const u=low(b[v]);res.push([v,u]);let nb=b[u];while(nb){const w=low(nb);nb&=nb-1;b[w]&=~(1<<u)}b[u]=0;ch=true}}
+  return res}
+const bigForest=(a,n)=>n>12&&isForest(a,n);
+function maxMatch(a,n){if(bigForest(a,n))return forestMatch(a,n).length;const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};return f((1<<n)-1)}
+function maxMatchEdges(a,n){if(bigForest(a,n))return forestMatch(a,n);const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};
   const res=[];let m=(1<<n)-1;while(m){const v=low(m),r=m&~(1<<v);const tot=f(m);if(f(r)===tot){m=r;continue}let nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;if(1+f(r&~(1<<u))===tot){res.push([v,u]);m=r&~(1<<u);break}}}return res}
-function pmCount(a,n){if(n%2)return 0;const memo=new Int32Array(1<<n).fill(-1);const g=m=>{if(!m)return 1;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let s=0,nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;s+=g(r&~(1<<u))}return memo[m]=s};return g((1<<n)-1)}
+function pmCount(a,n){if(n%2)return 0;if(bigForest(a,n))return forestMatch(a,n).length*2===n?1:0;const memo=new Int32Array(1<<n).fill(-1);const g=m=>{if(!m)return 1;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let s=0,nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;s+=g(r&~(1<<u))}return memo[m]=s};return g((1<<n)-1)}
 function minMaximal(a,n){const memo=new Int8Array(1<<n).fill(-1);const h=S=>{if(memo[S]>=0)return memo[S];let v=-1,t=S;while(t){const x=low(t);t&=t-1;if(a[x]&S){v=x;break}}if(v<0)return memo[S]=0;const u=low(a[v]&S);let best=99,nb=a[v]&S;while(nb){const w=low(nb);nb&=nb-1;best=Math.min(best,1+h(S&~(1<<v)&~(1<<w)))}nb=a[u]&S&~(1<<v);while(nb){const w=low(nb);nb&=nb-1;best=Math.min(best,1+h(S&~(1<<u)&~(1<<w)))}return memo[S]=best};return h((1<<n)-1)}
-function alpha(a,n){const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);return memo[m]=Math.max(f(r),1+f(r&~a[v]))};return f((1<<n)-1)}
+function alpha(a,n){if(bigForest(a,n))return n-forestMatch(a,n).length;const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);return memo[m]=Math.max(f(r),1+f(r&~a[v]))};return f((1<<n)-1)}
 function chi(a,n){if(isBip(a,n))return nEdges(a)?2:1;for(let k=3;;k++){const col=new Int8Array(n).fill(-1);const go=(i,mx)=>{if(i===n)return true;let used=0,nb=a[i];while(nb){const u=low(nb);nb&=nb-1;if(col[u]>=0)used|=1<<col[u]}for(let c=0;c<k&&c<=mx+1;c++)if(!(used>>c&1)){col[i]=c;if(go(i+1,Math.max(mx,c)))return true;col[i]=-1}return false};if(go(0,-1))return k}}
-function isHam(a,n){if(n<3)return 0;const reach=new Uint16Array(1<<n);reach[1]=1;const full=(1<<n)-1;for(let m=1;m<=full;m+=2){let e=reach[m];while(e){const v=low(e);e&=e-1;let nb=a[v]&~m;while(nb){const u=low(nb);nb&=nb-1;reach[m|(1<<u)]|=1<<u}}}return (reach[full]&a[0])?1:0}
+function isHam(a,n){if(n<3)return 0;if(n>12&&isForest(a,n))return 0;const reach=new Uint16Array(1<<n);reach[1]=1;const full=(1<<n)-1;for(let m=1;m<=full;m+=2){let e=reach[m];while(e){const v=low(e);e&=e-1;let nb=a[v]&~m;while(nb){const u=low(nb);nb&=nb-1;reach[m|(1<<u)]|=1<<u}}}return (reach[full]&a[0])?1:0}
 function isEuler(a,n){if(nComps(a,n)!==1)return 0;for(const x of a)if(pc(x)&1)return 0;return 1}
 function isoCount(a,b,n,stopAtOne){const da=degs(a),db=degs(b);const sa=[...da].sort(),sb=[...db].sort();for(let i=0;i<n;i++)if(sa[i]!==sb[i])return 0;const map=new Int8Array(n).fill(-1);let used=0,cnt=0;const go=i=>{if(i===n){cnt++;return}for(let v=0;v<n;v++){if(used>>v&1||db[v]!==da[i])continue;let ok=true;for(let j=0;j<i;j++){if(((a[i]>>j)&1)!==((b[v]>>map[j])&1)){ok=false;break}}if(!ok)continue;map[i]=v;used|=1<<v;go(i+1);used&=~(1<<v);map[i]=-1;if(stopAtOne&&cnt)return}};go(0);return cnt}
 /* ---------- planarity: rotation systems, embeddings up to symmetry, Kuratowski witness ---------- */
@@ -249,11 +256,11 @@ function edgeOrder(a,n){const E=[],full=(1<<n)-1;let done=0;
   while(done!==full){let best=-1,bd=-1,bg=-1;for(let v=0;v<n;v++)if(!(done>>v&1)){const d=pc(a[v]&done),g=pc(a[v]);if(d>bd||(d===bd&&g>bg)){bd=d;bg=g;best=v}}
     let nb=a[best]&done;while(nb){const u=low(nb);nb&=nb-1;E.push([u,best])}done|=1<<best}
   return E}
-function faceIds(rot,n){const id=new Int16Array(256).fill(-1);let f=0;
-  for(let u=0;u<n;u++)for(const v of rot[u]){if(id[u*16+v]>=0)continue;let x=u,y=v;do{id[x*16+y]=f;const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);f++}
+function faceIds(rot,n){const id=new Int16Array(1024).fill(-1);let f=0;
+  for(let u=0;u<n;u++)for(const v of rot[u]){if(id[u*32+v]>=0)continue;let x=u,y=v;do{id[x*32+y]=f;const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);f++}
   return id}
-function faceWalks(rot,n){const seen=new Uint8Array(256),F=[];
-  for(let u=0;u<n;u++)for(const v of rot[u]){if(seen[u*16+v])continue;const w=[];let x=u,y=v;do{seen[x*16+y]=1;w.push(x);const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);F.push(w)}
+function faceWalks(rot,n){const seen=new Uint8Array(1024),F=[];
+  for(let u=0;u<n;u++)for(const v of rot[u]){if(seen[u*32+v])continue;const w=[];let x=u,y=v;do{seen[x*32+y]=1;w.push(x);const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);F.push(w)}
   return F}
 /* enumerate planar rotation systems: a new vertex enters as a leaf in any corner, a chord joins two corners of one face */
 function embedAll(a,n,limit,cb){
@@ -267,7 +274,7 @@ function embedAll(a,n,limit,cb){
       else{const du=ru.length;for(let i=0;i<du&&cnt<limit;i++){ru.splice(i+1,0,v);go(k+1);ru.splice(i+1,1)}}
       rv.pop();return}
     const id=faceIds(rot,n),du=ru.length,dv=rv.length;
-    for(let i=0;i<du;i++){const fu=id[ru[i]*16+u];for(let j=0;j<dv&&cnt<limit;j++)if(id[rv[j]*16+v]===fu){ru.splice(i+1,0,v);rv.splice(j+1,0,u);go(k+1);ru.splice(i+1,1);rv.splice(j+1,1)}}
+    for(let i=0;i<du;i++){const fu=id[ru[i]*32+u];for(let j=0;j<dv&&cnt<limit;j++)if(id[rv[j]*32+v]===fu){ru.splice(i+1,0,v);rv.splice(j+1,0,u);go(k+1);ru.splice(i+1,1);rv.splice(j+1,1)}}
   };
   go(0);return cnt}
 function isPlanar(a,n){
@@ -316,6 +323,7 @@ function nCycles(a,n){if(nEdges(a)===n-nComps(a,n))return 0;let tot=0;
     for(let mask=1;mask<1<<m;mask++){let vs=mask;const big=(mask&(mask-1))!==0;while(vs){const v=low(vs);vs&=vs-1;const c=cnt[mask*m+v];if(!c)continue;if(big&&(nb>>v&1))tot+=c;let ext=(a[v+s+1]>>>(s+1))&~mask;while(ext){const u=low(ext);ext&=ext-1;cnt[(mask|1<<u)*m+u]+=c}}}}
   return tot/2}
 const maxCycles=n=>{if(n>8)return 0;let t=0;for(let k=3;k<=n;k++)t+=choose(n,k)*fact(k-1)/2;return t};
+const omega=(a,n)=>bigForest(a,n)?(nEdges(a)?2:1):alpha(compl(a,n),n);
 const PROP={
   edges:(a,n)=>nEdges(a),
   maxdeg:(a,n)=>Math.max(0,...degs(a)),
@@ -329,7 +337,7 @@ const PROP={
   euler:isEuler,ham:isHam,diam,girth,tri:nTri,mm:maxMatch,
   pmc:pmCount,pm:(a,n)=>pmCount(a,n)>0?1:0,
   minmax:minMaximal,stuck:(a,n)=>minMaximal(a,n)<maxMatch(a,n)?1:0,
-  alpha,omega:(a,n)=>alpha(compl(a,n),n),chi,
+  alpha,omega,chi,
   leaves:(a,n)=>degs(a).filter(d=>d===1).length,
   degcount:(a,n,d)=>degs(a).filter(x=>x===d).length,
   selfc:(a,n)=>isoCount(a,compl(a,n),n,true)?1:0,
@@ -450,7 +458,7 @@ const KIND={
   cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת קשתות או צמתים',type:'cut',noTarget:true}
 };
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
-if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV};
+if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV,forestMatch,maxMatch,alpha,pmCount,omega};
 
 /* ---------- formula-sheet mode: objects, operations, live substitution ---------- */
 const SHEET=(()=>{
@@ -680,7 +688,7 @@ function mkCond(kind,over){
 const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';
 const ranged=()=>!!S.rng&&!single(),nHi=()=>ranged()?Math.max(S.n,S.n2||S.n):S.n,Ns=()=>{const r=[];for(let n=S.n;n<=nHi();n++)r.push(n);return r};
 S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
-const maxN=()=>S.mode==='prufer'?12:S.mode==='manual'?8:(S.type==='tree'?12:8);
+const maxN=()=>S.mode==='prufer'?20:S.mode==='manual'?8:(S.type==='tree'?12:8);
 const curU=n=>S.type==='tree'&&n>8?universe('T',n):universe('G',n);
 const numMin=c=>c.kind==='cut'?1:KIND[c.kind].min||0;
 const numMax=c=>{const n=nHi();return c.kind==='cut'?Math.max(1,c.what==='e'?n*(n-1)/2:n-1):c.kind==='ind'?(c.k?choose(n,c.k):(1<<n)-2):KIND[c.kind].max(n)};
@@ -812,17 +820,22 @@ function pruferTree(seq,n){const deg=new Array(n).fill(1),a=new Array(n).fill(0)
   const link=(i,j)=>{a[i]|=1<<j;a[j]|=1<<i};
   for(const v of seq){let leaf=0;while(deg[leaf]!==1)leaf++;link(leaf,v-1);deg[leaf]--;deg[v-1]--}
   const rest=[];for(let i=0;i<n;i++)if(deg[i]===1)rest.push(i);if(rest.length===2)link(rest[0],rest[1]);return a}
+const PVARS=['x','y','z','w'];
+/* each variable ranges over a chosen interval of vertex numbers */
+function pvRange(v){const n=S.n,r=(S.pv=S.pv||{})[v]||{},lo=Math.max(1,Math.min(n,r.lo||1)),hi=Math.max(lo,Math.min(n,r.hi||n));return[lo,hi]}
 function syncPrufer(){const n=S.n,L=Math.max(0,n-2);if(!S.prufer){S.prufer=Array.from({length:L},(_,i)=>(i*2)%n+1);if(L>=3)S.prufer[2]='x'}
   S.prufer=Array.from({length:L},(_,i)=>{const t=S.prufer[i];return t===undefined?1:typeof t==='number'?Math.min(n,t):t})}
 function runAll(conds){const parts=Ns().map(n=>{const U=curU(n);return{U,r:run(U,S.type,conds)}}),z={u:0,l:0},add=(x,y)=>({u:x.u+y.u,l:x.l+y.l});
   return{parts,base:parts.reduce((t,p)=>add(t,p.r.base),z),steps:conds.map((_,i)=>parts.reduce((t,p)=>add(t,p.r.steps[i]),z)),fin:parts.reduce((t,p)=>add(t,p.r.fin),z)}}
 const cutOf=list=>list.find(c=>c.kind==='cut'),isBelow=(c,list)=>{const k=cutOf(list);return !!k&&list.indexOf(c)>list.indexOf(k)};
 function compute(){
-  if(S.mode==='prufer'){const n=S.n,vars=['x','y'].filter(v=>S.prufer.includes(v));ITEMS=[];
-    const rg=k=>vars.length>k?Array.from({length:n},(_,i)=>i+1):[0];
-    for(const x of rg(0))for(const y of rg(1)){const val={};if(vars[0])val[vars[0]]=x;if(vars[1])val[vars[1]]=y;const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
-      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')})}
-    R={r:null,info:{},galleryKind:'prufer'};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
+  if(S.mode==='prufer'){const n=S.n,vars=PVARS.filter(v=>S.prufer.includes(v)),rg=vars.map(v=>pvRange(v));ITEMS=[];
+    let total=1;for(const [lo,hi] of rg)total*=hi-lo+1;
+    const cur=rg.map(r=>r[0]);
+    for(let k=0;k<Math.min(total,S.show);k++){const val={};vars.forEach((v,i)=>val[v]=cur[i]);const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
+      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')});
+      for(let i=vars.length-1;i>=0;i--){if(cur[i]<rg[i][1]){cur[i]++;break}cur[i]=rg[i][0]}}
+    R={r:null,info:{},galleryKind:'prufer',total,vars};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
   const on=S.conds.filter(c=>c.on),r=runAll(on);
   const stepOf={};on.forEach((c,i)=>stepOf[c.id]=r.steps[i]);
   const info={};const key=x=>x.u+'/'+x.l;
@@ -867,6 +880,7 @@ function orbit(a,n){const seen=new Map(),q=[a];seen.set(a.join(','),a);for(let h
 function evalSingle(a,n,c){
   if(c.kind==='cut'){if(n>8)return null;const U=universe('G',n),need=new Uint8Array(U.graphs.length),i=gIndex(a,n);need[i]=1;return !!cutEval(U,c,belowOf(c),need)[i]}
   if(isBelow(c,S.conds))return null;
+  if(n>16&&(c.kind==='ind'||c.kind==='stuck'||c.target==='C'))return null;
   if(c.kind==='vdeg')return pc(a[c.v-1])===c.d;
   return cmp(condValue(a,n,c),c.op,c.value);
 }
@@ -935,7 +949,7 @@ function updateCounts(){
   for(const c of S.conds){
     const cn=$('#cnt'+c.id),nt=$('#note'+c.id),inf=R.info[c.id];if(!cn)continue;
     const rg=$('#rng'+c.id);rg.className='hint rngl';rg.innerHTML='';cn.className='num ccount';nt.className='note';nt.textContent='';
-    if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok===null?'—':ok?'✓':'✗';if(ok!==null)cn.classList.add(ok?'ok':'no');if(ok===null)nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':'נבדק על מה שנשאר אחרי ההסרה';continue}
+    if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok===null?'—':ok?'✓':'✗';if(ok!==null)cn.classList.add(ok?'ok':'no');if(ok===null)nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':isBelow(c,S.conds)?'נבדק על מה שנשאר אחרי ההסרה':'לא מחושב מעל שישה-עשר צמתים';continue}
     if(hidden()){cn.textContent=c.on?'?':'';continue}
     if(c.on){const now=lab?inf.step.l:inf.step.u;cn.textContent=pick(inf.step);
       if(prev===0){nt.textContent='הרשימה כבר התרוקנה בתנאי קודם';cn.classList.add('dim')}
@@ -964,11 +978,12 @@ function renderMain(){
     return;
   }
   if(S.mode==='prufer'){
-    const n=S.n,opts=t=>Array.from({length:n},(_,i)=>`<option value="${i+1}" ${t===i+1?'selected':''}>${i+1}</option>`).join('')+['x','y'].map(v=>`<option value="${v}" ${t===v?'selected':''}>${v}</option>`).join('');
-    m.innerHTML=`<div class="hero"><div class="big"><b class="num n1">${fmt(ITEMS.length)}</b><span class="t">${ITEMS.length===1?'עץ מתויג מתאים לסדרה':'עצים מתויגים מתאימים לסדרה'}</span></div><div class="pill">בכל מקום בסדרה בוחרים מספר צומת או משתנה</div></div>
+    const n=S.n,opts=t=>Array.from({length:n},(_,i)=>`<option value="${i+1}" ${t===i+1?'selected':''}>${i+1}</option>`).join('')+PVARS.map(v=>`<option value="${v}" ${t===v?'selected':''}>${v}</option>`).join('');
+    m.innerHTML=`<div class="hero"><div class="big"><b class="num n1">${fmt(R.total)}</b><span class="t">${R.total===1?'עץ מתויג מתאים לסדרה':'עצים מתויגים מתאימים לסדרה'}</span></div><div class="pill">${R.total>ITEMS.length?`מוצגים <b class="num">${ITEMS.length}</b> הראשונים. אפשר להגדיל ב"גרפים להצגה"`:'בכל מקום בסדרה בוחרים מספר צומת או משתנה'}</div></div>
     <div class="game"><span class="lab">סדרת פרופר</span><div class="prseq" dir="ltr">${S.prufer.length?S.prufer.map((t,i)=>`<select id="pr${i}" data-inp="pr" data-i="${i}" aria-label="מקום ${i+1} בסדרה">${opts(t)}</select>`).join(''):'<span class="hint">סדרה ריקה</span>'}</div>
     <button class="btn sm" data-act="prand">סדרה אקראית</button></div>
-    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button></div>
+    ${R.vars.length?`<div class="game"><span class="lab">טווח הערכים של כל משתנה</span>${R.vars.map(v=>{const [lo,hi]=pvRange(v);return `<span class="pvr"><b class="num">${v}</b><label for="pvlo${v}">מ־</label><input type="number" id="pvlo${v}" data-inp="pvlo" data-var="${v}" min="1" max="${n}" value="${lo}"><label for="pvhi${v}">עד</label><input type="number" id="pvhi${v}" data-inp="pvhi" data-var="${v}" min="1" max="${n}" value="${hi}"></span>`}).join('')}</div>`:''}
+    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>${showSel()}</div>
     <div class="gal"></div>`;
     fillGal();return;
   }
@@ -1048,7 +1063,7 @@ const yn=b=>b?'כן':'לא';
 function propRows(a,n,aut){
   const co=compl(a,n),d=degs(a).sort((x,y)=>y-x),nc=nComps(a,n),pl=isPlanar(a,n),gi=girth(a,n);
   const rows=[['צמתים',n],['קשתות',fmt(nEdges(a))],['קשתות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
-    ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
+    ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',omega(a,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
     ['צמתים מפרידים',nCutV(a,n)],['מעגלים',n<=8?fmt(nCycles(a,n)):nEdges(a)===n-nc?0:'—'],['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
   if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
   if(n<=8)rows.push(['תת-גרפים מושרים שונים',fmt(census(a,n))]);
@@ -1173,6 +1188,7 @@ function onInput(ev,commit){
   const t=ev.target,f=t.dataset.inp;if(!f)return;
   if(f==='guess'){S.guess.val=t.value;return}
   if(f==='show'){S.show=Number(t.value);changed();refresh(false);return}
+  if(f==='pvlo'||f==='pvhi'){if(t.value==='')return;const r=(S.pv=S.pv||{})[t.dataset.var]=S.pv[t.dataset.var]||{};r[f==='pvlo'?'lo':'hi']=Number(t.value);changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   if(f==='pr'){S.prufer[Number(t.dataset.i)]=/^\d+$/.test(t.value)?Number(t.value):t.value;changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   const c=S.conds.find(x=>x.id===Number(t.dataset.id));if(!c)return;
   const isNum=['value','extra','d','v','k'].includes(f);c[f]=isNum?Number(t.value):t.value;

@@ -26,14 +26,20 @@ function isBip(a,n){const col=new Int8Array(n).fill(-1);for(let s=0;s<n;s++){if(
 function diam(a,n){const full=(1<<n)-1;let best=0;for(let s=0;s<n;s++){let seen=1<<s,fr=seen,d=0;for(;;){let nx=0,f=fr;while(f){const v=low(f);f&=f-1;nx|=a[v]}nx&=~seen;if(!nx)break;d++;seen|=nx;fr=nx}if(seen!==full)return Infinity;if(d>best)best=d}return best}
 function girth(a,n){let best=Infinity;for(let s=0;s<n;s++){const dist=new Int8Array(n).fill(-1),par=new Int8Array(n).fill(-1);dist[s]=0;const q=[s];for(let h=0;h<q.length;h++){const v=q[h];let nb=a[v];while(nb){const u=low(nb);nb&=nb-1;if(dist[u]<0){dist[u]=dist[v]+1;par[u]=v;q.push(u)}else if(par[v]!==u){const c=dist[u]+dist[v]+1;if(c<best)best=c}}}}return best}
 function nTri(a,n){let t=0;for(let i=0;i<n;i++){let nb=a[i]>>>(i+1)<<(i+1);while(nb){const j=low(nb);nb&=nb-1;t+=pc(a[i]&a[j]&~((1<<(j+1))-1))}}return t}
-function maxMatch(a,n){const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};return f((1<<n)-1)}
-function maxMatchEdges(a,n){const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};
+/* forests: a leaf can always be matched to its neighbour, so large trees need no subset tables */
+const isForest=(a,n)=>nEdges(a)===n-nComps(a,n);
+function forestMatch(a,n){const b=a.slice(),res=[];let ch=true;
+  while(ch){ch=false;for(let v=0;v<n;v++)if(pc(b[v])===1){const u=low(b[v]);res.push([v,u]);let nb=b[u];while(nb){const w=low(nb);nb&=nb-1;b[w]&=~(1<<u)}b[u]=0;ch=true}}
+  return res}
+const bigForest=(a,n)=>n>12&&isForest(a,n);
+function maxMatch(a,n){if(bigForest(a,n))return forestMatch(a,n).length;const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};return f((1<<n)-1)}
+function maxMatchEdges(a,n){if(bigForest(a,n))return forestMatch(a,n);const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let best=f(r),nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;const t=1+f(r&~(1<<u));if(t>best)best=t}return memo[m]=best};
   const res=[];let m=(1<<n)-1;while(m){const v=low(m),r=m&~(1<<v);const tot=f(m);if(f(r)===tot){m=r;continue}let nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;if(1+f(r&~(1<<u))===tot){res.push([v,u]);m=r&~(1<<u);break}}}return res}
-function pmCount(a,n){if(n%2)return 0;const memo=new Int32Array(1<<n).fill(-1);const g=m=>{if(!m)return 1;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let s=0,nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;s+=g(r&~(1<<u))}return memo[m]=s};return g((1<<n)-1)}
+function pmCount(a,n){if(n%2)return 0;if(bigForest(a,n))return forestMatch(a,n).length*2===n?1:0;const memo=new Int32Array(1<<n).fill(-1);const g=m=>{if(!m)return 1;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);let s=0,nb=a[v]&r;while(nb){const u=low(nb);nb&=nb-1;s+=g(r&~(1<<u))}return memo[m]=s};return g((1<<n)-1)}
 function minMaximal(a,n){const memo=new Int8Array(1<<n).fill(-1);const h=S=>{if(memo[S]>=0)return memo[S];let v=-1,t=S;while(t){const x=low(t);t&=t-1;if(a[x]&S){v=x;break}}if(v<0)return memo[S]=0;const u=low(a[v]&S);let best=99,nb=a[v]&S;while(nb){const w=low(nb);nb&=nb-1;best=Math.min(best,1+h(S&~(1<<v)&~(1<<w)))}nb=a[u]&S&~(1<<v);while(nb){const w=low(nb);nb&=nb-1;best=Math.min(best,1+h(S&~(1<<u)&~(1<<w)))}return memo[S]=best};return h((1<<n)-1)}
-function alpha(a,n){const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);return memo[m]=Math.max(f(r),1+f(r&~a[v]))};return f((1<<n)-1)}
+function alpha(a,n){if(bigForest(a,n))return n-forestMatch(a,n).length;const memo=new Int8Array(1<<n).fill(-1);const f=m=>{if(!m)return 0;if(memo[m]>=0)return memo[m];const v=low(m),r=m&~(1<<v);return memo[m]=Math.max(f(r),1+f(r&~a[v]))};return f((1<<n)-1)}
 function chi(a,n){if(isBip(a,n))return nEdges(a)?2:1;for(let k=3;;k++){const col=new Int8Array(n).fill(-1);const go=(i,mx)=>{if(i===n)return true;let used=0,nb=a[i];while(nb){const u=low(nb);nb&=nb-1;if(col[u]>=0)used|=1<<col[u]}for(let c=0;c<k&&c<=mx+1;c++)if(!(used>>c&1)){col[i]=c;if(go(i+1,Math.max(mx,c)))return true;col[i]=-1}return false};if(go(0,-1))return k}}
-function isHam(a,n){if(n<3)return 0;const reach=new Uint16Array(1<<n);reach[1]=1;const full=(1<<n)-1;for(let m=1;m<=full;m+=2){let e=reach[m];while(e){const v=low(e);e&=e-1;let nb=a[v]&~m;while(nb){const u=low(nb);nb&=nb-1;reach[m|(1<<u)]|=1<<u}}}return (reach[full]&a[0])?1:0}
+function isHam(a,n){if(n<3)return 0;if(n>12&&isForest(a,n))return 0;const reach=new Uint16Array(1<<n);reach[1]=1;const full=(1<<n)-1;for(let m=1;m<=full;m+=2){let e=reach[m];while(e){const v=low(e);e&=e-1;let nb=a[v]&~m;while(nb){const u=low(nb);nb&=nb-1;reach[m|(1<<u)]|=1<<u}}}return (reach[full]&a[0])?1:0}
 function isEuler(a,n){if(nComps(a,n)!==1)return 0;for(const x of a)if(pc(x)&1)return 0;return 1}
 function isoCount(a,b,n,stopAtOne){const da=degs(a),db=degs(b);const sa=[...da].sort(),sb=[...db].sort();for(let i=0;i<n;i++)if(sa[i]!==sb[i])return 0;const map=new Int8Array(n).fill(-1);let used=0,cnt=0;const go=i=>{if(i===n){cnt++;return}for(let v=0;v<n;v++){if(used>>v&1||db[v]!==da[i])continue;let ok=true;for(let j=0;j<i;j++){if(((a[i]>>j)&1)!==((b[v]>>map[j])&1)){ok=false;break}}if(!ok)continue;map[i]=v;used|=1<<v;go(i+1);used&=~(1<<v);map[i]=-1;if(stopAtOne&&cnt)return}};go(0);return cnt}
 /* ---------- planarity: rotation systems, embeddings up to symmetry, Kuratowski witness ---------- */
@@ -42,11 +48,11 @@ function edgeOrder(a,n){const E=[],full=(1<<n)-1;let done=0;
   while(done!==full){let best=-1,bd=-1,bg=-1;for(let v=0;v<n;v++)if(!(done>>v&1)){const d=pc(a[v]&done),g=pc(a[v]);if(d>bd||(d===bd&&g>bg)){bd=d;bg=g;best=v}}
     let nb=a[best]&done;while(nb){const u=low(nb);nb&=nb-1;E.push([u,best])}done|=1<<best}
   return E}
-function faceIds(rot,n){const id=new Int16Array(256).fill(-1);let f=0;
-  for(let u=0;u<n;u++)for(const v of rot[u]){if(id[u*16+v]>=0)continue;let x=u,y=v;do{id[x*16+y]=f;const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);f++}
+function faceIds(rot,n){const id=new Int16Array(1024).fill(-1);let f=0;
+  for(let u=0;u<n;u++)for(const v of rot[u]){if(id[u*32+v]>=0)continue;let x=u,y=v;do{id[x*32+y]=f;const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);f++}
   return id}
-function faceWalks(rot,n){const seen=new Uint8Array(256),F=[];
-  for(let u=0;u<n;u++)for(const v of rot[u]){if(seen[u*16+v])continue;const w=[];let x=u,y=v;do{seen[x*16+y]=1;w.push(x);const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);F.push(w)}
+function faceWalks(rot,n){const seen=new Uint8Array(1024),F=[];
+  for(let u=0;u<n;u++)for(const v of rot[u]){if(seen[u*32+v])continue;const w=[];let x=u,y=v;do{seen[x*32+y]=1;w.push(x);const r=rot[y],z=r[(r.indexOf(x)+1)%r.length];x=y;y=z}while(x!==u||y!==v);F.push(w)}
   return F}
 /* enumerate planar rotation systems: a new vertex enters as a leaf in any corner, a chord joins two corners of one face */
 function embedAll(a,n,limit,cb){
@@ -60,7 +66,7 @@ function embedAll(a,n,limit,cb){
       else{const du=ru.length;for(let i=0;i<du&&cnt<limit;i++){ru.splice(i+1,0,v);go(k+1);ru.splice(i+1,1)}}
       rv.pop();return}
     const id=faceIds(rot,n),du=ru.length,dv=rv.length;
-    for(let i=0;i<du;i++){const fu=id[ru[i]*16+u];for(let j=0;j<dv&&cnt<limit;j++)if(id[rv[j]*16+v]===fu){ru.splice(i+1,0,v);rv.splice(j+1,0,u);go(k+1);ru.splice(i+1,1);rv.splice(j+1,1)}}
+    for(let i=0;i<du;i++){const fu=id[ru[i]*32+u];for(let j=0;j<dv&&cnt<limit;j++)if(id[rv[j]*32+v]===fu){ru.splice(i+1,0,v);rv.splice(j+1,0,u);go(k+1);ru.splice(i+1,1);rv.splice(j+1,1)}}
   };
   go(0);return cnt}
 function isPlanar(a,n){
@@ -109,6 +115,7 @@ function nCycles(a,n){if(nEdges(a)===n-nComps(a,n))return 0;let tot=0;
     for(let mask=1;mask<1<<m;mask++){let vs=mask;const big=(mask&(mask-1))!==0;while(vs){const v=low(vs);vs&=vs-1;const c=cnt[mask*m+v];if(!c)continue;if(big&&(nb>>v&1))tot+=c;let ext=(a[v+s+1]>>>(s+1))&~mask;while(ext){const u=low(ext);ext&=ext-1;cnt[(mask|1<<u)*m+u]+=c}}}}
   return tot/2}
 const maxCycles=n=>{if(n>8)return 0;let t=0;for(let k=3;k<=n;k++)t+=choose(n,k)*fact(k-1)/2;return t};
+const omega=(a,n)=>bigForest(a,n)?(nEdges(a)?2:1):alpha(compl(a,n),n);
 const PROP={
   edges:(a,n)=>nEdges(a),
   maxdeg:(a,n)=>Math.max(0,...degs(a)),
@@ -122,7 +129,7 @@ const PROP={
   euler:isEuler,ham:isHam,diam,girth,tri:nTri,mm:maxMatch,
   pmc:pmCount,pm:(a,n)=>pmCount(a,n)>0?1:0,
   minmax:minMaximal,stuck:(a,n)=>minMaximal(a,n)<maxMatch(a,n)?1:0,
-  alpha,omega:(a,n)=>alpha(compl(a,n),n),chi,
+  alpha,omega,chi,
   leaves:(a,n)=>degs(a).filter(d=>d===1).length,
   degcount:(a,n,d)=>degs(a).filter(x=>x===d).length,
   selfc:(a,n)=>isoCount(a,compl(a,n),n,true)?1:0,
@@ -243,4 +250,4 @@ const KIND={
   cut:{cat:'תנאים מדרגה שנייה',label:'אחרי הסרת קשתות או צמתים',type:'cut',noTarget:true}
 };
 const IND_LABEL={indep:'בלתי תלויה',clique:'קליקה',conn:'קשירה',tree:'עץ',cycle:'מעגל',path:'מסלול'};
-if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV};
+if(typeof module!=='undefined')module.exports={universe,run,KIND,PROP,compl,isoCount,maxMatchEdges,indCount,isPlanar,embedAll,embeddings,outerChoices,kuratowski,faceWalks,nComps,nEdges,autList,gIndex,deck,cutEval,cutWitness,delVertex,values,condValue,nCycles,nCutV,forestMatch,maxMatch,alpha,pmCount,omega};

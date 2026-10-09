@@ -18,11 +18,11 @@ The interface is in Hebrew. Everything runs in the browser from a single file; t
 - **Second-order conditions.** A divider card: conditions above it apply to the graph, conditions below it to what remains after removing a chosen number of edges or vertices (for some removal, or for every removal).
 - **A range of vertex counts**, optional, so one question can span graphs of several sizes.
 - **Formula sheet.** Define the objects of a question (the graph, vertices, edges, vertex sets, graphs derived by operations) with no limit on size; every value entered is substituted into the formulas it appears in, and unknowns stay symbolic.
-- **Modes.** Free exploration, guess the count, hit a target count, draw your own graph, and Prüfer sequences with up to two variables.
+- **Modes.** Free exploration, guess the count, hit a target count, draw your own graph, and Prüfer sequences with up to four variables, each over a chosen range.
 
 ## Limits
 
-General and bipartite graphs up to 8 vertices; trees and Prüfer sequences up to 12.
+General and bipartite graphs up to 8 vertices; trees up to 12, Prüfer sequences up to 20.
 
 ## How it is built
 

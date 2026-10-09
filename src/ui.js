@@ -17,7 +17,7 @@ function mkCond(kind,over){
 const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';
 const ranged=()=>!!S.rng&&!single(),nHi=()=>ranged()?Math.max(S.n,S.n2||S.n):S.n,Ns=()=>{const r=[];for(let n=S.n;n<=nHi();n++)r.push(n);return r};
 S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
-const maxN=()=>S.mode==='prufer'?12:S.mode==='manual'?8:(S.type==='tree'?12:8);
+const maxN=()=>S.mode==='prufer'?20:S.mode==='manual'?8:(S.type==='tree'?12:8);
 const curU=n=>S.type==='tree'&&n>8?universe('T',n):universe('G',n);
 const numMin=c=>c.kind==='cut'?1:KIND[c.kind].min||0;
 const numMax=c=>{const n=nHi();return c.kind==='cut'?Math.max(1,c.what==='e'?n*(n-1)/2:n-1):c.kind==='ind'?(c.k?choose(n,c.k):(1<<n)-2):KIND[c.kind].max(n)};
@@ -149,17 +149,22 @@ function pruferTree(seq,n){const deg=new Array(n).fill(1),a=new Array(n).fill(0)
   const link=(i,j)=>{a[i]|=1<<j;a[j]|=1<<i};
   for(const v of seq){let leaf=0;while(deg[leaf]!==1)leaf++;link(leaf,v-1);deg[leaf]--;deg[v-1]--}
   const rest=[];for(let i=0;i<n;i++)if(deg[i]===1)rest.push(i);if(rest.length===2)link(rest[0],rest[1]);return a}
+const PVARS=['x','y','z','w'];
+/* each variable ranges over a chosen interval of vertex numbers */
+function pvRange(v){const n=S.n,r=(S.pv=S.pv||{})[v]||{},lo=Math.max(1,Math.min(n,r.lo||1)),hi=Math.max(lo,Math.min(n,r.hi||n));return[lo,hi]}
 function syncPrufer(){const n=S.n,L=Math.max(0,n-2);if(!S.prufer){S.prufer=Array.from({length:L},(_,i)=>(i*2)%n+1);if(L>=3)S.prufer[2]='x'}
   S.prufer=Array.from({length:L},(_,i)=>{const t=S.prufer[i];return t===undefined?1:typeof t==='number'?Math.min(n,t):t})}
 function runAll(conds){const parts=Ns().map(n=>{const U=curU(n);return{U,r:run(U,S.type,conds)}}),z={u:0,l:0},add=(x,y)=>({u:x.u+y.u,l:x.l+y.l});
   return{parts,base:parts.reduce((t,p)=>add(t,p.r.base),z),steps:conds.map((_,i)=>parts.reduce((t,p)=>add(t,p.r.steps[i]),z)),fin:parts.reduce((t,p)=>add(t,p.r.fin),z)}}
 const cutOf=list=>list.find(c=>c.kind==='cut'),isBelow=(c,list)=>{const k=cutOf(list);return !!k&&list.indexOf(c)>list.indexOf(k)};
 function compute(){
-  if(S.mode==='prufer'){const n=S.n,vars=['x','y'].filter(v=>S.prufer.includes(v));ITEMS=[];
-    const rg=k=>vars.length>k?Array.from({length:n},(_,i)=>i+1):[0];
-    for(const x of rg(0))for(const y of rg(1)){const val={};if(vars[0])val[vars[0]]=x;if(vars[1])val[vars[1]]=y;const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
-      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')})}
-    R={r:null,info:{},galleryKind:'prufer'};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
+  if(S.mode==='prufer'){const n=S.n,vars=PVARS.filter(v=>S.prufer.includes(v)),rg=vars.map(v=>pvRange(v));ITEMS=[];
+    let total=1;for(const [lo,hi] of rg)total*=hi-lo+1;
+    const cur=rg.map(r=>r[0]);
+    for(let k=0;k<Math.min(total,S.show);k++){const val={};vars.forEach((v,i)=>val[v]=cur[i]);const seq=S.prufer.map(t=>typeof t==='number'?t:val[t]);
+      ITEMS.push({a:pruferTree(seq,n),idx:-1,w:1,n,seq,cap:vars.map(v=>v+' = '+val[v]).join(',  ')});
+      for(let i=vars.length-1;i>=0;i--){if(cur[i]<rg[i][1]){cur[i]++;break}cur[i]=rg[i][0]}}
+    R={r:null,info:{},galleryKind:'prufer',total,vars};if(S.sel===null||S.sel>=ITEMS.length)S.sel=0;return}
   const on=S.conds.filter(c=>c.on),r=runAll(on);
   const stepOf={};on.forEach((c,i)=>stepOf[c.id]=r.steps[i]);
   const info={};const key=x=>x.u+'/'+x.l;
@@ -204,6 +209,7 @@ function orbit(a,n){const seen=new Map(),q=[a];seen.set(a.join(','),a);for(let h
 function evalSingle(a,n,c){
   if(c.kind==='cut'){if(n>8)return null;const U=universe('G',n),need=new Uint8Array(U.graphs.length),i=gIndex(a,n);need[i]=1;return !!cutEval(U,c,belowOf(c),need)[i]}
   if(isBelow(c,S.conds))return null;
+  if(n>16&&(c.kind==='ind'||c.kind==='stuck'||c.target==='C'))return null;
   if(c.kind==='vdeg')return pc(a[c.v-1])===c.d;
   return cmp(condValue(a,n,c),c.op,c.value);
 }
@@ -272,7 +278,7 @@ function updateCounts(){
   for(const c of S.conds){
     const cn=$('#cnt'+c.id),nt=$('#note'+c.id),inf=R.info[c.id];if(!cn)continue;
     const rg=$('#rng'+c.id);rg.className='hint rngl';rg.innerHTML='';cn.className='num ccount';nt.className='note';nt.textContent='';
-    if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok===null?'—':ok?'✓':'✗';if(ok!==null)cn.classList.add(ok?'ok':'no');if(ok===null)nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':'נבדק על מה שנשאר אחרי ההסרה';continue}
+    if(man){const ok=evalSingle(g,S.n,c);cn.textContent=ok===null?'—':ok?'✓':'✗';if(ok!==null)cn.classList.add(ok?'ok':'no');if(ok===null)nt.textContent=c.kind==='cut'?'תנאי ההסרה פועל רק עד שמונה צמתים':isBelow(c,S.conds)?'נבדק על מה שנשאר אחרי ההסרה':'לא מחושב מעל שישה-עשר צמתים';continue}
     if(hidden()){cn.textContent=c.on?'?':'';continue}
     if(c.on){const now=lab?inf.step.l:inf.step.u;cn.textContent=pick(inf.step);
       if(prev===0){nt.textContent='הרשימה כבר התרוקנה בתנאי קודם';cn.classList.add('dim')}
@@ -301,11 +307,12 @@ function renderMain(){
     return;
   }
   if(S.mode==='prufer'){
-    const n=S.n,opts=t=>Array.from({length:n},(_,i)=>`<option value="${i+1}" ${t===i+1?'selected':''}>${i+1}</option>`).join('')+['x','y'].map(v=>`<option value="${v}" ${t===v?'selected':''}>${v}</option>`).join('');
-    m.innerHTML=`<div class="hero"><div class="big"><b class="num n1">${fmt(ITEMS.length)}</b><span class="t">${ITEMS.length===1?'עץ מתויג מתאים לסדרה':'עצים מתויגים מתאימים לסדרה'}</span></div><div class="pill">בכל מקום בסדרה בוחרים מספר צומת או משתנה</div></div>
+    const n=S.n,opts=t=>Array.from({length:n},(_,i)=>`<option value="${i+1}" ${t===i+1?'selected':''}>${i+1}</option>`).join('')+PVARS.map(v=>`<option value="${v}" ${t===v?'selected':''}>${v}</option>`).join('');
+    m.innerHTML=`<div class="hero"><div class="big"><b class="num n1">${fmt(R.total)}</b><span class="t">${R.total===1?'עץ מתויג מתאים לסדרה':'עצים מתויגים מתאימים לסדרה'}</span></div><div class="pill">${R.total>ITEMS.length?`מוצגים <b class="num">${ITEMS.length}</b> הראשונים. אפשר להגדיל ב"גרפים להצגה"`:'בכל מקום בסדרה בוחרים מספר צומת או משתנה'}</div></div>
     <div class="game"><span class="lab">סדרת פרופר</span><div class="prseq" dir="ltr">${S.prufer.length?S.prufer.map((t,i)=>`<select id="pr${i}" data-inp="pr" data-i="${i}" aria-label="מקום ${i+1} בסדרה">${opts(t)}</select>`).join(''):'<span class="hint">סדרה ריקה</span>'}</div>
     <button class="btn sm" data-act="prand">סדרה אקראית</button></div>
-    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button></div>
+    ${R.vars.length?`<div class="game"><span class="lab">טווח הערכים של כל משתנה</span>${R.vars.map(v=>{const [lo,hi]=pvRange(v);return `<span class="pvr"><b class="num">${v}</b><label for="pvlo${v}">מ־</label><input type="number" id="pvlo${v}" data-inp="pvlo" data-var="${v}" min="1" max="${n}" value="${lo}"><label for="pvhi${v}">עד</label><input type="number" id="pvhi${v}" data-inp="pvhi" data-var="${v}" min="1" max="${n}" value="${hi}"></span>`}).join('')}</div>`:''}
+    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>${showSel()}</div>
     <div class="gal"></div>`;
     fillGal();return;
   }
@@ -385,7 +392,7 @@ const yn=b=>b?'כן':'לא';
 function propRows(a,n,aut){
   const co=compl(a,n),d=degs(a).sort((x,y)=>y-x),nc=nComps(a,n),pl=isPlanar(a,n),gi=girth(a,n);
   const rows=[['צמתים',n],['קשתות',fmt(nEdges(a))],['קשתות במשלים',fmt(nEdges(co))],['סדרת דרגות',`<span dir="ltr">${d.join(', ')}</span>`],['רכיבי קשירות',nc],['קוטר',fmt(diam(a,n))],['מעגל קצר ביותר',gi===Infinity?'אין':gi],['משולשים',nTri(a,n)],['דו-צדדי',yn(isBip(a,n))],
-    ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',alpha(co,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
+    ['זיווג מקסימלי',maxMatch(a,n)],['זיווגים מושלמים',fmt(pmCount(a,n))],['קבוצה בלתי תלויה מקסימלית',alpha(a,n)],['קליקה מקסימלית',omega(a,n)],['מספר צביעה',chi(a,n)],['מעגל אוילר',yn(isEuler(a,n))],['מעגל המילטון',yn(isHam(a,n))],
     ['צמתים מפרידים',nCutV(a,n)],['מעגלים',n<=8?fmt(nCycles(a,n)):nEdges(a)===n-nc?0:'—'],['מישורי',yn(pl)],['פאות בשיכון מישורי',pl?nEdges(a)-n+nc+1:'—'],['המשלים קשיר',yn(nComps(co,n)===1)],['איזומורפי למשלים',yn(PROP.selfc(a,n))]];
   if(aut)rows.push(['אוטומורפיזמים',fmt(aut)],['עותקים מתויגים',fmt(fact(n)/aut)]);
   if(n<=8)rows.push(['תת-גרפים מושרים שונים',fmt(census(a,n))]);
@@ -510,6 +517,7 @@ function onInput(ev,commit){
   const t=ev.target,f=t.dataset.inp;if(!f)return;
   if(f==='guess'){S.guess.val=t.value;return}
   if(f==='show'){S.show=Number(t.value);changed();refresh(false);return}
+  if(f==='pvlo'||f==='pvhi'){if(t.value==='')return;const r=(S.pv=S.pv||{})[t.dataset.var]=S.pv[t.dataset.var]||{};r[f==='pvlo'?'lo':'hi']=Number(t.value);changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   if(f==='pr'){S.prufer[Number(t.dataset.i)]=/^\d+$/.test(t.value)?Number(t.value):t.value;changed();refresh(false);const e=$('#'+t.id);if(e)e.focus();return}
   const c=S.conds.find(x=>x.id===Number(t.dataset.id));if(!c)return;
   const isNum=['value','extra','d','v','k'].includes(f);c[f]=isNum?Number(t.value):t.value;
