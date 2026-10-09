@@ -123,10 +123,10 @@ function sheetFor(g){
   /* status of each formula: applies, hidden (a needed property is given as the opposite), or conditional (unknown) */
   const st=f=>{if(!f.need)return 'on';let u=false;for(const [k,w] of f.need){const p=prop(g,k);if(p==='u')u=true;else if(p!==w)return 'hide'}return u?'hide':'on'};
   const cond=f=>f.need.filter(([k])=>prop(g,k)==='u').map(([k,w])=>(w==='n'?'לא ':'')+PROPS[k]).join(' ו');
-  const card=f=>{const z=st(f);return `<article class="f${z==='if'?' off':''}${f.rel?' rel':''}"><div class="fh"><b>${f.t}</b><span class="ref">${f.r}</span>${z==='if'?`<span class="need">אם ${X} ${cond(f)}</span>`:''}</div><div class="fx gen">${f.g}</div>${f.s&&/class="q[vs]"/.test(f.s)?`<div class="fx qsub">${f.s}</div>`:''}</article>`};
+  const card=f=>`<tr class="${f.rel?'rel':''}"><th scope="row">${f.t} <span class="ref">${f.r}</span></th><td class="fx gen">${f.g}</td><td class="fx qsub">${f.s&&/class="q[vs]"/.test(f.s)?f.s:''}</td></tr>`;
   const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
   const vis=F.filter(f=>st(f)!=='hide');
-  return `<h3 class="gt"><span class="name">${X}</span> ${title}</h3>${vis.filter(f=>st(f)==='on').map(card).join('')}${vis.filter(f=>st(f)==='if').map(card).join('')}`}
+  return `<table class="qt"><caption><span class="name">${X}</span> ${title}</caption><thead><tr><th scope="col">נוסחה</th><th scope="col">צורה כללית</th><th scope="col">עם הנתונים</th></tr></thead><tbody>${vis.map(card).join('')}</tbody></table>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,val(g,k)])}}
@@ -150,7 +150,7 @@ return{render(){
   document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
   <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ צלע</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
   <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p></div></div>`;
-  document.getElementById('main').innerHTML=`<div class="hero qhero"><p>דף הנוסחאות של האובייקטים שבשאלה, בלי הגבלה על מספר הצמתים. הערכים הנתונים מוצבים <b>בצבע</b>, ומה שלא נתון נשאר כסמל.</p><p>ערך שמצאת בעצמך אפשר למלא בצד ימין, והוא יוצב בכל שאר הנוסחאות.</p></div><div class="qgrid" id="qsheet"></div>`;
+  document.getElementById('main').innerHTML=`<div class="qsheet" id="qsheet"></div>`;
   document.getElementById('card').innerHTML=`<div class="cardhead"><h2>מקרא הסמלים</h2></div><dl id="qlegend" class="qleg"></dl><p class="hint">סמל צבוע הוא נתון. השאר לא נתונים, ומוצגים בנוסחאות לפי ההגדרה שלהם.</p>`;
   renderObjs();renderSheet()}};
 })();

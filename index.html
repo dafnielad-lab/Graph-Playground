@@ -103,7 +103,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qb{display:flex;flex-direction:column;gap:10px}.qlist{display:flex;flex-direction:column;gap:10px}
 .qbox{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .qrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--bg);border-radius:10px;padding:8px}
-.qb .name,.qgrid .name{background:var(--ink);color:var(--surface);border-radius:8px;padding:4px 10px;font-weight:700;direction:ltr}.qb .name.v{background:var(--accent);color:var(--accent-ink)}
+.qb .name,.qt .name{background:var(--ink);color:var(--surface);border-radius:8px;padding:4px 10px;font-weight:700;direction:ltr}.qb .name.v{background:var(--accent);color:var(--accent-ink)}
 .qb input[type=number]{width:58px;text-align:center;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
 .qb input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 .cell{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
@@ -111,13 +111,22 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qb .x{margin-inline-start:auto;border:1px solid var(--line);background:transparent;border-radius:8px;width:30px;height:30px}
 .qb .link{border:0;background:transparent;color:var(--accent);padding:0;font-weight:500;text-align:start;font-size:13px}.cell select{padding:4px 6px}
 .qhero{flex-direction:column;align-items:flex-start;gap:4px}.qhero p{margin:0;max-width:75ch}.qhero b{color:var(--hero-2)}
+.qsheet{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qt{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden}
+.qt caption{text-align:start;font-weight:700;padding:8px 12px;background:var(--surface);caption-side:top}
+.qt thead th{font-size:12px;color:var(--muted);font-weight:500;padding:2px 12px 4px;text-align:start}
+.qt tbody th{font-weight:400;font-size:13px;text-align:start;padding:4px 12px;color:var(--muted);vertical-align:baseline}
+.qt td{padding:4px 12px;font-size:15px;text-align:left;vertical-align:baseline}
+.qt tbody tr{border-top:1px solid var(--track)}.qt tr.rel th{color:var(--accent)}
+.qt td.gen{font-size:14px;color:var(--muted)}.qt td.qsub{font-size:16px;color:var(--ink)}
+.qt .ref{white-space:nowrap}
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .qgrid .gt{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:6px 0 0;font-size:15px}
 .f{background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .f.off{background:transparent;border:2px dashed var(--line)}.f.rel{border-inline-start:4px solid var(--accent)}
 .fh{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.fh b{font-weight:500}
 .ref{font-size:12px;background:var(--track);border-radius:12px;padding:2px 8px;color:var(--muted)}.need{font-size:12px;color:var(--hi);font-weight:500}
-.gen{font-size:16px;color:var(--muted);overflow-x:auto}.qsub{font-size:19px;background:var(--bg);border-radius:8px;padding:6px 10px;overflow-x:auto}
+
 .qv{color:var(--accent);font-weight:700}.qs{color:var(--accent)}.same{font-size:13px;color:var(--muted)}
 .qleg{margin:0;display:flex;flex-direction:column}.qleg div{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--track);align-items:baseline}
 .qleg dt{min-width:70px;flex:none;font-size:16px}.qleg dd{margin:0;font-size:14px}.qleg .given dt{color:var(--accent)}
@@ -162,7 +171,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 .kv{font-size:12px}.props .kv{padding:5px 0}.toolbox{padding:8px}.tag{font-size:11px}
 .sig{font-size:11px;padding-block:0}
 .prseq select{font-size:13px;min-height:32px}
-.qgrid{grid-template-columns:minmax(0,1fr);gap:6px}.qsub{font-size:15px;padding:4px 8px}.gen{font-size:13px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input[type=number]{width:46px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
+.qt thead{display:none}.qt tbody th,.qt td{display:block;padding:1px 8px}.qt tbody th{padding-top:5px}.qt td{white-space:normal}.qt td.qsub:empty{display:none}.qt td.qsub{font-size:14px;padding-bottom:4px}.qt td.gen{font-size:12px}.f{padding:8px 10px}.qbox{padding:8px 9px}.qrow{padding:6px}.qb input[type=number]{width:46px;padding:4px}.qleg dt{font-size:14px;min-width:56px}.qleg dd{font-size:12px}
 }
 
 </style>
@@ -566,10 +575,10 @@ function sheetFor(g){
   /* status of each formula: applies, hidden (a needed property is given as the opposite), or conditional (unknown) */
   const st=f=>{if(!f.need)return 'on';let u=false;for(const [k,w] of f.need){const p=prop(g,k);if(p==='u')u=true;else if(p!==w)return 'hide'}return u?'hide':'on'};
   const cond=f=>f.need.filter(([k])=>prop(g,k)==='u').map(([k,w])=>(w==='n'?'לא ':'')+PROPS[k]).join(' ו');
-  const card=f=>{const z=st(f);return `<article class="f${z==='if'?' off':''}${f.rel?' rel':''}"><div class="fh"><b>${f.t}</b><span class="ref">${f.r}</span>${z==='if'?`<span class="need">אם ${X} ${cond(f)}</span>`:''}</div><div class="fx gen">${f.g}</div>${f.s&&/class="q[vs]"/.test(f.s)?`<div class="fx qsub">${f.s}</div>`:''}</article>`};
+  const card=f=>`<tr class="${f.rel?'rel':''}"><th scope="row">${f.t} <span class="ref">${f.r}</span></th><td class="fx gen">${f.g}</td><td class="fx qsub">${f.s&&/class="q[vs]"/.test(f.s)?f.s:''}</td></tr>`;
   const title=g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
   const vis=F.filter(f=>st(f)!=='hide');
-  return `<h3 class="gt"><span class="name">${X}</span> ${title}</h3>${vis.filter(f=>st(f)==='on').map(card).join('')}${vis.filter(f=>st(f)==='if').map(card).join('')}`}
+  return `<table class="qt"><caption><span class="name">${X}</span> ${title}</caption><thead><tr><th scope="col">נוסחה</th><th scope="col">צורה כללית</th><th scope="col">עם הנתונים</th></tr></thead><tbody>${vis.map(card).join('')}</tbody></table>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('');
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;L.push([SYM[k]+s,DEF[k]+' של '+g.name,val(g,k)])}}
@@ -593,7 +602,7 @@ return{render(){
   document.getElementById('conds').innerHTML=`<div class="qb"><div class="colhead"><h2>נתוני השאלה</h2><span class="lab">אובייקטים, פעולות וערכים</span></div><div id="qobjs" class="qlist"></div>
   <div class="qbox"><div class="lab">הוסף אובייקט</div><div class="addrow"><button class="addb" data-add="v">+ צומת</button><button class="addb" data-add="e">+ צלע</button><button class="addb" data-add="s">+ קבוצת צמתים</button><button class="addb" data-add="g">+ גרף מפעולה</button></div>
   <p class="hint">גרף מפעולה נוצר מגרף קיים, ואפשר להפעיל עליו פעולה נוספת. הכמת של צומת קובע לאן הדרגה שלו נכנסת בנוסחאות.</p></div></div>`;
-  document.getElementById('main').innerHTML=`<div class="hero qhero"><p>דף הנוסחאות של האובייקטים שבשאלה, בלי הגבלה על מספר הצמתים. הערכים הנתונים מוצבים <b>בצבע</b>, ומה שלא נתון נשאר כסמל.</p><p>ערך שמצאת בעצמך אפשר למלא בצד ימין, והוא יוצב בכל שאר הנוסחאות.</p></div><div class="qgrid" id="qsheet"></div>`;
+  document.getElementById('main').innerHTML=`<div class="qsheet" id="qsheet"></div>`;
   document.getElementById('card').innerHTML=`<div class="cardhead"><h2>מקרא הסמלים</h2></div><dl id="qlegend" class="qleg"></dl><p class="hint">סמל צבוע הוא נתון. השאר לא נתונים, ומוצגים בנוסחאות לפי ההגדרה שלהם.</p>`;
   renderObjs();renderSheet()}};
 })();
