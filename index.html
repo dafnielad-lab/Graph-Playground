@@ -527,7 +527,11 @@ const degOf=v=>dEx(v)!==null?V(dEx(v)):v.q==='one'&&v.w?(x=>x.includes('class="q
 /* what is known about a quantity: its own value, or what the operation that built the graph makes of the source graph's quantities.
    num: a number; otherwise html is an expression in the remaining symbols */
 const NUM=v=>({num:v,html:V(v),atom:true}),EXP=h=>({num:null,html:h,atom:false}),OPD=e=>e.atom?e.html:`(${e.html})`;
-const plus=(e,c)=>e.num!==null?NUM(e.num+c):EXP(`${OPD(e)} ${c<0?'−':'+'} ${V(Math.abs(c))}`);
+const plus=(e,c)=>c===0?e:e.num!==null?NUM(e.num+c):EXP(`${OPD(e)} ${c<0?'−':'+'} ${V(Math.abs(c))}`);
+/* the components defined for a graph; when their number equals c they are all of its components, each a different one */
+const compsOf=P=>O.filter(o=>o.t==='g'&&o.op==='comp'&&o.src===P.name);
+const fullComps=P=>{const c=ex(P,'c').num,L=compsOf(P);return c!==null&&L.length===c?L:null};
+const ownB=(o,k)=>val(o,k)!==null?[val(o,k),val(o,k)]:rgOf(o,k);
 function ex(g,k,depth){
   const own=val(g,k);if(own!==null)return NUM(own);
   const me={num:null,html:SYM[k]+sub(g),atom:true,self:true};
@@ -539,6 +543,7 @@ function ex(g,k,depth){
     if(op==='dele')return plus(E('m'),-1);if(op==='adde'||op==='subd')return plus(E('m'),1);
     if(op==='compl'){const N=E('n'),M=E('m');return N.num!==null&&M.num!==null?NUM(N.num*(N.num-1)/2-M.num):EXP(`${OPD(N)}·(${N.html} − 1) / 2 − ${OPD(M)}`)}
     if(op==='ind'){if(a.prop==='indep')return NUM(0);if(a.prop==='clique'&&a.k!==null)return NUM(a.k*(a.k-1)/2)}}
+  if(op==='comp'&&(k==='n'||k==='m')){const L=fullComps(src);if(L){const others=L.filter(x=>x!==g);if(others.every(x=>val(x,k)!==null))return plus(E(k),-others.reduce((t,x)=>t+val(x,k),0))}}
   if(k==='c'){if(op==='dele'&&a.bridge)return plus(E('c'),1);if(op==='contr'||op==='subd')return E('c');if(op==='comp')return NUM(1)}
   if((k==='D'||k==='dl')&&op==='compl'){const N=E('n'),d=E(k==='D'?'dl':'D');return N.num!==null&&d.num!==null?NUM(N.num-1-d.num):EXP(`${OPD(N)} − 1 − ${OPD(d)}`)}
   return me}
@@ -554,6 +559,14 @@ function interval(g,k,depth){
     else if(op==='delS')r=span2(E('n'),a.k!==null?a.k:(rgOf(a,'k')||[null,null])[0],a.k!==null?a.k:(rgOf(a,'k')||[null,null])[1]);else if(op==='ind')r=rgOf(a,'k')}
   if(k==='m'){if(op==='delv')r=span2(E('m'),dLo(a),dHi(a));else if(op==='dele')r=shift(E('m'),-1);else if(op==='adde'||op==='subd')r=shift(E('m'),1)}
   if(k==='c'){const C=E('c');if(op==='dele')r=a.bridge?shift(C,1):C&&[C[0],C[1]===null?null:C[1]+1];else if(op==='adde')r=C&&[C[0]===null?null:Math.max(1,C[0]-1),C[1]];else if(op==='contr'||op==='subd')r=C}
+  if(op==='comp'&&(k==='n'||k==='m')){const L=fullComps(src),Pb=E(k),fl=k==='n'?1:0;
+    if(L&&Pb){const ob=L.filter(x=>x!==g).map(x=>ownB(x,k));
+      if(ob.every(Boolean)){const sLo=ob.reduce((t,b)=>t+(b[0]??fl),0),sHi=ob.some(b=>b[1]===null)?null:ob.reduce((t,b)=>t+b[1],0);
+        r=[Pb[0]===null||sHi===null?fl:Math.max(fl,Pb[0]-sHi),Pb[1]===null?null:Pb[1]-sLo]}
+    }
+    /* not all components are known: the others still take at least what is known about them, and a vertex each */
+    if(!r&&Pb&&Pb[1]!==null){const sib=compsOf(src).filter(x=>x!==g),c=ex(src,'c').num,hidden=c!==null?Math.max(0,c-sib.length-1):0;
+      const take=sib.reduce((t,x)=>t+((ownB(x,k)||[null])[0]??fl),0)+(k==='n'?hidden:0);if(take>0)r=[fl,Pb[1]-take]}}
   return r&&(r[0]!==null||r[1]!==null)&&r[0]!==r[1]?r:null}
 const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<span class="qs">${OPD(e)}</span>`};
 const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':(g.c!==null&&g.c>1)||(rgOf(g,'c')&&rgOf(g,'c')[0]>1)?'n':'u'):k==='fo'&&g.tr==='y'?'y':k==='tf'&&(g.bp==='y'||g.tr==='y'||g.fo==='y')?'y':g[k];
@@ -579,6 +592,12 @@ function sheetFor(g){
     if(g.op==='comp'){rel('רכיב קשירות הוא קשיר',`c(${X}) = 1`,`${c} = ${V(1)}`);rel('צמתים ברכיב',`n(${X}) ≤ n(${P})`,`${n} ≤ ${N}`);rel('קשתות ברכיב',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`)}
     if(g.op==='span'){rel('תת-גרף פורש: אותם צמתים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בתת-גרף פורש',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('רכיבי קשירות בתת-גרף פורש',`c(${X}) ≥ c(${P})`,`${c} ≥ ${C}`);F.push({tp,t:'כל גרף קשיר מכיל עץ פורש',r:'טענה 2.6',g:`${P} connected ⇒ exists spanning tree`,s:'',rel:1,text:1})}}
   /* degrees */
+  const CL=compsOf(g);
+  if(CL.length){tp='רכיבי הקשירות';const full=fullComps(g),cn=ex(g,'c').num;
+    for(const k of ['n','m']){const w=k==='n'?'הצמתים':'הקשתות',gen=CL.map(h=>`${k}(${h.name})`).join(' + '),st=CL.map(h=>sx(h,k)).join(' + ');
+      if(full)add(`${w} של הגרף הם סכום ${w} ברכיבים`,'מההגדרה',`${k} = ${gen}`,`${q(k)} = ${st}`);
+      else add(`סכום ${w} ברכיבים שהוגדרו`,'מההגדרה',`${gen} ≤ ${k}`,`${st} ≤ ${q(k)}`)}
+    if(cn!==null&&CL.length>cn)add('הוגדרו יותר רכיבים ממספר רכיבי הקשירות','בדיקה','defined components ≤ c',`${V(CL.length)} ≤ ${V(cn)}`)}
   tp='נתונים בטווח';
   for(const k in SYM){const iv=ex(g,k).num===null?interval(g,k):null;if(iv)add(DEF[k]+(rgOf(g,k)?'':' (מהפעולה)'),'נתון',`min ≤ ${SYM[k]} ≤ max`,rngTxt(iv[0],SYM[k]+s,iv[1]))}
   for(const S of O.filter(o=>o.t==='s'&&o.in===X&&rgOf(o,'k')))add(`מספר הצמתים בקבוצה ${S.name}`,'נתון',`min ≤ |${S.name}| ≤ max`,rngTxt(rgOf(S,'k')[0],`|${S.name}|`,rgOf(S,'k')[1]));
