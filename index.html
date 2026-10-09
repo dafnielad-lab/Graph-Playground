@@ -192,7 +192,7 @@ select,button,input{font-size:12px}select{padding:4px 5px}
 <div><h3>חוקרים גרף אחד</h3><p>לחיצה על גרף פותחת את הכרטיס שלו, עם המשלים וכל התכונות. הכפתור "הרחב למרכז" מעביר את הכרטיס למרכז המסך ומגדיל את הציורים. לחיצה על צמתים בוחרת תת-קבוצה, ואז התכונות של התת-גרף המושרה מוצגות לצד התכונות של הגרף. בכלי הזיווג לוחצים על קשתות, ואפשר להציג ולבצע מסלול שיפור.</p></div>
 <div><h3>טווח צמתים</h3><p>הכפתור "טווח" ליד מספר הצמתים פותח שדה שני. הספירה והגלריה כוללות אז את כל הגרפים מכל מספר צמתים בטווח.</p></div>
 <div><h3>תנאים מדרגה שנייה</h3><p>התנאי "אחרי הסרת קשתות או צמתים" מחלק את הרשימה. התנאים שמעליו נבדקים על הגרף, והתנאים שמתחתיו נבדקים על מה שנשאר אחרי הסרת קשתות או צמתים. בוחרים כמה מסירים, ואם מספיק שקיימת הסרה מתאימה או שנדרש שכל הסרה תתאים. בכרטיס הגרף מסומנת באדום הסרה לדוגמה.</p></div>
-<div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי קשתות. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
+<div><h3>מישוריות</h3><p>התנאי "מישורי" נמצא תחת מבנה. הכפתור "ציור מישורי" מצייר כל גרף מישורי בלי חיתוכי קשתות. הכפתור "פריסה דו-צדדית" מצייר כל גרף דו-צדדי בשתי שורות, צד בכל שורה. בכרטיס הגרף אפשר לעבור בין השיכונים השונים של הגרף ולבחור איזו פאה תהיה החיצונית. בגרף לא מישורי אפשר לסמן חלוקה של K₅ או של K₃,₃ שמונעת שיכון.</p></div>
 <div><h3>מצבים</h3><p>ניחוש: מנחשים את המספר לפני שהוא נחשף. יעד: מחפשים תנאים שמשאירים מספר נתון של גרפים. גרף ידני: מציירים גרף ורואים אילו תנאים הוא מקיים. סדרת פרופר: בונים עץ מתויג מסדרה, עם עד ארבעה משתנים. לכל משתנה טווח ערכים, ואפשר לקבוע תלות בין משתנים: שונים, קטן, קטן או שווה וכדומה.</p></div>
 <div><h3>דף נוסחאות</h3><p>מצב בלי הגבלה על מספר הצמתים. מגדירים את האובייקטים שבשאלה: הגרף הנתון, צמתים, קשתות, קבוצות צמתים, וגרפים שנוצרים מפעולות כמו הסרה, משלים או תת-גרף מושרה. כל ערך שממלאים מוצב בכל הנוסחאות שבהן הוא מופיע, ומה שלא נתון נשאר כסמל. לכל תכונה כמו מישוריות בוחרים כן, לא או לא ידוע, ומוצגות רק הנוסחאות שחלות לפי מה שנתון.</p></div>
 <div><h3>גבולות</h3><p>גרפים כלליים ודו-צדדיים עד שמונה צמתים. עצים עד שנים-עשר, וסדרות פרופר עד עשרים צמתים.</p></div>
@@ -704,6 +704,18 @@ function layout(a,n,mode){
   const key=mode+n+':'+a.join(',');if(LAY[key])return LAY[key];
   const P=[];for(let i=0;i<n;i++){const t=-Math.PI/2+2*Math.PI*i/n;P.push([Math.cos(t),Math.sin(t)])}
   if(n===1)P[0]=[0,0];
+  if(mode==='bip'){
+    /* two rows, one per side; a few barycentre sweeps order each row to reduce crossings. Not bipartite: fall back */
+    if(!isBip(a,n))return LAY[key]=layout(a,n,'auto');
+    const col=new Int8Array(n).fill(-1),ord=[];
+    for(let s0=0;s0<n;s0++){if(col[s0]>=0)continue;col[s0]=0;const q=[s0];for(let h=0;h<q.length;h++){const v=q[h];ord.push(v);let nb=a[v];while(nb){const u=low(nb);nb&=nb-1;if(col[u]<0){col[u]=1-col[v];q.push(u)}}}}
+    let A=ord.filter(v=>col[v]===0),B=ord.filter(v=>col[v]===1);
+    const sweep=(X,Y)=>{const at=new Map();Y.forEach((v,i)=>at.set(v,i/Math.max(1,Y.length-1)));const key=new Map();X.forEach((v,i)=>{let t=0,c=0,nb=a[v];while(nb){const u=low(nb);nb&=nb-1;t+=at.get(u);c++}key.set(v,c?t/c:i/Math.max(1,X.length-1))});return X.slice().sort((x,y)=>key.get(x)-key.get(y))};
+    for(let it=0;it<6;it++){B=sweep(B,A);A=sweep(A,B)}
+    const W=Math.max(A.length,B.length,2),H=W*.62;
+    A.forEach((v,i)=>P[v]=[(i+.5)/A.length*W,0]);B.forEach((v,i)=>P[v]=[(i+.5)/B.length*W,H]);
+    return LAY[key]=fit(P);
+  }
   if(mode==='auto'&&n>2){
     // order the start circle by BFS so neighbours begin close together
     const ord=[];let seen=0;for(let s=0;s<n;s++){if(seen>>s&1)continue;const q=[s];seen|=1<<s;for(let h=0;h<q.length;h++){ord.push(q[h]);let nb=a[q[h]]&~seen;while(nb){const u=low(nb);nb&=nb-1;seen|=1<<u;q.push(u)}}}
@@ -991,7 +1003,7 @@ function renderMain(){
     <div class="game"><span class="lab">תלות בין משתנים</span>${(S.pc||[]).map((c,i)=>{const vs=k=>`<select id="pc${k}${i}" data-inp="pc${k}" data-i="${i}" aria-label="משתנה">${PVARS.map(v=>`<option value="${v}" ${c[k]===v?'selected':''}>${v}</option>`).join('')}</select>`;return `<span class="pvr${R.vars.includes(c.a)&&R.vars.includes(c.b)?'':' idle'}" dir="ltr">${vs('a')}<select id="pcr${i}" data-inp="pcr" data-i="${i}" aria-label="יחס">${Object.entries(PREL).map(([k,r])=>`<option value="${k}" ${c.r===k?'selected':''}>${r[0]}</option>`).join('')}</select>${vs('b')}<button class="ib" data-act="pcdel" data-v="${i}" aria-label="הסר תלות">×</button></span>`}).join('')}
     <button class="btn sm" data-act="pcadd">+ הוסף תלות</button><button class="btn sm" data-act="pcdist" ${R.vars.length<2?'disabled':''}>כל המשתנים שונים זה מזה</button>
     ${(S.pc||[]).some(c=>!(R.vars.includes(c.a)&&R.vars.includes(c.b)))?'<span class="hint">תלות או טווח של משתנה שלא מופיע בסדרה מוצגים בהיר ולא משפיעים.</span>':''}</div>
-    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>${showSel()}</div>
+    <div class="bar"><button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button><button class="btn" data-act="lay" data-v="bip" aria-pressed="${S.layout==='bip'}">פריסה דו-צדדית</button><button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button><button class="btn" data-act="opt" data-v="showComp" aria-pressed="${S.showComp}">משלים לצד כל עץ</button><button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>${showSel()}</div>
     <div class="gal"></div>`;
     fillGal();return;
   }
@@ -1019,6 +1031,7 @@ function renderMain(){
     <button class="btn hi" data-act="opt" data-v="showMatch" aria-pressed="${S.showMatch}">זיווג מקסימלי מסומן</button>
     <button class="btn" data-act="opt" data-v="showLabels" aria-pressed="${S.showLabels}">תוויות צמתים</button>
     <button class="btn" data-act="lay" data-v="circle" aria-pressed="${S.layout==='circle'}">פריסה במעגל</button>
+    <button class="btn" data-act="lay" data-v="bip" aria-pressed="${S.layout==='bip'}">פריסה דו-צדדית</button>
     <button class="btn" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>
     ${gk==='many'&&!hid?`<button class="btn" data-act="opt" data-v="sample" aria-pressed="${S.sample}">הצג <b class="num">${S.show}</b> לדוגמה</button>`:''}
     ${showSel()}
@@ -1042,7 +1055,7 @@ function fillGal(){
 }
 function galItem(it,i){
   const n=it.n,pr=R.galleryKind==='prufer',lab=R.galleryKind==='labeled',mode=lab||S.layout==='circle'?'circle':'auto';
-  const pos=lab?layout(new Array(n).fill(0),n,'circle'):(S.layout==='planar'&&planarPos(it.a,n))||layout(it.a,n,mode);
+  const pos=lab?layout(new Array(n).fill(0),n,'circle'):(S.layout==='planar'&&planarPos(it.a,n))||layout(it.a,n,S.layout==='bip'?'bip':mode);
   const match=S.showMatch?new Set(maxMatchEdges(it.a,n).map(([x,y])=>ekey(x,y))):null;
   const g=svgGraph(it.a,n,{pos,match,labels:lab||pr||S.showLabels,aria:'גרף '+(i+1)});
   const c=S.showComp?svgGraph(compl(it.a,n),n,{pos,labels:lab||pr||S.showLabels,cls:'comp',aria:'המשלים של גרף '+(i+1)}):'';
@@ -1080,7 +1093,7 @@ function renderCard(){
   const el=$('#card'),sg=selGraph();
   if(!sg||hidden()){el.innerHTML=`${cardHead()}<p class="hint">${hidden()?'הכרטיס ייפתח אחרי החשיפה.':'בחר גרף מהגלריה כדי לראות את התכונות שלו.'}</p>`;return}
   const a=sg.a,n=sg.n,man=S.mode==='manual',lab=man||R.galleryKind==='labeled';
-  let pos=lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
+  let pos=S.layout==='bip'?layout(a,n,'bip'):lab||S.layout==='circle'?layout(new Array(n).fill(0),n,'circle'):layout(a,n,'auto');
   const E=embInfo(a,n),kur=!E&&S.kur?kuratowski(a,n):null,nc=nComps(a,n),stepper=(act,i,L)=>`<span class="stp"><button class="ib" data-act="${act}" data-v="-1" aria-label="הקודם" ${L>1?'':'disabled'}>›</button><b class="num">${i+1} / ${L}</b><button class="ib" data-act="${act}" data-v="1" aria-label="הבא" ${L>1?'':'disabled'}>‹</button></span>`;
   let pl=`<button class="btn sm" data-act="lay" data-v="planar" aria-pressed="${S.layout==='planar'}">ציור מישורי</button>`;
   if(!E)pl=`<div class="chips"><span class="tag no">הגרף לא מישורי</span></div><button class="btn sm" data-act="kur" aria-pressed="${!!S.kur}">הראה תת-גרף שמונע שיכון</button>${kur?`<p class="hint">הקשתות המסומנות הן חלוקה של <b class="num">${kur.type==='K5'?'K₅':'K₃,₃'}</b>, ולפי משפט קורטובסקי גרף שמכיל חלוקה כזו אינו מישורי.</p>`:''}`;
