@@ -43,8 +43,8 @@ function renderObjs(){
   document.getElementById('qobjs').innerHTML=O.map((o,i)=>{const gs=opt(graphs().filter(g=>o.t!=='g'||O.indexOf(g)<i).map(g=>[g.name,g.name]),o.t==='g'?o.src:o.in),x=o.name==='G'?'':`<button class="x" data-del="${o.name}" aria-label="הסר את ${o.name}">×</button>`;
     if(o.t==='g')return `<div class="qbox"><div class="qrow"><span class="name">${o.name}</span>${o.op?`<span>=</span><select data-i="${i}" data-k="op" id="f${i}op" aria-label="פעולה">${opt(Object.entries(OPS).map(([k,v])=>[k,v[0]]),o.op)}</select>${o.arg?`<select data-i="${i}" data-k="arg" id="f${i}arg" aria-label="על מה">${opt(O.filter(a=>a.t===OPS[o.op][1]&&a.in===o.src&&O.indexOf(a)<i).map(a=>[a.name,a.name]),o.arg)}</select>`:''}<span>${o.op==='compl'||o.op==='comp'||o.op==='span'?'של':'מתוך'}</span><select data-i="${i}" data-k="src" id="f${i}src" aria-label="גרף מקור">${gs}</select>`:'<span>הגרף הנתון</span>'}${x}</div>
       <div class="qrow">${num(i,'n',o.n,'צמתים')}${num(i,'m',o.m,'קשתות')}${num(i,'c',o.c,'רכיבים')}</div>
-      <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}${tri(i,'tr',o.tr,'עץ')}${tri(i,'bp',o.bp,'דו-צדדי')}</div>
-      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'fo',o.fo,'יער')}${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}</div>`:''}
+      <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}<label class="cell">עץ<select data-i="${i}" data-k="tr" id="f${i}tr">${opt([['u','לא ידוע'],['y','עץ'],['f','יער'],['n','לא']],o.tr)}</select></label>${tri(i,'bp',o.bp,'דו-צדדי')}</div>
+      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}</div>`:''}
       <button class="link" data-more="${i}">${o.more?'הסתר גדלים ותכונות נוספים':'גדלים ותכונות נוספים'}</button></div>`;
     if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow">${num(i,'d',o.d,'דרגה')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
     if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קשת ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
@@ -106,7 +106,10 @@ function interval(g,k,depth){
       const take=sib.reduce((t,x)=>t+((ownB(x,k)||[null])[0]??fl),0)+(k==='n'?hidden:0);if(take>0)r=[fl,Pb[1]-take]}}
   return r&&(r[0]!==null||r[1]!==null)&&r[0]!==r[1]?r:null}
 const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<span class="qs">${OPD(e)}</span>`};
-const prop=(g,k)=>k==='conn'?(g.c===1||g.tr==='y'?'y':(g.c!==null&&g.c>1)||(rgOf(g,'c')&&rgOf(g,'c')[0]>1)?'n':'u'):k==='fo'&&g.tr==='y'?'y':k==='tf'&&(g.bp==='y'||g.tr==='y'||g.fo==='y')?'y':g[k];
+const cMany=g=>(g.c!==null&&g.c>1)||!!(rgOf(g,'c')&&rgOf(g,'c')[0]>1);
+/* the tree field also offers "forest": a forest is a tree exactly when it has one component */
+const isTree=g=>g.tr==='y'?'y':g.tr==='n'?'n':g.tr==='f'?(g.c===1?'y':cMany(g)?'n':'u'):'u';
+const prop=(g,k)=>k==='tr'?isTree(g):k==='conn'?(g.c===1||g.tr==='y'?'y':cMany(g)?'n':'u'):k==='fo'?(g.tr==='y'||g.tr==='f'?'y':'u'):k==='tf'&&(g.bp==='y'||g.tr==='y'||g.tr==='f')?'y':g[k];
 function sheetFor(g){
   const s=sub(g),q=k=>sx(g,k),n=q('n'),m=q('m'),c=q('c'),D=q('D'),dl=q('dl'),ad=allDeg(g),F=[],X=g.name;
   let tp='קשרים מהפעולה';const add=(t,r,gen,st,need)=>F.push({t,r,g:gen,s:st,need,tp});
