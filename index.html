@@ -172,6 +172,12 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .rlkind{display:flex;gap:8px;align-items:baseline;font-weight:700;font-size:15px}.rlkind .fx{color:var(--hi);font-size:17px}.rlp{border-inline-start:3px solid var(--line);background:var(--bg);border-radius:6px;padding:3px 8px}.rlp.ok{border-color:var(--good)}.rlp.no{border-color:var(--bad)}.rlp.cur{outline:2px solid var(--bad)}
 .rlph{display:flex;gap:6px;align-items:baseline;font-size:14px}.rlph span{flex:1 1 auto}.rlp.ok .rlph b{color:var(--good)}.rlp.no .rlph b{color:var(--bad)}.rlpd{direction:ltr;text-align:left;font-size:13px}.rlpd .fx{white-space:normal}.rlpd.alg{color:var(--muted);font-size:12.5px}
 .rlpw{display:flex;flex-direction:column;margin-top:2px;border-top:1px solid var(--track);padding-top:2px}.rlpw>span{font-size:11.5px;color:var(--bad);font-weight:700}.rlpw .fx{direction:ltr;text-align:left;font-size:13px;white-space:normal}.rlmiss{font-size:12.5px;color:var(--muted)}
+.rlmode{align-self:flex-start}.rlchips{display:flex;flex-wrap:wrap;gap:5px}.rlchip{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:16px;padding:3px 10px;min-height:30px;font-size:12.5px;cursor:pointer}.rlchip b{width:10px;text-align:center;color:var(--muted)}
+.rlchip.y{border-color:var(--good);background:var(--bg);font-weight:700}.rlchip.y b{color:var(--good)}.rlchip.n{border-color:var(--bad);background:var(--bg);font-weight:700}.rlchip.n b{color:var(--bad)}
+.rlab{border-collapse:collapse;width:100%;font-size:13px}.rlab th{padding:4px 6px;font-weight:700;vertical-align:bottom;text-align:center}.rlab thead th .fx{display:block;font-weight:400;font-size:11px;color:var(--muted);direction:ltr}.rlab tbody th{text-align:start;white-space:nowrap;font-size:15px}.rlab tbody th .fx{direction:ltr}
+.rlab td{border:1px solid var(--line);padding:0;text-align:center;min-width:64px}.rlab td button{display:flex;flex-direction:column;align-items:center;width:100%;border:0;background:transparent;color:inherit;padding:5px 2px;cursor:pointer;min-height:46px}.rlab td button b{font-size:16px}.rlab td button span{font-size:10.5px;color:var(--muted)}
+.rlab td.y b{color:var(--good)}.rlab td.n b{color:var(--bad)}.rlab td.gv{background:var(--hi-soft)}.rlab td.op b{color:var(--muted);font-size:13px}.rlab td.un b{color:var(--hi)}.rlab td.cur{outline:3px solid var(--accent);outline-offset:-3px}.rlab td.kd{font-weight:700;padding:4px 8px;min-width:90px;border:0;text-align:start}
+.rlleg{display:grid;grid-template-columns:auto 1fr;gap:5px 8px;align-items:center;font-size:13px}.rlk{display:inline-block;min-width:38px;text-align:center;font-weight:700;border:1px solid var(--line);border-radius:6px;padding:1px 4px}.rlk.y{color:var(--good)}.rlk.n{color:var(--bad)}.rlk.gv{background:var(--hi-soft)}.rlk.op{color:var(--muted);font-size:12px}.rlk.un{color:var(--hi)}.rlex{margin-top:4px;color:var(--ink)}
 @media (max-width:900px){.rlrow{grid-template-columns:minmax(0,1fr)}}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -1725,6 +1731,7 @@ const toggle=(M,i,j)=>{M[i]^=1<<j};
 /* removing or freezing: a relation built from the removed one keeps its current pairs as a free relation */
 const freeze=(i,V)=>{RELS[i]={name:RELS[i].name,M:V[i].slice()}};
 document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest||!t.closest('.rl'))return;
+  const md=t.closest('[data-rmode]');if(md){MODE=md.dataset.rmode;REL.render();return}if(MODE==='abs'){absClick(t);return}
   const c=t.closest('[data-rc]'),nd=t.closest('[data-rn]'),h=t.closest('[data-rh]'),sel=t.closest('[data-rsel]'),del=t.closest('[data-rdel]'),add=t.closest('[data-radd]'),fz=t.closest('[data-rfz]');
   if(c){const [k,i,j]=c.dataset.rc.split('|').map(Number);if(RELS[k]&&!RELS[k].op){toggle(RELS[k].M,i,j);SEL=null;renderAll()}}
   else if(nd&&editable()){const i=Number(nd.dataset.rn);if(SEL===null){SEL=i;renderMain()}else{toggle(RELS[CUR].M,SEL,i);SEL=null;renderAll()}}
@@ -1736,17 +1743,147 @@ document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest||!t.close
     RELS.push(add.dataset.radd==='op'?{name,op:'tc',a:src,b:src,k:2}:{name,M:empty(A.length)});CUR=RELS.length-1;HL=null;SEL=null;renderAll()}});
 document.addEventListener('keydown',ev=>{const nd=ev.target.closest&&ev.target.closest('.rl [data-rn]');if(nd&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();nd.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.closest('.rl'))return;
+  if(MODE==='abs'){if(t.dataset.ro!==undefined){const r=ABS[Number(t.dataset.ro)];if(r&&r.op){r[t.dataset.f]=t.value;renderAbs()}}return}
   if(t.dataset.rv){CUR=Number(t.value);HL=null;SEL=null;renderAll()}
   else if(t.dataset.rp!==undefined){const r=RELS[Number(t.dataset.rp)];if(t.value&&r&&!r.op){r.M=fill(t.value);HL=null;renderAll()}}
   else if(t.dataset.ro!==undefined){const r=RELS[Number(t.dataset.ro)];if(r&&r.op){r[t.dataset.f]=t.value;HL=null;renderAll()}}
   else if(t.dataset.rk==='kind'){KIND=t.value;resetSet(false);const f=RELS.find(r=>!r.op);if(f)f.M=fill(KIND==='div'?'div':KIND==='pow'?'sub':KIND==='range'?'le':'empty');renderAll()}
   else if(t.dataset.rk){PARAM[t.dataset.rk]=t.value;const was=KIND;resetSet(was==='range');const f=RELS.find(r=>!r.op);if(f&&was==='div')f.M=fill('div');else if(f&&was==='pow')f.M=fill('sub');renderAll()}});
+/* ---------- the abstract layer: relations known only by their properties ----------
+   Two independent tools answer "does this property follow":
+   1. rules: theorems as clauses, chained by unit propagation; whatever they reach comes with a derivation.
+   2. models: every choice of relations over small sets that satisfies the data; one model where a property fails
+      settles that it does not follow. */
+let MODE='conc',ABS=[{name:'R',giv:{sym:'y',trans:'y'}},{name:'S',op:'rc',a:'R',b:'R',k:2,giv:{}},{name:'T',op:'inv',a:'S',b:'S',k:2,giv:{}}],PICK=null;
+const PK=['refl','irr','sym','anti','wanti','trans','comp'],PN={refl:'רפלקסיבי',irr:'אנטי-רפלקסיבי',sym:'סימטרי',anti:'אנטי-סימטרי',wanti:'אנטי-סימטרי במובן הרחב',trans:'טרנזיטיבי',comp:'השוואה מלאה'};
+const PF={refl:'I ⊆ X',irr:'X ∩ I = ∅',sym:'X⁻¹ = X',anti:'X ∩ X⁻¹ = ∅',wanti:'X ∩ X⁻¹ ⊆ I',trans:'X² ⊆ X',comp:'X ∪ X⁻¹ ∪ I = A × A'};
+/* the seven properties of a matrix at once, without witnesses */
+function flags(M){const n=M.length;let loop=false,gap=false,both=false,one=false,inc=false,tr=true;
+  for(let i=0;i<n;i++){const r=M[i];if(r>>i&1)loop=true;else gap=true;
+    for(let j=0;j<n;j++){if(r>>j&1){if(tr&&(M[j]&~r))tr=false;if(j!==i){if(M[j]>>i&1)both=true;else one=true}}else if(j>i&&!(M[j]>>i&1))inc=true}}
+  return{refl:!gap,irr:!loop,sym:!one,anti:!both&&!loop,wanti:!both,trans:tr,comp:!inc}}
+const evalList=(list,base,n)=>{const V=[];list.forEach((r,i)=>{if(!r.op){V.push(base[i]);return}const ix=nm=>{const j=list.findIndex(x=>x.name===nm);return j>=0&&j<i?V[j]:empty(n)};V.push(OPS[r.op].f(ix(r.a),ix(r.b),kOf(r)))});return V};
+/* the theorems, as clauses over the statements "X has property p". A clause is a list of literals of which at least one holds */
+function clauses(list){const C=[],lit=(x,p,v)=>({x,p,v:v!==false}),neg=l=>({x:l.x,p:l.p,v:!l.v});
+  const imp=(prem,concl,why)=>C.push({lits:[...prem.map(neg),concl],why}),iff=(a,b,why)=>{imp([a],b,why);imp([b],a,why)},fact=(l,why)=>C.push({lits:[l],why});
+  const DOWN=['irr','anti','wanti'],UP=['refl','comp'];
+  /* P is contained in X: what X has passes down to P for the properties that survive removing pairs, and up for those that survive adding */
+  const inside=(P,X,pre,why)=>{for(const h of DOWN)imp([...pre,lit(X,h)],lit(P,h),`${why}, ותכונה זו נשמרת כשמסירים זוגות`);for(const h of UP)imp([...pre,lit(P,h)],lit(X,h),`${why}, ותכונה זו נשמרת כשמוסיפים זוגות`)};
+  list.forEach((r,i)=>{const X=r.name;
+    imp([lit(X,'anti')],lit(X,'irr'),'זוג של איבר עם עצמו שווה להפוך שלו');imp([lit(X,'anti')],lit(X,'wanti'),'אם אין שני זוגות הפוכים, התנאי מתקיים באופן ריק');
+    imp([lit(X,'irr'),lit(X,'wanti')],lit(X,'anti'),'זוגות הפוכים אפשריים רק על האלכסון, והאלכסון ריק');
+    imp([lit(X,'irr'),lit(X,'trans')],lit(X,'anti'),'שני זוגות הפוכים היו נותנים, בטרנזיטיביות, זוג של איבר עם עצמו');
+    imp([lit(X,'refl')],lit(X,'irr',false),'A אינה ריקה, ולכן יש זוג של איבר עם עצמו');
+    imp([lit(X,'sym'),lit(X,'wanti')],lit(X,'trans'),'כל זוג הוא של איבר עם עצמו, כלומר היחס מוכל בזהות');
+    if(!r.op)return;const o=r.op,P=r.a,Q=r.b,k=kOf(r),ok=nm=>{const j=list.findIndex(x=>x.name===nm);return j>=0&&j<i};if(!ok(P)||(OPS[o].two&&!ok(Q)))return;
+    const S=`${X} = ${OPS[o].sym(P,Q,k)}`;
+    if(o==='inv'||(o==='pow'&&k===1))for(const p of PK)iff(lit(P,p),lit(X,p),o==='inv'?`${S}: היפוך כל הזוגות שומר על התכונה`:`${S}: אותו יחס`);
+    if(o==='cmp'){iff(lit(P,'irr'),lit(X,'refl'),`${S}: האלכסון במשלים מלא בדיוק כשהוא ריק במקור`);iff(lit(P,'refl'),lit(X,'irr'),`${S}: האלכסון במשלים ריק בדיוק כשהוא מלא במקור`);iff(lit(P,'sym'),lit(X,'sym'),`${S}: זוג והפוכו נמצאים יחד או חסרים יחד`);
+      iff(lit(P,'wanti'),lit(X,'comp'),`${S}: שני זוגות הפוכים חסרים במשלים בדיוק כששניהם במקור`);iff(lit(P,'comp'),lit(X,'wanti'),`${S}: שני זוגות הפוכים במשלים בדיוק כששניהם חסרים במקור`);
+      imp([lit(X,'anti')],lit(P,'refl'),`${S}: האלכסון של המשלים ריק`);imp([lit(X,'anti')],lit(P,'comp'),`${S}: אין במשלים שני זוגות הפוכים`);imp([lit(P,'refl'),lit(P,'comp')],lit(X,'anti'),`${S}: במשלים אין אלכסון ואין שני זוגות הפוכים`)}
+    if(o==='rc'){fact(lit(X,'refl'),`${S}: הזהות נוספה`);iff(lit(P,'sym'),lit(X,'sym'),`${S}: הזוגות שנוספו סימטריים`);iff(lit(P,'wanti'),lit(X,'wanti'),`${S}: מחוץ לאלכסון היחסים זהים`);iff(lit(P,'comp'),lit(X,'comp'),`${S}: מחוץ לאלכסון היחסים זהים`);
+      imp([lit(P,'trans')],lit(X,'trans'),`${S}: הרכבה עם זוג מהזהות מחזירה את אותו זוג`)}
+    if(o==='sc'){fact(lit(X,'sym'),`${S}: לכל זוג נוסף ההפוך שלו`);iff(lit(P,'refl'),lit(X,'refl'),`${S}: האלכסון לא השתנה`);iff(lit(P,'irr'),lit(X,'irr'),`${S}: האלכסון לא השתנה`);iff(lit(P,'comp'),lit(X,'comp'),`${S}: זוג או הפוכו במקור, בדיוק כשאחד מהם בסגור`);inside(P,X,[],`${P} ⊆ ${X}`)}
+    if(o==='tc'){fact(lit(X,'trans'),`${S}: סגור טרנזיטיבי`);imp([lit(P,'sym')],lit(X,'sym'),`${S}: מסלול הפוך עובר בזוגות ההפוכים`);inside(P,X,[],`${P} ⊆ ${X}`);
+      for(const h of DOWN)imp([lit(P,'trans'),lit(P,h)],lit(X,h),`${S}: יחס טרנזיטיבי שווה לסגור שלו`)}
+    if(o==='ec'){for(const p of ['refl','sym','trans'])fact(lit(X,p),`${S}: סגור שקילות`);inside(P,X,[],`${P} ⊆ ${X}`)}
+    if(o==='pow'&&k===0){for(const p of ['refl','sym','wanti','trans'])fact(lit(X,p),`${S}: יחס הזהות`)}
+    if(o==='pow'&&k>=2){imp([lit(P,'refl')],lit(X,'refl'),`${S}: זוג של איבר עם עצמו, מורכב עם עצמו`);imp([lit(P,'sym')],lit(X,'sym'),`${S}: ההפוך של חזקה הוא החזקה של ההפוך`);imp([lit(P,'trans')],lit(X,'trans'),`${S}: מ־${P}² ⊆ ${P} נובע שכל חזקה מוכלת בקודמת`);
+      inside(X,P,[lit(P,'trans')],`${P} טרנזיטיבי, ולכן ${X} ⊆ ${P}`);inside(P,X,[lit(P,'refl')],`${P} רפלקסיבי, ולכן ${P} ⊆ ${X}`)}
+    if(o==='comp'){imp([lit(P,'refl'),lit(Q,'refl')],lit(X,'refl'),`${S}: שני זוגות של איבר עם עצמו`);inside(Q,X,[lit(P,'refl')],`${P} רפלקסיבי, ולכן ${Q} ⊆ ${X}`);inside(P,X,[lit(Q,'refl')],`${Q} רפלקסיבי, ולכן ${P} ⊆ ${X}`)}
+    if(o==='uni'){inside(P,X,[],`${P} ⊆ ${X}`);inside(Q,X,[],`${Q} ⊆ ${X}`);imp([lit(P,'irr'),lit(Q,'irr')],lit(X,'irr'),`${S}: האלכסון ריק בשניהם`);imp([lit(P,'sym'),lit(Q,'sym')],lit(X,'sym'),`${S}: ההפוך של כל זוג נמצא באותו יחס`)}
+    if(o==='int'){inside(X,P,[],`${X} ⊆ ${P}`);inside(X,Q,[],`${X} ⊆ ${Q}`);imp([lit(P,'refl'),lit(Q,'refl')],lit(X,'refl'),`${S}: האלכסון מלא בשניהם`);imp([lit(P,'sym'),lit(Q,'sym')],lit(X,'sym'),`${S}: ההפוך של כל זוג נמצא בשניהם`);imp([lit(P,'trans'),lit(Q,'trans')],lit(X,'trans'),`${S}: הזוג המורכב נמצא בשניהם`)}
+    if(o==='dif'){inside(X,P,[],`${X} ⊆ ${P}`);imp([lit(Q,'refl')],lit(X,'irr'),`${S}: כל האלכסון הוסר`);imp([lit(X,'refl')],lit(Q,'irr'),`${S}: שום זוג מהאלכסון לא הוסר`);imp([lit(P,'sym'),lit(Q,'sym')],lit(X,'sym'),`${S}: זוג והפוכו נשארים יחד או מוסרים יחד`)}});
+  return C}
+/* unit propagation: when all literals of a clause but one are known to fail, the last one holds */
+function propagate(list){const C=clauses(list),K=new Map(),key=l=>l.x+'|'+l.p;let conflict=null;
+  for(const r of list)for(const p of PK)if(r.giv&&r.giv[p])K.set(r.name+'|'+p,{v:r.giv[p]==='y',given:true,from:[]});
+  let ch=true;while(ch&&!conflict){ch=false;for(const c of C){let open=null,n=0,sat=false;for(const l of c.lits){const k=K.get(key(l));if(!k){open=l;n++}else if(k.v===l.v){sat=true;break}}
+    if(sat)continue;if(n===0){conflict=c;break}if(n===1){K.set(key(open),{v:open.v,why:c.why,from:c.lits.filter(l=>l!==open).map(key)});ch=true}}}
+  return{K,conflict,C}}
+/* models: all relations over sets of one to four elements that satisfy the data, as far as the budget allows */
+let CACHE={key:'',val:null};
+function models(list){const LIMIT=300000,B=list.map((r,i)=>r.op?-1:i).filter(i=>i>=0),seen={},exh={};let found=0,tried=0;
+  for(const r of list){seen[r.name]={};for(const p of PK)seen[r.name][p]={T:null,F:null}}
+  const fits=(r,f)=>{for(const p of PK){const g=r.giv&&r.giv[p];if(g&&(g==='y')!==f[p])return false}return true};
+  let seed=987654321;const rnd=()=>(seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff;
+  for(let n=1;n<=4;n++){const bits=n*n,mask=(1<<n)-1,cand=[];if(bits*B.length>26&&n>2){exh[n]=false}
+    /* each unknown relation is first cut down to the matrices that fit its own data */
+    let prod=1,ok=true;for(const b of B){const L=[];if(n<=4){for(let code=0;code<1<<bits;code++){const M=[];for(let i=0;i<n;i++)M.push(code>>i*n&mask);if(fits(list[b],flags(M)))L.push(M)}}cand.push(L);prod*=L.length;if(!L.length)ok=false}
+    if(!ok){exh[n]=true;continue}
+    const full=prod<=LIMIT,runs=full?prod:LIMIT>>2;exh[n]=full;
+    for(let t=0;t<runs;t++){const base=[];let q=t;B.forEach((b,j)=>{const L=cand[j];base[b]=full?L[q%L.length]:L[Math.floor(rnd()*L.length)];q=Math.floor(q/L.length)});
+      const V=evalList(list,base,n),F=V.map(flags);tried++;let good=true;for(let i=0;i<list.length&&good;i++)if(list[i].op&&!fits(list[i],F[i]))good=false;if(!good)continue;found++;
+      for(let i=0;i<list.length;i++){const s=seen[list[i].name];for(const p of PK){const slot=F[i][p]?'T':'F';if(!s[p][slot])s[p][slot]={n,base:B.map(b=>base[b].slice())}}}}}
+  return{seen,exh,found,tried,B}}
+const FREE_OPS=new Set(['inv','cmp','rc','sc','uni','int','dif']);
+/* everything together: for every relation and property, what is known and why */
+function solveAbs(list){const key=JSON.stringify(list);if(CACHE.key===key)return CACHE.val;const pr=propagate(list),mo=models(list);
+  /* when the data are only "has the property" and no operation hides an existence claim, three elements decide the matter:
+     a counterexample cut down to the elements of its witness is still a counterexample */
+  const exact=list.every(r=>(!r.op||FREE_OPS.has(r.op))&&PK.every(p=>!r.giv||r.giv[p]!=='n'))&&mo.exh[1]&&mo.exh[2]&&mo.exh[3];
+  const st={};for(const r of list){st[r.name]={};for(const p of PK){const k=pr.K.get(r.name+'|'+p),s=mo.seen[r.name][p];
+    st[r.name][p]=k?{kind:k.given?'given':'proved',v:k.v,clash:!!(k.v?s.F&&!s.T&&false:false)}:s.T&&s.F?{kind:'open'}:!mo.found?{kind:'none'}:exact?{kind:'exact',v:!!s.T}:{kind:'seen',v:!!s.T};
+    /* a rule may never say what a model contradicts */
+    if(k&&!k.given&&mo.found&&((k.v&&!s.T)||(!k.v&&!s.F)))st[r.name][p].clash=true}}
+  const val={pr,mo,st,exact};CACHE={key,val};return val}
+const holds=x=>x&&(x.kind==='given'||x.kind==='proved'||x.kind==='exact')&&x.v===true;
+/* a derivation: every statement after the statements it rests on */
+function proofHtml(pr,k0,list){const order=[],seen=new Set(),go=k=>{if(seen.has(k))return;seen.add(k);const e=pr.K.get(k);if(!e)return;for(const f of e.from)go(f);order.push(k)};go(k0);
+  const txt=(k,v)=>{const [x,p]=k.split('|'),f=PF[p].replace(/X/g,x);return v?f:`not ( ${f} )`},nm=(k,v)=>{const [x,p]=k.split('|');return `${fx(esc(x))} ${v?'':'אינו '}${PN[p]}`};
+  return `<div class="qpf">${order.map((k,i)=>{const e=pr.K.get(k),refs=e.from.map(f=>order.indexOf(f)+1).filter(x=>x>0);
+    return `<div class="ps"><div class="pf"><span class="pn">${i+1}</span>${fx(esc(txt(k,e.v)))}</div><div class="pj">${nm(k,e.v)}: ${e.given?'נתון':esc(e.why)+(refs.length?`. לפי ${refs.length>1?'שורות':'שורה'} ${refs.join(', ')}`:'')}</div></div>`}).join('')}</div>`}
+const CELL={given:x=>[x.v?'✓':'✗','gv '+(x.v?'y':'n'),'נתון'],proved:x=>[x.v?'✓':'✗',x.v?'y':'n',x.v?'נובע':'לא ייתכן'],exact:x=>[x.v?'✓':'✗',x.v?'y':'n',x.v?'נובע':'לא ייתכן'],open:()=>['תלוי','op','לא נובע'],seen:x=>[x.v?'✓ ?':'✗ ?','un','לא הוכרע'],none:()=>['?','un','לא הוכרע']};
+function renderAbsSide(){const opt=(l,c)=>l.map(([v,t])=>`<option value="${v}" ${v===c?'selected':''}>${t}</option>`).join('');
+  const box=(r,i)=>{const o=r.op?OPS[r.op]:null,before=ABS.slice(0,i).map(x=>[x.name,x.name]),del=ABS.length>1?`<button class="x" data-rdel="${i}" aria-label="הסר את ${r.name}">×</button>`:'';
+    return `<div class="qbox"><div class="qrow"><span class="name v">${r.name}</span>${o?`<select data-ro="${i}" data-f="op" aria-label="פעולה">${opt(Object.entries(OPS).map(([k,x])=>[k,x.l]),r.op)}</select>`:'<span class="lab">יחס לא ידוע מעל A</span>'}${del}</div>
+      ${o?`<div class="qrow"><label class="cell">${o.two?'ראשון':'של'}<select data-ro="${i}" data-f="a">${opt(before,r.a)}</select></label>${o.two?`<label class="cell">שני<select data-ro="${i}" data-f="b">${opt(before,r.b)}</select></label>`:''}${o.k?`<label class="cell">מעריך<input type="number" min="0" max="9" class="rn" dir="ltr" data-ro="${i}" data-f="k" value="${kOf(r)}"></label>`:''}</div><div class="gfset fx">${r.name} = ${esc(symOf(r))}</div>`:''}
+      <div class="rlchips">${PK.map(p=>{const g=r.giv[p]||'';return `<button class="rlchip ${g}" data-rg="${i}|${p}" aria-label="${PN[p]}: ${g==='y'?'נתון שמתקיים':g==='n'?'נתון שלא מתקיים':'לא נתון'}"><b>${g==='y'?'✓':g==='n'?'✗':'·'}</b>${PN[p]}</button>`}).join('')}</div></div>`};
+  const room=ABS.length<NAMES.length;
+  document.getElementById('rlobjs').innerHTML=`${ABS.map(box).join('')}<div class="qbox"><div class="lab">הוסף יחס</div><div class="addrow"><button class="addb" data-radd="free" ${room?'':'disabled'}>+ יחס לא ידוע</button><button class="addb" data-radd="op" ${room?'':'disabled'}>+ יחס מפעולה</button></div>
+    <p class="hint">לחיצה על תכונה מחליפה בין שלושה מצבים: לא נתון, נתון שמתקיים, נתון שלא מתקיים. אפשר לתת נתונים גם על יחס מפעולה.</p></div>`}
+function renderAbsMain(){const R=solveAbs(ABS),{pr,mo,st}=R,sizes=[1,2,3,4].filter(n=>mo.exh[n]),clash=ABS.some(r=>PK.some(p=>st[r.name][p].clash));
+  const kind=r=>{const s=st[r.name],eq=holds(s.refl)&&holds(s.sym)&&holds(s.trans),wk=holds(s.refl)&&holds(s.wanti)&&holds(s.trans),sr=holds(s.irr)&&holds(s.trans),tot=holds(s.comp);
+    return eq&&wk?'יחס השוויון':eq?'יחס שקילות':wk?(tot?'סדר מלא (רפלקסיבי)':'סדר חלקי (רפלקסיבי)'):sr?(tot?'סדר מלא (אנטי-רפלקסיבי)':'סדר חלקי (אנטי-רפלקסיבי)'):''};
+  let top='';
+  if(pr.conflict){const c=pr.conflict;top=`<div class="qwarn"><b>הנתונים סותרים זה את זה.</b> ${esc(c.why)}.<div class="rlex">${c.lits.map(l=>proofHtml(pr,l.x+'|'+l.p,ABS)).join('')}</div></div>`}
+  else if(!mo.found)top=`<div class="qwarn">לא נמצא אף יחס שמקיים את כל הנתונים מעל קבוצות של עד ארבעה איברים. ייתכן שהנתונים סותרים, אבל הכללים לא הוכיחו זאת.</div>`;
+  if(clash)top+=`<div class="qwarn">שגיאה פנימית: כלל הסיק מסקנה שדוגמה סותרת. אל תסמוך על התוצאה הזאת, ודווח עליה.</div>`;
+  let ex='';
+  if(PICK&&!pr.conflict){const [x,p]=PICK.split('|'),r=ABS.find(q=>q.name===x),s=r&&st[x][p];if(s){const head=`<div class="qph"><span>${fx(esc(x))} ${PN[p]}</span>${fx(esc(PF[p].replace(/X/g,x)))}</div>`,se=mo.seen[x][p];
+    const open=(slot,t)=>se[slot]?`<button class="btn sm" data-rex="${x}|${p}|${slot}">${t}</button>`:'';let body='';
+    if(s.kind==='given')body=`<p class="hint">נתון.</p>`;
+    else if(s.kind==='proved')body=`<p class="hint">${s.v?'נובע מהנתונים.':'לא ייתכן לפי הנתונים.'} ההוכחה, שורה אחר שורה:</p>${proofHtml(pr,PICK,ABS)}`;
+    else if(s.kind==='exact')body=`<p class="hint">${s.v?'נובע מהנתונים':'לא ייתכן לפי הנתונים'}, אבל לא לפי כלל מהרשימה אלא בבדיקה ממצה: נבדקו כל היחסים המתאימים מעל קבוצות של אחד, שניים ושלושה איברים. כאן זה מספיק, כי כל הנתונים והתכונה הם טענות ״לכל״ על שלושה איברים לכל היותר: דוגמה נגדית, אילו הייתה, הייתה נשארת דוגמה נגדית גם אחרי שמצמצמים את הקבוצה לאיברים שמופיעים בה.</p>`;
+    else if(s.kind==='open')body=`<p class="hint">לא נובע מהנתונים: יש יחסים שמקיימים את כל הנתונים והתכונה מתקיימת בהם, ויש כאלה שבהם היא לא מתקיימת. זו הכרעה סופית, כי כל דוגמה היא יחס ממשי.</p><div class="rlbar">${open('T','פתח דוגמה שבה התכונה מתקיימת')}${open('F','פתח דוגמה נגדית')}</div>`;
+    else if(s.kind==='seen')body=`<p class="hint">לא הוכרע. ${s.v?'התכונה התקיימה בכל הדוגמאות שנבדקו':'התכונה לא התקיימה באף דוגמה שנבדקה'}, אבל אין כלל שמוכיח זאת, והבדיקה מכסה רק קבוצות קטנות. ייתכן שזה משפט נכון, וייתכן שיש דוגמה ${s.v?'נגדית':'מקיימת'} גדולה יותר.</p><div class="rlbar">${open(s.v?'T':'F','פתח דוגמה')}</div>`;
+    else body=`<p class="hint">לא הוכרע: לא נמצאה אף דוגמה שמקיימת את הנתונים.</p>`;
+    ex=`<section class="gfb"><div class="qpb">${head}${body}</div></section>`}}
+  document.getElementById('main').innerHTML=`<div class="gfwrap rl">${top}
+    <section class="gfb"><h3>מה נובע מהנתונים</h3><p class="hint">שורה לכל יחס ועמודה לכל תכונה. לחיצה על תא פותחת את ההסבר: הוכחה, או דוגמאות.</p>
+      <div class="rlmw"><table class="rlab"><thead><tr><th></th>${PK.map(p=>`<th scope="col">${PN[p]}<span class="fx">${PF[p]}</span></th>`).join('')}<th scope="col">סיווג</th></tr></thead><tbody>
+      ${ABS.map(r=>`<tr><th scope="row">${fx(`${r.name}${r.op?' = '+esc(symOf(r)):''}`)}</th>${PK.map(p=>{const s=st[r.name][p],[sym,cl,lab]=CELL[s.kind](s),k=r.name+'|'+p;return `<td class="${cl}${PICK===k?' cur':''}"><button data-rpk="${k}" aria-pressed="${PICK===k}" aria-label="${r.name} ${PN[p]}: ${lab}"><b>${sym}</b><span>${lab}</span></button></td>`}).join('')}<td class="kd">${kind(r)}</td></tr>`).join('')}
+      </tbody></table></div></section>${ex}</div>`;
+  document.getElementById('card').innerHTML=`<div class="gfcard rl"><div class="cardhead"><h2>איך לקרוא</h2></div>
+    <div class="rlleg"><span class="rlk gv y">✓</span><span>נתון</span><span class="rlk y">✓</span><span>נובע מהנתונים, עם הוכחה</span><span class="rlk n">✗</span><span>לא ייתכן לפי הנתונים, עם הוכחה</span><span class="rlk op">תלוי</span><span>לא נובע: יש דוגמה לכאן ודוגמה לכאן</span><span class="rlk un">✓ ?</span><span>לא הוכרע: כך בכל הדוגמאות הקטנות, בלי הוכחה</span></div>
+    <p class="qnote" role="note"><b>מה מובטח, ומה לא.</b> ״נובע״ ו״לא ייתכן״ מגיעים משרשרת של משפטים, והיא מוצגת בהסבר. ״לא נובע״ מגיע מדוגמאות ממשיות, ולכן הוא סופי. ״לא הוכרע״ אומר שהכלים כאן לא הספיקו, ולא שהטענה נכונה או שגויה.</p>
+    <p class="hint">הדוגמאות: ${mo.found} יחסים שמקיימים את הנתונים, מתוך ${mo.tried} שנבדקו. הבדיקה מלאה לקבוצות בגודל ${sizes.length?sizes.join(', '):'—'}, ובגדלים האחרים עד ארבע היא מדגמית. ההנחה בכל מקום: A אינה ריקה.</p></div>`}
+function renderAbs(){renderAbsSide();renderAbsMain()}
+function absClick(t){const g=t.closest('[data-rg]'),pk=t.closest('[data-rpk]'),del=t.closest('[data-rdel]'),add=t.closest('[data-radd]'),exb=t.closest('[data-rex]');
+  if(g){const [i,p]=g.dataset.rg.split('|'),r=ABS[Number(i)],c=r.giv[p];if(!c)r.giv[p]='y';else if(c==='y')r.giv[p]='n';else delete r.giv[p];renderAbs()}
+  else if(pk){PICK=PICK===pk.dataset.rpk?null:pk.dataset.rpk;renderAbsMain()}
+  else if(del&&ABS.length>1){const i=Number(del.dataset.rdel),nm=ABS[i].name;ABS.forEach(r=>{if(r.op&&(r.a===nm||(OPS[r.op].two&&r.b===nm))){delete r.op}});ABS.splice(i,1);PICK=null;renderAbs()}
+  else if(add){const name=[...NAMES].find(x=>!ABS.some(r=>r.name===x));if(!name)return;const src=ABS[ABS.length-1].name;ABS.push(add.dataset.radd==='op'?{name,op:'tc',a:src,b:src,k:2,giv:{}}:{name,giv:{}});renderAbs()}
+  else if(exb){const [x,p,slot]=exb.dataset.rex.split('|'),R=solveAbs(ABS),m=R.mo.seen[x][p][slot];if(!m)return;
+    /* the example becomes a concrete relation: the same list, with the unknown relations filled in */
+    KIND='custom';PARAM.custom='abcd'.slice(0,m.n).split('').join(', ');A=buildSet();RELS=ABS.map((r,i)=>{const j=R.mo.B.indexOf(i);return r.op?{name:r.name,op:r.op,a:r.a,b:r.b,k:r.k}:{name:r.name,M:m.base[j].slice()}});
+    CUR=Math.max(0,ABS.findIndex(r=>r.name===x));HL=slot==='F'?p:null;SEL=null;MODE='conc';REL.render()}}
 return{
 /* for tests */
-lib:{empty,full,ident,union,inter,diff,compl,inverse,compose,tclose,analyze,classes,order,pairs,size,same,subset},
-render(){
-  document.getElementById('conds').innerHTML=`<div class="qb rl"><div class="colhead"><h2>הקבוצה והיחס</h2><span class="lab">יחס מעל קבוצה סופית</span></div><div id="rlobjs" class="qlist"></div></div>`;
-  renderAll()}};
+lib:{empty,full,ident,union,inter,diff,compl,inverse,compose,tclose,analyze,classes,order,pairs,size,same,subset,flags,clauses,propagate,models,solveAbs,evalList,OPS,PK},
+render(){const seg=`<div class="seg rlmode" role="group" aria-label="סוג העבודה">${[['conc','יחס מסוים'],['abs','תכונות בלבד']].map(([v,l])=>`<button data-rmode="${v}" aria-pressed="${MODE===v}">${l}</button>`).join('')}</div>`;
+  document.getElementById('conds').innerHTML=`<div class="qb rl"><div class="colhead"><h2>${MODE==='abs'?'היחסים והנתונים':'הקבוצה והיחס'}</h2><span class="lab">${MODE==='abs'?'יחסים שידועות רק התכונות שלהם':'יחס מעל קבוצה סופית'}</span></div>${seg}<div id="rlobjs" class="qlist"></div></div>`;
+  if(MODE==='abs')renderAbs();else renderAll()}};
 })();
 
 /* ---------- UI ---------- */

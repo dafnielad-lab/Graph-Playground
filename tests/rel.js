@@ -43,6 +43,26 @@ const res=await p.evaluate(()=>{const L=REL.lib,bad=[];let cnt=0,orders=0,equivs
   for(let t=0;t<4000;t++){const n=4+Math.floor(rnd()*4),d=rnd();const M=Array.from({length:n},()=>{let r=0;for(let j=0;j<n;j++)if(rnd()<d)r|=1<<j;return r});check(M,'r'+t);
     if(t%4===0){const up=M.map((r,i)=>r&~((1<<i+1)-1)),st=L.tclose(up);check(st,'strict'+t);check(L.union(st,L.ident(n)),'weak'+t)}
     if(t%4===1)check(L.tclose(L.union(L.union(M,L.inverse(M)),L.ident(n))),'eq'+t)}
-  return{bad:bad.slice(0,30),total:bad.length,cnt,orders,equivs}});
+  /* ---- the abstract layer ---- */
+  let cl=0,cfg=0,lits=0;
+  /* 1. every theorem, one by one: a clause must hold for every choice of relations. All pairs of relations on up to two elements, a sample on three and four */
+  const holdsAll=(list,base,n,id)=>{const V=L.evalList(list,base,n),F=V.map(L.flags),ix=nm=>list.findIndex(r=>r.name===nm);
+    for(const c of L.clauses(list)){cl++;if(!c.lits.some(l=>F[ix(l.x)][l.p]===l.v))bad.push(['clause fails',id,c.why,JSON.stringify(c.lits),JSON.stringify(base)])}};
+  const mk=(n,code)=>{const M=[];for(let i=0;i<n;i++)M.push(code>>i*n&((1<<n)-1));return M};
+  const shapes=[];for(const op of Object.keys(L.OPS))for(const k of (op==='pow'?[0,1,2,3,4]:[2]))shapes.push([{name:'R',giv:{}},{name:'S',giv:{}},{name:'T',op,a:'R',b:'S',k,giv:{}}]);
+  for(const sh of shapes){for(let n=1;n<=2;n++)for(let x=0;x<1<<n*n;x++)for(let y=0;y<1<<n*n;y++)holdsAll(sh,[mk(n,x),mk(n,y)],n,sh[2].op+sh[2].k);
+    for(let t=0;t<1500;t++){const n=3+(t&1),bits=n*n;holdsAll(sh,[mk(n,Math.floor(rnd()*(1<<bits))),mk(n,Math.floor(rnd()*(1<<bits)))],n,sh[2].op+sh[2].k)}}
+  /* flags against analyze */
+  for(let t=0;t<3000;t++){const n=1+Math.floor(rnd()*5),M=mk(n,Math.floor(rnd()*2**(n*n))&((2**(n*n))-1)),F=L.flags(M),P=L.analyze(M);for(const p of L.PK)if(F[p]!==P[p].ok)bad.push(['flags',p,JSON.stringify(M)])}
+  /* 2. whole configurations: random lists with random data. What the rules conclude may never be contradicted by a model, and "exact" verdicts are compared with an exhaustive check on four elements */
+  const ops=Object.keys(L.OPS);
+  for(let t=0;t<260;t++){const len=2+Math.floor(rnd()*3),list=[];for(let i=0;i<len;i++){const nm='RSTUV'[i],giv={};for(const p of L.PK){const x=rnd();if(x<0.16)giv[p]='y';else if(x<0.2)giv[p]='n'}
+      if(i===0||rnd()<0.3)list.push({name:nm,giv});else list.push({name:nm,op:ops[Math.floor(rnd()*ops.length)],a:'RSTUV'[Math.floor(rnd()*i)],b:'RSTUV'[Math.floor(rnd()*i)],k:Math.floor(rnd()*4),giv})}
+    const R=L.solveAbs(list);cfg++;if(R.pr.conflict){if(R.mo.found)bad.push(['conflict but a model exists',JSON.stringify(list)]);continue}
+    for(const r of list)for(const p of L.PK){const s=R.st[r.name][p],se=R.mo.seen[r.name][p];lits++;if(s.clash)bad.push(['rule contradicted by a model',r.name,p,JSON.stringify(list)]);
+      if(s.kind==='open'&&!(se.T&&se.F))bad.push(['open without both examples',JSON.stringify(list)]);
+      /* the three-element argument, checked against all relations on four elements when that is affordable */
+      if(s.kind==='exact'&&R.mo.exh[4]&&(s.v?se.F:se.T))bad.push(['exact verdict refuted on four elements',r.name,p,JSON.stringify(list)])}}
+  return{bad:bad.slice(0,30),total:bad.length,cnt,orders,equivs,clauses:cl,configs:cfg,statements:lits}});
 console.log(JSON.stringify(res),'page errors',errs);
 await b.close();process.exit(res.total||errs.length?1:0)})();
