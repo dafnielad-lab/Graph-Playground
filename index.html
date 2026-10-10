@@ -148,7 +148,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .lgrow select{flex:1 1 auto;min-width:0}.lgrow .lgop{flex:2 1 auto}.lgtxt{direction:ltr;text-align:left;font-size:14px;padding-inline:4px}.lggiv.T{border-color:var(--good)}.lggiv.F{border-color:var(--bad)}
 .lgcard{display:flex;flex-direction:column;gap:6px}.lgcard h3{margin:8px 0 0;font-size:14px}.lgc{border-inline-start:3px solid var(--line);padding:2px 8px;background:var(--bg);border-radius:6px}.lgc.T{border-color:var(--good)}.lgc.F{border-color:var(--bad)}
 .lgc .fx{display:block;direction:ltr;text-align:left;font-size:14px;white-space:normal}.lgc .lgw .fx{display:inline}.lgw{font-size:12.5px;color:var(--muted)}.lgsub{font-size:12.5px;color:var(--muted);margin-top:4px}
-.lgmode{align-self:flex-start}.lgtab.det{font-size:17px}.lgtab.det th,.lgtab.det td{padding:6px 9px;min-width:26px}.lgtab.det thead th{top:0}.lgtab.det thead tr:nth-child(2) th{top:38px;font-size:18px;font-weight:500}
+.lg .name.xx{background:var(--hi);color:#fff}.lgmode{align-self:flex-start}.lgtab.det{font-size:17px}.lgtab.det th,.lgtab.det td{padding:6px 9px;min-width:26px}.lgtab.det thead th{top:0}.lgtab.det thead tr:nth-child(2) th{top:38px;font-size:18px;font-weight:500}
 .lgtab.det .blk{border-inline-start:2px solid var(--line)}.lgtab.det td.par,.lgtab.det th.par{padding-inline:2px;min-width:8px;color:var(--muted)}.lgtab.det td{font-weight:500}.lgtab.det td.T,.lgtab.det td.F{font-weight:500;opacity:.8}
 .lgtab.det th.main{font-weight:800;color:var(--accent)}.lgtab.det td.main{font-weight:800;font-size:20px;opacity:1;background:var(--bg)}.lgtab.det th.giv~th{background:var(--surface)}.lgtab.det td.v{background:var(--bg);opacity:1;font-weight:700}
 .lgtab.det tr.out td{opacity:.3}.lgtab.det tr.out td.clash{opacity:1}
@@ -1282,16 +1282,18 @@ render(){
 const LOGIC=(()=>{
 const OPS={not:['¬','לא',1],and:['∧','וגם',2],or:['∨','או',2],imp:['→','גורר',2],iff:['↔','אם ורק אם',2],xor:['⊕','או מוציא: בדיוק אחד',2]};
 const EV={not:a=>!a,and:(a,b)=>a&&b,or:(a,b)=>a||b,imp:(a,b)=>!a||b,iff:(a,b)=>a===b,xor:(a,b)=>a!==b};
-const VN='pqrstuvwxyz',FN='ABCDEFGHJKLMNPQRSTUVWXYZ',MAXV=8;
+const VN='pqrstuvwxyz',FN='ABCDEFGHJKLMNPQRSTUVWXYZ',XN='αβγδεζηθ',MAXV=8;
+/* an atom has no inner structure in the table: a variable, or a proposition about which nothing is known (written α, β, ...) */
+const atom=x=>x.t==='v'||x.t==='x';
 /* the propositions of the question, in order; a compound one may only use those above it. given: 'u' not given, 'T', 'F' */
 let L=[{name:'p',t:'v',given:'u'},{name:'q',t:'v',given:'u'},{name:'A',t:'f',op:'imp',a:'p',b:'q',given:'T'},{name:'B',t:'f',op:'not',a:'q',b:null,given:'T'},{name:'C',t:'f',op:'not',a:'p',b:null,given:'u'}];
-const by=n=>L.find(x=>x.name===n),vars=()=>L.filter(x=>x.t==='v');
-const fresh=t=>{const pool=t==='v'?VN:FN;for(const ch of pool)if(!by(ch))return ch;for(let i=1;;i++){const nm=pool[0]+i;if(!by(nm))return nm}};
+const by=n=>L.find(x=>x.name===n),vars=()=>L.filter(atom);
+const fresh=t=>{const pool=t==='v'?VN:t==='x'?XN:FN;for(const ch of pool)if(!by(ch))return ch;for(let i=1;;i++){const nm=pool[0]+i;if(!by(nm))return nm}};
 const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* the proposition written out in the variables, with brackets only where they are needed */
-function text(x,top){if(x.t==='v')return x.name;const a=by(x.a),b=x.b&&by(x.b),w=y=>y.t==='v'||y.op==='not'?text(y):`(${text(y)})`;
+function text(x,top){if(atom(x))return x.name;const a=by(x.a),b=x.b&&by(x.b),w=y=>atom(y)||y.op==='not'?text(y):`(${text(y)})`;
   return x.op==='not'?`¬${w(a)}`:`${w(a)} ${OPS[x.op][0]} ${w(b)}`}
-function value(x,asg,memo){if(memo.has(x))return memo.get(x);let v;if(x.t==='v')v=asg[x.name];else{const a=value(by(x.a),asg,memo);v=x.op==='not'?EV.not(a):EV[x.op](a,value(by(x.b),asg,memo))}memo.set(x,v);return v}
+function value(x,asg,memo){if(memo.has(x))return memo.get(x);let v;if(atom(x))v=asg[x.name];else{const a=value(by(x.a),asg,memo);v=x.op==='not'?EV.not(a):EV[x.op](a,value(by(x.b),asg,memo))}memo.set(x,v);return v}
 /* every assignment of the variables, true first as in a textbook table; for each the value of every proposition */
 function table(){const V=vars(),k=V.length,rows=[];
   for(let r=0;r<(1<<k);r++){const asg={};V.forEach((v,i)=>{asg[v.name]=!((r>>(k-1-i))&1)});const memo=new Map(),vals=L.map(x=>value(x,asg,memo));
@@ -1309,14 +1311,14 @@ function rename(x,nm){const old=x.name;x.name=nm;L.forEach(y=>{if(y.a===old)y.a=
 function renderList(){
   const nv=vars().length;
   document.getElementById('lgobjs').innerHTML=L.map((x,i)=>{const up=L.slice(0,i).map(y=>[y.name,y.name]),canF=i>0;
-    const typ=`<select data-i="${i}" data-k="t" aria-label="סוג">${opt([['v','משתנה'],...(canF?[['f','פסוק מורכב']]:[])],x.t)}</select>`;
-    const body=x.t==='v'?'':`<div class="qrow lgrow" dir="ltr">${OPS[x.op][2]===2?`<select data-i="${i}" data-k="a" aria-label="פסוק ראשון">${opt(up,x.a)}</select>`:''}<select data-i="${i}" data-k="op" class="lgop" aria-label="קשר">${opt(Object.entries(OPS).map(([k,v])=>[k,`${v[0]}  ${v[1]}`]),x.op)}</select><select data-i="${i}" data-k="${OPS[x.op][2]===2?'b':'a'}" aria-label="${OPS[x.op][2]===2?'פסוק שני':'פסוק'}">${opt(up,OPS[x.op][2]===2?x.b:x.a)}</select></div><div class="lgtxt fx">${esc(x.name)} = ${esc(text(x))}</div>`;
-    return `<div class="qbox"><div class="qrow"><span class="name${x.t==='v'?' v':''}">${esc(x.name)}</span>${typ}<label class="cell">נתון<select data-i="${i}" data-k="given" class="lggiv ${x.given}">${opt([['u','לא נתון'],['T','אמת'],['F','שקר']],x.given)}</select></label><button class="x" data-del="${i}" aria-label="הסר את ${esc(x.name)}">×</button></div>${body}</div>`}).join('');
-  document.getElementById('lgadd').innerHTML=`<button class="addb" data-add="v" ${nv>=MAXV?'disabled':''}>+ משתנה</button><button class="addb" data-add="f" ${L.length?'':'disabled'}>+ פסוק מורכב</button>`+(nv>=MAXV?`<p class="hint">עד ${MAXV} משתנים, כדי שהלוח יישאר קריא.</p>`:'')}
+    const typ=`<select data-i="${i}" data-k="t" aria-label="סוג">${opt([['v','משתנה'],['x','פסוק כלשהו, לא ידוע ממה הוא בנוי'],...(canF?[['f','פסוק מורכב']]:[])],x.t)}</select>`;
+    const body=atom(x)?'':`<div class="qrow lgrow" dir="ltr">${OPS[x.op][2]===2?`<select data-i="${i}" data-k="a" aria-label="פסוק ראשון">${opt(up,x.a)}</select>`:''}<select data-i="${i}" data-k="op" class="lgop" aria-label="קשר">${opt(Object.entries(OPS).map(([k,v])=>[k,`${v[0]}  ${v[1]}`]),x.op)}</select><select data-i="${i}" data-k="${OPS[x.op][2]===2?'b':'a'}" aria-label="${OPS[x.op][2]===2?'פסוק שני':'פסוק'}">${opt(up,OPS[x.op][2]===2?x.b:x.a)}</select></div><div class="lgtxt fx">${esc(x.name)} = ${esc(text(x))}</div>`;
+    return `<div class="qbox"><div class="qrow"><span class="name${x.t==='v'?' v':x.t==='x'?' xx':''}">${esc(x.name)}</span>${typ}<label class="cell">נתון<select data-i="${i}" data-k="given" class="lggiv ${x.given}">${opt([['u','לא נתון'],['T','אמת'],['F','שקר']],x.given)}</select></label><button class="x" data-del="${i}" aria-label="הסר את ${esc(x.name)}">×</button></div>${body}</div>`}).join('');
+  document.getElementById('lgadd').innerHTML=`<button class="addb" data-add="v" ${nv>=MAXV?'disabled':''}>+ משתנה</button><button class="addb" data-add="x" ${nv>=MAXV?'disabled':''}>+ פסוק כלשהו</button><button class="addb" data-add="f" ${L.length?'':'disabled'}>+ פסוק מורכב</button>`+(nv>=MAXV?`<p class="hint">עד ${MAXV} משתנים ופסוקים לא ידועים יחד, כדי שהלוח יישאר קריא.</p>`:'')}
 /* the detailed table: every proposition written out sign by sign, with a truth value under every letter and under every connective.
    The value under the main connective is the value of the whole proposition. */
 let DETAIL=true;
-function tree(x){return x.t==='v'?{v:x.name}:x.op==='not'?{op:'not',a:tree(by(x.a))}:{op:x.op,a:tree(by(x.a)),b:tree(by(x.b))}}
+function tree(x){return atom(x)?{v:x.name}:x.op==='not'?{op:'not',a:tree(by(x.a))}:{op:x.op,a:tree(by(x.a)),b:tree(by(x.b))}}
 function tokens(nd,out,main){const w=c=>{if(c.v||c.op==='not')tokens(c,out);else{out.push({t:'('});tokens(c,out);out.push({t:')'})}};
   if(nd.v)out.push({t:nd.v,nd,main});else if(nd.op==='not'){out.push({t:OPS.not[0],nd,main});w(nd.a)}else{w(nd.a);out.push({t:OPS[nd.op][0],nd,main});w(nd.b)}return out}
 const evalT=(nd,asg)=>nd.v?asg[nd.v]:nd.op==='not'?!evalT(nd.a,asg):EV[nd.op](evalT(nd.a,asg),evalT(nd.b,asg));
@@ -1331,7 +1333,7 @@ function detailTable(rows,F){const V=vars(),k=V.length,blocks=L.filter(x=>x.t===
 function renderTable(){
   const rows=table(),F=facts(rows),live=rows.filter(r=>r.ok).length,given=L.filter(x=>x.given!=='u');
   const head=L.map((x,i)=>{const f=F[i],tag=x.given!=='u'?'<span class="lgtag g">נתון</span>':f.forced?`<span class="lgtag ${f.forced}">נובע</span>`:'';
-    return `<th scope="col" class="${x.t==='v'?'v':''}${x.given!=='u'?' giv':''}"><span class="fx nm">${esc(x.name)}</span>${x.t==='f'?`<span class="fx tx">${esc(text(x))}</span>`:''}${tag}</th>`}).join('');
+    return `<th scope="col" class="${atom(x)?'v':''}${x.given!=='u'?' giv':''}"><span class="fx nm">${esc(x.name)}</span>${x.t==='f'?`<span class="fx tx">${esc(text(x))}</span>`:''}${tag}</th>`}).join('');
   const body=rows.map((r,n)=>`<tr class="${r.ok?'':'out'}"><td class="rn">${n+1}</td>${r.vals.map((v,i)=>`<td class="${v?'T':'F'}${L[i].given!=='u'?' giv':''}${L[i].given!=='u'&&(L[i].given==='T')!==v?' clash':''}">${v?'T':'F'}</td>`).join('')}</tr>`).join('');
   document.getElementById('main').innerHTML=`<div class="lgwrap"><div class="colhead"><h2>לוח אמת משותף</h2><span class="lab">${given.length?`${live} מתוך ${rows.length} שורות מתיישבות עם הנתונים`:`${rows.length} שורות`}</span></div>
     ${given.length&&!live?'<div class="qwarn" role="alert"><b>הנתונים סותרים זה את זה:</b> אין שורה בלוח שמקיימת את כולם, ולכן מהם נובע כל דבר.</div>':''}
@@ -1351,16 +1353,16 @@ function renderTable(){
   const eqAll=grp(i=>rows.map(r=>r.vals[i]?1:0).join('')),eqLive=live?grp(i=>F[i].forced?'const'+i:rows.filter(r=>r.ok).map(r=>r.vals[i]?1:0).join('')):[];
   const show=g=>`<div class="lgc"><div class="fx">${g.map(x=>esc(x.name)).join(' ≡ ')}</div></div>`,same=(a,b)=>a.length===b.length&&a.every((g,i)=>g.length===b[i].length&&g.every((x,j)=>x===b[i][j]));
   C.push(`<h3>שקילות</h3>`+(eqAll.length?eqAll.map(show).join(''):'<p class="hint">אין שני פסוקים עם אותה עמודה בכל הלוח.</p>')+(given.length&&live&&eqLive.length&&!same(eqAll,eqLive)?`<div class="lgsub">בהינתן הנתונים, בשורות שנשארו:</div>`+eqLive.map(show).join(''):''));
-  document.getElementById('card').innerHTML=`<div class="lgcard"><div class="cardhead"><h2>מה נובע</h2></div>${C.join('')}<p class="hint">לוח האמת עובר על כל ההצבות האפשריות, ולכן מה שמופיע כאן הוא הוכחה מלאה ולא הערכה.</p></div>`}
+  document.getElementById('card').innerHTML=`<div class="lgcard"><div class="cardhead"><h2>מה נובע</h2></div>${C.join('')}${L.some(x=>x.t==='x')?`<p class="qnote"><b>פסוקים לא ידועים.</b> ${L.filter(x=>x.t==='x').map(x=>`<bdi dir="ltr" class="fx">${esc(x.name)}</bdi>`).join(', ')} יכולים להיות כל פסוק. מה שמופיע תחת "נובע בהכרח" נכון לכל בחירה שלהם. מה שמופיע תחת "לא נובע בהכרח" אומר שקיימת בחירה שבה המסקנה לא מתקיימת, ולא שהיא לא מתקיימת אף פעם.</p>`:''}<p class="hint">לוח האמת עובר על כל ההצבות האפשריות, ולכן מה שמופיע כאן הוא הוכחה מלאה ולא הערכה.</p></div>`}
 function renderAll(){fix();renderList();renderTable()}
 document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.closest('.lg'))return;const i=Number(t.dataset.i),k=t.dataset.k,x=L[i];if(!x||!k)return;
-  if(k==='t'){if(t.value===x.t)return;if(t.value==='v'){if(vars().length>=MAXV){renderAll();return}x.t='v';x.op=x.a=x.b=undefined;rename(x,fresh('v'))}else{x.t='f';x.op='not';x.a=L[i-1].name;x.b=null;rename(x,fresh('f'))}}
+  if(k==='t'){if(t.value===x.t)return;if(t.value==='v'||t.value==='x'){if(!atom(x)&&vars().length>=MAXV){renderAll();return}x.t=t.value;x.op=x.a=x.b=undefined;rename(x,fresh(t.value))}else{x.t='f';x.op='not';x.a=L[i-1].name;x.b=null;rename(x,fresh('f'))}}
   else if(k==='op'){x.op=t.value;if(OPS[x.op][2]===2&&!x.b)x.b=x.a}
   else x[k]=t.value;
   renderAll()});
 document.addEventListener('click',ev=>{const m=ev.target.closest&&ev.target.closest('[data-lgmode]');if(m){DETAIL=m.dataset.lgmode==='1';renderTable()}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.lg'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]');
-  if(a){if(a.dataset.add==='v'){if(vars().length<MAXV)L.push({name:fresh('v'),t:'v',given:'u'})}else if(L.length){const n=L.length;L.push({name:fresh('f'),t:'f',op:n>=2?'and':'not',a:L[n>=2?n-2:n-1].name,b:n>=2?L[n-1].name:null,given:'u'})}renderAll()}
+  if(a){if(a.dataset.add==='v'||a.dataset.add==='x'){if(vars().length<MAXV)L.push({name:fresh(a.dataset.add),t:a.dataset.add,given:'u'})}else if(L.length){const n=L.length;L.push({name:fresh('f'),t:'f',op:n>=2?'and':'not',a:L[n>=2?n-2:n-1].name,b:n>=2?L[n-1].name:null,given:'u'})}renderAll()}
   else if(d){L.splice(Number(d.dataset.del),1);renderAll()}});
 return{
 /* for tests: the table and the facts for a list of propositions, without touching the page */
