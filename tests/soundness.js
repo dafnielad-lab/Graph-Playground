@@ -21,6 +21,7 @@ const res=await p.evaluate(({MAXN,STEP})=>{
       if(nH>=0){if(nL<r.P.nadjLo)bad.push([tag,id,`nonadj sum ${nL} < ${r.P.nadjLo}`]);if(r.P.nadjHi!=='inf'&&nH>r.P.nadjHi)bad.push([tag,id,`nonadj sum ${nH} > ${r.P.nadjHi}`])}
       if(r.P.ore&&!t.ham)bad.push([tag,id,'Ore says Hamiltonian, false'])}};
   const yn=x=>x?'y':'n';
+  { const t1=truth([0],1);check('S0 single vertex',  '1#0',SHEET.solve([G('G',{n:1})])[0],t1);check('S0 single vertex, tree','1#0',SHEET.solve([G('G',{n:1,tr:'y'})])[0],t1);check('S0 single vertex, flags','1#0',SHEET.solve([G('G',{n:1,pl:'y',bp:'y',eu:'u'})])[0],t1)}
   for(let n=2;n<=MAXN;n++){const U=universe('G',n).graphs;for(let i=0;i<U.length;i+=(n>=7?STEP:1)){const a=U[i],t=truth(a,n),id=n+'#'+i;if(bad.length>60)break;
     const run=l=>{try{return SHEET.solve(l)}catch(e){bad.push(['throw',id,e.message]);return[]}};
     const tr=t.fo?(t.c===1?'y':'f'):'n';
@@ -50,6 +51,19 @@ const res=await p.evaluate(({MAXN,STEP})=>{
       if(n>=4){const k1=delVertex(a,n,w),k2=delVertex(k1,n-1,u),t2=truth(k2,n-2);
         const r3=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,nu:t.nu,al:t.al,om:t.om,tf:yn(t.tf)}),{t:'s',name:'S',in:'G',k:2,prop:'clique'},G('K',{op:'delS',src:'G',arg:'S'})]);check('S10 remove 2 adjacent: result',id,r3[1],t2);
         const r4=run([G('G',{n,tf:yn(t.tf),D:t.D,dl:t.dl}),{t:'s',name:'S',in:'G',k:2,prop:'clique'},G('K',{op:'delS',src:'G',arg:'S',m:t2.m,chi:t2.chi,al:t2.al,nu:t2.nu,om:t2.om})]);check('S11 back from 2 adjacent',id,r4[0],t)}}
+    /* contraction and subdivision of the first edge, an induced subgraph, an added edge */
+    if(t.m>=1&&n>=3){let u=0,w=0;o3:for(u=0;u<n;u++)for(w=u+1;w<n;w++)if(a[u]>>w&1)break o3;
+      const sd=a.map(x=>x);sd[u]&=~(1<<w);sd[w]&=~(1<<u);sd.push((1<<u)|(1<<w));sd[u]|=1<<n;sd[w]|=1<<n;const tsd=n<8?truth(sd,n+1):null;
+      const mg=a.map(x=>x);mg[u]|=mg[w];mg[u]&=~(1<<u)&~(1<<w);for(let x=0;x<n;x++)if(x!==u&&x!==w&&(mg[u]>>x&1))mg[x]|=1<<u;const ct=delVertex(mg.map((x,i)=>i===u?x:x),n,w),tct=truth(ct.map((x,i)=>x),n-1);
+      const full={n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om,pl:yn(t.pl),bp:yn(t.bp),tr,tf:yn(t.tf)},E0={t:'e',name:'e',in:'G',bridge:false};
+      if(tsd){const r=run([G('G',full),E0,G('K',{op:'subd',src:'G',arg:'e'})]);check('S26 subdivision: result',id,r[1],tsd);const rb=run([G('G',{}),E0,G('K',{op:'subd',src:'G',arg:'e',n:tsd.n,m:tsd.m,c:tsd.c,D:tsd.D,dl:tsd.dl,chi:tsd.chi,pl:yn(tsd.pl)})]);check('S26b back from subdivision',id,rb[0],t)}
+      { const r=run([G('G',full),E0,G('K',{op:'contr',src:'G',arg:'e'})]);check('S27 contraction: result',id,r[1],tct);const rb=run([G('G',{}),E0,G('K',{op:'contr',src:'G',arg:'e',n:tct.n,m:tct.m,c:tct.c,chi:tct.chi})]);check('S27b back from contraction',id,rb[0],t)}}
+    if(n>=4){const S=(1<<3)-1<<(i%(n-2)),idx=[];for(let x=0;x<n;x++)if(S>>x&1)idx.push(x);const ia=idx.map(x=>idx.reduce((acc,y,j)=>acc|((a[x]>>y&1)<<j),0)),ti=truth(ia,3);
+      const pr=ti.m===3?'clique':ti.m===0?'indep':'';const r=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om,pl:yn(t.pl),bp:yn(t.bp),tr,tf:yn(t.tf)}),{t:'s',name:'S',in:'G',k:3,prop:pr},G('K',{op:'ind',src:'G',arg:'S'})]);check('S28 induced subgraph: result',id,r[1],ti);check('S28 induced subgraph: G',id,r[0],t);
+      const rb=run([G('G',{n}),{t:'s',name:'S',in:'G',k:3,prop:pr},G('K',{op:'ind',src:'G',arg:'S',m:ti.m,chi:ti.chi,pl:yn(ti.pl),bp:yn(ti.bp)})]);check('S28b back from induced',id,rb[0],t)}
+    { let u=-1,w=-1;o4:for(let x=0;x<n;x++)for(let y=x+1;y<n;y++)if(!(a[x]>>y&1)){u=x;w=y;break o4}
+      if(u>=0){const ad=a.slice();ad[u]|=1<<w;ad[w]|=1<<u;const ta=truth(ad,n);const r=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om,pl:yn(t.pl),bp:yn(t.bp)}),G('K',{op:'adde',src:'G'})]);check('S29 added edge: result',id,r[1],ta);
+        const rb=run([G('G',{n}),G('K',{op:'adde',src:'G',m:ta.m,c:ta.c,D:ta.D,dl:ta.dl,chi:ta.chi,al:ta.al,nu:ta.nu,om:ta.om,pl:yn(ta.pl),bp:yn(ta.bp)})]);check('S29b back from added edge',id,rb[0],t)}}
     /* two non-adjacent */
     if(n>=4){let u=-1,w=-1;outer2:for(let x=0;x<n;x++)for(let y=x+1;y<n;y++)if(!(a[x]>>y&1)){u=x;w=y;break outer2}
       if(u>=0){const k1=delVertex(a,n,w),k2=delVertex(k1,n-1,u),t2=truth(k2,n-2);
@@ -60,6 +74,8 @@ const res=await p.evaluate(({MAXN,STEP})=>{
       const sub=S=>{const idx=[];for(let x=0;x<n;x++)if(S>>x&1)idx.push(x);return idx.map(x=>idx.reduce((acc,y,j)=>acc|((a[x]>>y&1)<<j),0))};
       const ts=comps.map(S=>{const g=sub(S);return truth(g,g.length)});
       const r=run([G('G',{n,c:t.c,tr:t.fo?'f':'u'}),...ts.slice(0,-1).map((x,j)=>G('C'+j,{op:'comp',src:'G',n:x.n,m:x.m}))]);check('S14 components: G',id,r[0],t);ts.slice(0,-1).forEach((x,j)=>check('S14 component',id,r[j+1],x));
+      { const rr=run([Object.assign(G('G',{n}),{rg:{c:[2,null]}}),G('C0',{op:'comp',src:'G',n:ts[0].n,m:ts[0].m})]);check('S19 one component, c at least 2',id,rr[0],t);
+        const rq=run([Object.assign(G('G',{n}),{rg:{c:[1,t.c+1]}}),...ts.slice(0,-1).map((x,j)=>G('C'+j,{op:'comp',src:'G',n:x.n,m:x.m}))]);check('S19b components, c in a range',id,rq[0],t)}
       const r2=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om}),...ts.map((x,j)=>G('C'+j,{op:'comp',src:'G'}))]);ts.forEach((x,j)=>check('S15 component from G',id,r2[j+1],x))
       /* join the components: once as a chain, once with every new edge at one vertex */
       const reps=comps.map(S=>low(S));for(const star of [0,1]){const aj=a.slice();for(let j=1;j<reps.length;j++){const x=star?reps[0]:reps[j-1],y=reps[j];aj[x]|=1<<y;aj[y]|=1<<x}const tj=truth(aj,n);

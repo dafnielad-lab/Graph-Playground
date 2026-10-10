@@ -370,7 +370,7 @@ function digest(g,memo){
     Z();if(op==='dele'&&prop(src,'fo')==='y')same('c',1);
     Z();if(op==='dele'&&src.eu==='y'){ge('c',1,'בגרף אוילרי אין גשר: כל קשת על מעגל');le('c',1,'בגרף אוילרי אין גשר: כל קשת על מעגל')}
     Z();if(src.ha==='y'){Z();if(op==='delv'||op==='dele')eq('c',1,'בגרף המילטוני: מה שנשאר מהמעגל מחבר את כל הצמתים');
-      Z();if(op==='delS'&&a){const b=ownB(a,'k');Z();if(b&&b[1]!==null)le('c',b[1],'בגרף המילטוני: הסרת קבוצה מפרקת את המעגל לכל היותר למספר חלקים כגודלה')}}
+      Z();if(op==='delS'&&a){const b=ownB(a,'k');Z();if(b&&b[1]!==null&&b[1]>=1)le('c',b[1],'בגרף המילטוני: הסרת קבוצה מפרקת את המעגל לכל היותר למספר חלקים כגודלה')}}
     Z();if(op==='delv'&&a&&a.cut)ge('c',sl('c')+1,`${a.name} צומת מפריד`);
     Z();if(op==='delv'&&prop(src,'tr')==='y'&&a&&dEx(a)!==null)eq('c',dEx(a),'הסרת צומת מעץ: רכיב לכל שכן');
     Z();if(op==='subd'){K();same('n',1);same('m',1);same('c',0);ge('D',sl('D'),r);le('D',Math.max(2,sh('D')),r);le('dl',Math.min(2,sh('dl')),r);E();}
@@ -406,14 +406,14 @@ function digest(g,memo){
   { const CS=compsOf(g).map(x=>memo.get(x)).filter(x=>x&&!x.bad),all=compsOf(g).length;
     Z();if(all){K();const r='סכום על רכיבי הקשירות',r2='לפי רכיבי הקשירות';ge('c',all,'רכיבי הקשירות שהוגדרו');const full=L('c')===H('c')&&L('c')===all&&CS.length===all,hid=Math.max(0,L('c')-all);
       Z();if(CS.length===all){K();for(const k of ['n','m','al','nu','be']){ge(k,CS.reduce((t,x)=>t+x.B[k][0],0)+(k==='n'||k==='al'?hid:0),r);Z();if(full)le(k,CS.reduce((t,x)=>t+x.B[k][1],0),r)}
-        Z();if(!full&&H('c')<Infinity&&H('n')<Infinity){const rest=H('c')-all,R=H('n')-CS.reduce((t,x)=>t+x.B.n[0],0)-(rest-1);Z();if(rest>=1&&R>=1)le('m',CS.reduce((t,x)=>t+x.B.m[1],0)+R*(R-1)/2,'קשתות ברכיבים שהוגדרו, ועוד כל מה שנכנס בצמתים שנותרו')}
+        Z();if(!full&&H('c')<Infinity&&H('n')<Infinity){const rest=Math.max(1,L('c')-all),R=H('n')-CS.reduce((t,x)=>t+x.B.n[0],0)-(rest-1);Z();if(R>=0)le('m',CS.reduce((t,x)=>t+x.B.m[1],0)+R*(R-1)/2,'קשתות ברכיבים שהוגדרו, ועוד כל מה שנכנס בצמתים שנותרו')}
         le('dl',Math.min(...CS.map(x=>x.B.dl[1])),r2);ge('D',Math.max(...CS.map(x=>x.B.D[0])),r2);
         Z();if(full){K();for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2);E();};E();};E();}}
   /* a property left unknown is also taken from the numbers once they settle it: m = n − c makes a forest */
   const P=k=>{const v=prop(g,k);Z();if(v!=='u')return v;const f=L('m')===H('m')&&L('n')===H('n')&&L('c')===H('c')&&L('m')===L('n')-L('c');
     Z();if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';Z();if(k==='tr'&&f&&L('c')===1)return 'y';Z();if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';if((k==='bp'||k==='tf')&&B.chi[1]<=2)return 'y';if(k==='tf'&&hasCyc&&B.gi[0]>=4)return 'y';return v};
   /* typed lists: the whole degree sequence, the set of degrees allowed, lengths of cycles known to exist; counted degrees */
-  const DS=parseList(g.ds),DSET=parseList(g.dset),CY=parseList(g.cyc),CN=O.filter(o=>o.t==='v'&&o.in===X&&o.q==='cnt'&&dEx(o)!==null);
+  const DS=parseList(g.ds),DSET=parseList(g.dset),CY=parseList(g.cyc),CN=O.filter(o=>o.t==='v'&&o.in===X&&o.q==='cnt'&&dEx(o)!==null).filter((o,i,A)=>A.findIndex(y=>dEx(y)===dEx(o))===i);
   const giGiven=val(g,'gi')!==null||!!rgOf(g,'gi'),dmGiven=val(g,'dm')!==null||!!rgOf(g,'dm'),hasCyc=giGiven||!!(CY&&CY.length);
   const ad0=allDeg(g),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'&&vAct(o)),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
   let it=0;
@@ -739,7 +739,7 @@ function digestHtml(){
       if(tb.length)mv.push(`<div class="qtw"><table class="qtab"><thead><tr><th scope="col">אחרי הפעולה, הגרף <bdi dir="ltr" class="fx">${g.name}′</bdi></th>${KS.map(k=>`<th scope="col" class="fx" title="${DEF[k]}"><bdi dir="ltr">${SYM[k]}<sub>${g.name}′</sub></bdi></th>`).join('')}<th></th></tr></thead><tbody>${tb.join('')}</tbody></table></div><dl class="qtl">${[['−v','הסרת צומת אחד, כלשהו'],['−e','הסרת קשת אחת, כלשהי'],['−uw','הסרת שני צמתים שכנים: uw היא קשת'],['−u,w','הסרת שני צמתים שאינם שכנים'],['+e','הוספת קשת אחת בין שני צמתים שאינם שכנים'],['+F','הוספת קבוצת קשתות F שמחברת את כל הרכיבים: כל קשת בין שני רכיבים שונים, ומספר הקשתות הוא מספר הרכיבים פחות אחת'],['′','בכותרות: הגודל בגרף שמתקבל אחרי הפעולה']].map(([a,b])=>`<div><dt><bdi dir="ltr" class="fx">${a}</bdi></dt><dd>${b}</dd></div>`).join('')}</dl>`)}
     const moves=`<button class="qmv" data-mv="${g.name}" aria-expanded="${oo}">${oo?'▾':'◂'} פעולות על ${g.name} <span class="lab">זוגות צמתים, הסרות, הוספת קשת ומשלים, בלי להגדיר אותן</span></button>${oo?`<div class="qitems one">${mv.join('')}</div>`:''}`;
     return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div>${moves}</div>`}).join('');
-  return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, עם הסבר לכל חסם</span></h3>${open?`<p class="qnote" role="note"><b>מה התמצית מבטיחה, ומה לא.</b> התמצית מריצה כמה סבבים של הסקה, מהנתונים אל המסקנות ובחזרה, לפי רשימת כללים קבועה. כל חסם וכל תובנה שמופיעים כאן נובעים מהנתונים. אבל חסם שמופיע כאן אינו בהכרח ההדוק ביותר האפשרי, וייתכנו מסקנות נכונות שהכלי לא הגיע אליהן. לכן טווח רחב, או מסקנה שלא מופיעה, אינם הוכחה שאי אפשר להסיק יותר.</p>`+body:''}</section>`}
+  return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, עם הסבר לכל חסם</span></h3>${open?`<p class="qnote" role="note"><b>מה התמצית מבטיחה, ומה לא.</b> התמצית מריצה כמה סבבים של הסקה, מהנתונים אל המסקנות ובחזרה, לפי רשימת כללים קבועה. כללי ההסקה נבדקו אחד אחד, והמסקנות נבדקו אוטומטית מול כל הגרפים עד שישה צמתים ומול מדגם של גרפים על שבעה ושמונה צמתים, בלי שנמצאה שגיאה. זו בדיקה ולא הוכחה, ולכן מסקנה שנכנסת להוכחה שלך צריך לבדוק גם בעצמך, לפי הגזירה שמוצגת לידה. בנוסף, חסם שמופיע כאן אינו בהכרח ההדוק ביותר האפשרי, וייתכנו מסקנות נכונות שהכלי לא הגיע אליהן: טווח רחב, או מסקנה שלא מופיעה, אינם הוכחה שאי אפשר להסיק יותר.</p>`+body:''}</section>`}
 function renderSheet(){
   document.getElementById('qsheet').innerHTML=graphs().map(sheetFor).join('')+digestHtml();
   const L=[];for(const g of graphs()){const s=sub(g);for(const k in SYM){if(k==='f'&&g.pl==='n')continue;{const e=ex(g,k).num,iv=e===null?interval(g,k):null;L.push([SYM[k]+s,DEF[k]+' של '+g.name,e!==null?e:iv?`${iv[0]??'?'} … ${iv[1]??'?'}`:null])}}}
