@@ -1918,6 +1918,7 @@ const KINDS={fin:{l:'קבוצה סופית בגודל נתון',n:true,sym:(a,b,
   sum:{l:'איחוד זר של שתי קבוצות',src:2,sym:(a,b)=>`${a} ⊔ ${b}`},prod:{l:'מכפלה קרטזית',src:2,sym:(a,b)=>`${a} × ${b}`},
   fun:{l:'כל הפונקציות מקבוצה לקבוצה',src:2,lab:['מ־','אל'],sym:(a,b)=>`${a} → ${b}`},
   seq:{l:'סדרות אינסופיות של איברי הקבוצה',src:1,sym:a=>`ℕ → ${a}`},tup:{l:'סדרות באורך נתון',src:1,n:true,sym:(a,b,n)=>sup(par(a),n)},
+  uni:{l:'איחוד',src:2,rel:true,sym:(a,b)=>`${a} ∪ ${b}`},int:{l:'חיתוך',src:2,rel:true,sym:(a,b)=>`${a} ∩ ${b}`},dif:{l:'הפרש',src:2,rel:true,lab:['מתוך','מסירים את'],sym:(a,b)=>`${a} ∖ ${b}`},sym:{l:'הפרש סימטרי',src:2,rel:true,sym:(a,b)=>`${a} △ ${b}`},
   star:{l:'כל הסדרות הסופיות',src:1,sym:a=>sup(par(a),'*')},pow:{l:'קבוצת החזקה',src:1,sym:a=>`P(${a})`},pfin:{l:'כל התת־קבוצות הסופיות',src:1,sym:a=>`P<sub>fin</sub>(${a})`}};
 const nOf=s=>Math.max(0,Math.min(1000000,Math.floor(Number(s.n))||0));
 /* ---------- the cardinality of a set, with the steps that lead to it. Each step is a formula and the reason for it ---------- */
@@ -1953,39 +1954,81 @@ function cardOf(s,ca,cb,nm,na,nb){const k=s.kind,X=`|${nm}|`,S=[];let c;
     else{c=ca;S.push([`${a} ≤ ${X}`,'לכל איבר יש יחידון, ואלה תת־קבוצות סופיות שונות']);S.push([`${X} ≤ |${sup(par(na),'*')}| = ${a}`,'כל תת־קבוצה סופית היא קבוצת האיברים של סדרה סופית']);S.push([`${X} = ${a}`,'קנטור–ברנשטיין'])}}
   return{c,steps:S}}
 
+/* ---------- union, intersection, difference: the cardinalities of the two sets do not settle the answer, so the result is a range
+   unless something is known about how the sets sit: disjoint, or one inside the other ---------- */
+const lt=(x,y)=>cmp(x,y)<0,mn=(x,y)=>lt(y,x)?y:x,mx=(x,y)=>lt(x,y)?y:x,minus=(x,y)=>x.n===null||y.n===null?null:F(x.n>y.n?x.n-y.n:0n);
+const RELS={'':'לא נתון',dis:'זרות',sub:'הראשונה מוכלת בשנייה',sup:'השנייה מוכלת בראשונה'};
+/* what is known without being told: the standard sets sit inside one another, and the open interval misses the integers */
+function autoRel(sa,sb){const rank={fin:0,N:1,Z:2,Q:3,R:4},a=sa.kind,b=sb.kind;if(a==='fin'&&nOf(sa)===0)return 'sub';if(b==='fin'&&nOf(sb)===0)return 'sup';
+  if(a in rank&&b in rank){if(a==='fin'&&b==='fin')return nOf(sa)<=nOf(sb)?'sub':'sup';return rank[a]<=rank[b]?'sub':'sup'}
+  if(a==='I'&&b==='I')return 'sub';if(a==='I'&&b==='R')return 'sub';if(a==='R'&&b==='I')return 'sup';if((a==='I'&&(b==='fin'||b==='N'||b==='Z'))||(b==='I'&&(a==='fin'||a==='N'||a==='Z')))return 'dis';return ''}
+function diffIn(a,b,X,big,small){/* big ∖ small, where small ⊆ big */const S=[];
+  if(fin(a)){const r=minus(a,b);if(r){S.push([`${X} = |${big}| − |${small}| = ${fmt(a)} − ${fmt(b)} = ${fmt(r)}`,`${small} מוכלת ב־${big}, ושתיהן סופיות`]);return{lo:r,hi:r,steps:S}}S.push([`0 ≤ ${X} ≤ ${fmt(a)}`,'הגדלים גדולים מכדי לחסר']);return{lo:F(0),hi:a,steps:S}}
+  if(lt(b,a)){S.push([`${fmt(a)} = |${big}| = ${X} + |${small}| = ${X} + ${fmt(b)}`,`${big} היא איחוד זר של ההפרש ושל ${small}`]);S.push([`${X} = ${fmt(a)}`,`אילו ההפרש היה קטן מ־${fmt(a)}, גם הסכום היה קטן מ־${fmt(a)}: ${maxWhy}`]);return{lo:a,hi:a,steps:S}}
+  S.push([`0 ≤ ${X} ≤ ${fmt(a)}`,`שתי הקבוצות באותה עוצמה אינסופית, וההפרש תלוי בקבוצות עצמן: הוא יכול להיות ריק, סופי, או בעוצמה ${fmt(a)}`]);return{lo:F(0),hi:a,steps:S}}
+function setOp(kind,rel,a,b,nm,na,nb){const X=`|${nm}|`,fa=fmt(a),fb=fmt(b),S=[],ex=(c,f,w)=>{S.push([f,w]);return{lo:c,hi:c,steps:S}},rg=(lo,hi,f,w)=>{S.push([f,w]);return{lo,hi,steps:S}};
+  if(kind==='uni'){if(rel==='dis'){const c=add(a,b);S.push([`${X} = |${na}| + |${nb}| = ${fa} + ${fb}`,'הקבוצות זרות: העוצמה היא סכום העוצמות']);return ex(c,`${fa} + ${fb} = ${fmt(c)}`,fin(c)?'חיבור של מספרים טבעיים':maxWhy)}
+    if(rel==='sub')return ex(b,`${nm} = ${nb},   ${X} = ${fb}`,`${na} מוכלת ב־${nb}, ולכן האיחוד הוא ${nb}`);if(rel==='sup')return ex(a,`${nm} = ${na},   ${X} = ${fa}`,`${nb} מוכלת ב־${na}, ולכן האיחוד הוא ${na}`);
+    const lo=mx(a,b),hi=add(a,b);S.push([`${fmt(lo)} ≤ ${X} ≤ ${fa} + ${fb} = ${fmt(hi)}`,'כל אחת מהקבוצות מוכלת באיחוד, והאיחוד אינו גדול מהאיחוד הזר']);
+    return same(lo,hi)?ex(lo,`${X} = ${fmt(lo)}`,'קנטור–ברנשטיין: חסם תחתון וחסם עליון שווים'):{lo,hi,steps:S}}
+  if(kind==='int'){if(rel==='dis')return ex(F(0),`${nm} = ∅,   ${X} = 0`,'הקבוצות זרות');if(rel==='sub')return ex(a,`${nm} = ${na},   ${X} = ${fa}`,`${na} מוכלת ב־${nb}, ולכן החיתוך הוא ${na}`);if(rel==='sup')return ex(b,`${nm} = ${nb},   ${X} = ${fb}`,`${nb} מוכלת ב־${na}, ולכן החיתוך הוא ${nb}`);
+    const hi=mn(a,b);return zero(hi)?ex(hi,`${X} = 0`,'אחת הקבוצות ריקה'):rg(F(0),hi,`0 ≤ ${X} ≤ ${fmt(hi)}`,'החיתוך מוכל בכל אחת מהקבוצות, ובלי מידע נוסף הוא יכול להיות גם ריק')}
+  if(kind==='dif'){if(rel==='dis')return ex(a,`${nm} = ${na},   ${X} = ${fa}`,'הקבוצות זרות: שום איבר לא מוסר');if(rel==='sub')return ex(F(0),`${nm} = ∅,   ${X} = 0`,`${na} מוכלת ב־${nb}: כל האיברים מוסרים`);if(rel==='sup')return diffIn(a,b,X,na,nb);
+    if(zero(a))return ex(a,`${X} = 0`,'מקבוצה ריקה אין מה להסיר');
+    if(fin(a)){const lo=fin(b)?(minus(a,b)||F(0)):F(0);return same(lo,a)?ex(a,`${X} = ${fa}`,'הקבוצה שמסירים ריקה'):rg(lo,a,`${fmt(lo)} ≤ ${X} ≤ ${fa}`,fin(b)?'מוסרים לכל היותר כמספר איברי הקבוצה השנייה, ולכל הפחות אף איבר':'ההפרש מוכל בקבוצה הראשונה, ואולי כולה מוסרת')}
+    if(lt(b,a)){S.push([`${fa} = |${na}| = ${X} + |${na} ∩ ${nb}|,   |${na} ∩ ${nb}| ≤ ${fb}`,`${na} היא איחוד זר של ההפרש ושל החיתוך, והחיתוך מוכל ב־${nb}`]);return ex(a,`${X} = ${fa}`,`אילו ההפרש היה קטן מ־${fa}, גם הסכום היה קטן מ־${fa}: ${maxWhy}`)}
+    return rg(F(0),a,`0 ≤ ${X} ≤ ${fa}`,'הקבוצה שמסירים אינה קטנה מהראשונה, ולכן ההפרש תלוי בקבוצות עצמן')}
+  /* symmetric difference */
+  if(rel==='dis'){const c=add(a,b);S.push([`${nm} = ${na} ∪ ${nb},   ${X} = ${fa} + ${fb}`,'הקבוצות זרות: ההפרש הסימטרי הוא האיחוד']);return ex(c,`${fa} + ${fb} = ${fmt(c)}`,fin(c)?'חיבור של מספרים טבעיים':maxWhy)}
+  if(rel==='sub'){S.push([`${nm} = ${nb} ∖ ${na}`,`${na} מוכלת ב־${nb}`]);const r=diffIn(b,a,X,nb,na);return{lo:r.lo,hi:r.hi,steps:[...S,...r.steps]}}
+  if(rel==='sup'){S.push([`${nm} = ${na} ∖ ${nb}`,`${nb} מוכלת ב־${na}`]);const r=diffIn(a,b,X,na,nb);return{lo:r.lo,hi:r.hi,steps:[...S,...r.steps]}}
+  if(fin(a)&&fin(b)){const d=lt(a,b)?minus(b,a):minus(a,b),lo=d||F(0),hi=add(a,b);return same(lo,hi)?ex(lo,`${X} = ${fmt(lo)}`,'אחת הקבוצות ריקה'):rg(lo,hi,`${fmt(lo)} ≤ ${X} ≤ ${fmt(hi)}`,'החסם התחתון כשאחת מוכלת בשנייה, והעליון כשהן זרות')}
+  if(!same(a,b)){const big=mx(a,b),[P,Q]=lt(b,a)?[na,nb]:[nb,na];S.push([`|${P} ∖ ${Q}| = ${fmt(big)}`,`${Q} קטנה מ־${P}, ולכן הסרתה אינה משנה את העוצמה האינסופית`]);return ex(big,`${fmt(big)} ≤ ${X} ≤ ${fa} + ${fb} = ${fmt(big)}`,`${P} ∖ ${Q} מוכלת בהפרש הסימטרי, והוא מוכל באיחוד`)}
+  return rg(F(0),a,`0 ≤ ${X} ≤ ${fa}`,'שתי הקבוצות באותה עוצמה אינסופית, וההפרש הסימטרי תלוי בקבוצות עצמן')}
+/* a construction over sets whose cardinality is only known as a range: the ends of the ranges, since every construction here only grows when its sets grow */
+function ranged(s,A,Bq,list,ia,ib){const K=KINDS[s.kind],X=`|${s.name}|`,ends=q=>q?(same(q.lo,q.hi)?[q.lo]:[q.lo,q.hi]):[null];let lo=null,hi=null;
+  const rel=K.rel?(s.rel||autoRel(list[ia],list[ib])):'';
+  for(const a of ends(A))for(const b of ends(Bq)){const r=K.rel?setOp(s.kind,rel,a,b,s.name,s.a,s.b):(c=>({lo:c,hi:c}))(cardOf(s,a,b,s.name,s.a,s.b).c);lo=lo===null?r.lo:mn(lo,r.lo);hi=hi===null?r.hi:mx(hi,r.hi)}
+  /* the least symmetric difference is not at an end when the two ranges meet */
+  if(s.kind==='sym'&&rel===''&&A&&Bq&&!lt(A.hi,Bq.lo)&&!lt(Bq.hi,A.lo))lo=F(0);
+  return{lo,hi,steps:[[same(lo,hi)?`${X} = ${fmt(lo)}`:`${fmt(lo)} ≤ ${X} ≤ ${fmt(hi)}`,'עוצמת אחד המקורות ידועה רק כטווח. מציבים את קצות הטווחים: הקטנים ביותר לחסם התחתון, והגדולים ביותר לעליון']]}}
+
 /* ---------- state ---------- */
-let SETS=[{name:'A',kind:'N'},{name:'B',kind:'fin',n:2},{name:'C',kind:'fun',a:'A',b:'B'},{name:'D',kind:'R'},{name:'E',kind:'seq',a:'D'},{name:'F',kind:'pow',a:'D'},{name:'G',kind:'star',a:'A'}],CUR=4;
+let SETS=[{name:'A',kind:'N'},{name:'B',kind:'fin',n:2},{name:'C',kind:'fun',a:'A',b:'B'},{name:'D',kind:'R'},{name:'E',kind:'seq',a:'D'},{name:'F',kind:'pow',a:'D'},{name:'G',kind:'star',a:'A'},{name:'H',kind:'Q'},{name:'J',kind:'dif',a:'D',b:'H'},{name:'K',kind:'int',a:'C',b:'E'}],CUR=8;
 /* every set in order: its cardinality, its steps, and its full expression in terms of the atoms. A set may use only sets listed before it */
 function solve(list){const out=[];list.forEach((s,i)=>{const K=KINDS[s.kind],ix=nm=>{const j=list.findIndex(x=>x.name===nm);return j>=0&&j<i?j:-1},ia=K.src?ix(s.a):-1,ib=K.src===2?ix(s.b):-1;
   if((K.src>=1&&ia<0)||(K.src===2&&ib<0)){out.push({bad:true,expr:'?',kids:[]});return}
   const A=ia>=0?out[ia]:null,Bq=ib>=0?out[ib]:null;if((A&&A.bad)||(Bq&&Bq.bad)){out.push({bad:true,expr:'?',kids:[]});return}
-  const r=cardOf(s,A&&A.c,Bq&&Bq.c,s.name,s.a,s.b),atom=!K.src,expr=K.sym(A?(KINDS[list[ia].kind].src?par(A.expr):A.expr):'',Bq?(KINDS[list[ib].kind].src?par(Bq.expr):Bq.expr):'',nOf(s));
-  out.push({c:r.c,steps:r.steps,expr,atom,kids:[ia,ib].filter(x=>x>=0)})});return out}
+  const exactIn=(!A||A.c)&&(!Bq||Bq.c),rel=K.rel?(s.rel||autoRel(list[ia],list[ib])):'';
+  const r=!exactIn?ranged(s,A,Bq,list,ia,ib):K.rel?setOp(s.kind,rel,A.c,Bq.c,s.name,s.a,s.b):(q=>({lo:q.c,hi:q.c,steps:q.steps}))(cardOf(s,A&&A.c,Bq&&Bq.c,s.name,s.a,s.b));
+  const atom=!K.src,expr=K.sym(A?(KINDS[list[ia].kind].src?par(A.expr):A.expr):'',Bq?(KINDS[list[ib].kind].src?par(Bq.expr):Bq.expr):'',nOf(s)),c=same(r.lo,r.hi)?r.lo:null;
+  out.push({c,lo:r.lo,hi:r.hi,steps:r.steps,expr,atom,rel,auto:K.rel&&!s.rel&&rel?rel:'',kids:[ia,ib].filter(x=>x>=0),txt:c?`|${s.name}| = ${fmt(c)}`:`${fmt(r.lo)} ≤ |${s.name}| ≤ ${fmt(r.hi)}`,val:c?fmt(c):`${fmt(r.lo)} … ${fmt(r.hi)}`})});return out}
 const fx=t=>`<bdi dir="ltr" class="fx">${t}</bdi>`;
 const short=s=>KINDS[s.kind].sym(s.a||'',s.b||'',nOf(s));
 function renderSide(R){const opt=(l,c)=>l.map(([v,t])=>`<option value="${v}" ${v===c?'selected':''}>${t}</option>`).join('');
   document.getElementById('cdobjs').innerHTML=SETS.map((s,i)=>{const K=KINDS[s.kind],before=SETS.slice(0,i).map(x=>[x.name,x.name]),kinds=Object.entries(KINDS).filter(([k,x])=>!x.src||i>0).map(([k,x])=>[k,x.l]);
     return `<div class="qbox${i===CUR?' rlcur':''}"><div class="qrow"><button class="name v rlnm" data-cs="${i}" aria-pressed="${i===CUR}" aria-label="הצג את ${s.name}">${s.name}</button><select data-ci="${i}" data-f="kind" aria-label="סוג הקבוצה">${opt(kinds,s.kind)}</select>${SETS.length>1?`<button class="x" data-cdel="${i}" aria-label="הסר את ${s.name}">×</button>`:''}</div>
-      ${K.src||K.n?`<div class="qrow">${K.src?`<label class="cell">${K.lab?K.lab[0]:'של'}<select data-ci="${i}" data-f="a">${opt(before,s.a)}</select></label>`:''}${K.src===2?`<label class="cell">${K.lab?K.lab[1]:'ושל'}<select data-ci="${i}" data-f="b">${opt(before,s.b)}</select></label>`:''}${K.n?`<label class="cell">${s.kind==='fin'?'גודל':'אורך'}<input type="number" min="0" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${nOf(s)}"></label>`:''}</div>`:''}
-      <div class="gfset fx">${s.name} = ${short(s)}${R[i].bad?'':`,   |${s.name}| = ${fmt(R[i].c)}`}</div></div>`}).join('')}
+      ${K.src||K.n?`<div class="qrow">${K.src?`<label class="cell">${K.lab?K.lab[0]:'של'}<select data-ci="${i}" data-f="a">${opt(before,s.a)}</select></label>`:''}${K.src===2?`<label class="cell">${K.lab?K.lab[1]:'ושל'}<select data-ci="${i}" data-f="b">${opt(before,s.b)}</select></label>`:''}${K.n?`<label class="cell">${s.kind==='fin'?'גודל':'אורך'}<input type="number" min="0" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${nOf(s)}"></label>`:''}</div>`:''}${K.rel?`<div class="qrow"><label class="cell">היחס בין השתיים<select data-ci="${i}" data-f="rel">${opt(Object.entries(RELS).map(([v,t])=>[v,v===''&&R[i].auto?`מזוהה לבד: ${RELS[R[i].auto]}`:t]),s.rel||'')}</select></label></div>`:''}
+      <div class="gfset fx">${s.name} = ${short(s)}${R[i].bad?'':`,   ${R[i].txt}`}</div></div>`}).join('')}
 function renderMain(R){if(CUR>=SETS.length)CUR=SETS.length-1;const s=SETS[CUR],r=R[CUR];
   /* the structure tree: the set, and under it the sets it is built from, down to the atoms */
-  const tree=(i,d)=>`<div class="cdn" style="margin-inline-start:${d*22}px"><span class="name v">${SETS[i].name}</span>${fx(`${R[i].expr}`)}<span class="cdc">${fx(fmt(R[i].c))}</span><span class="lab">${R[i].atom?'גרעין':KINDS[SETS[i].kind].l}</span></div>${R[i].kids.map(j=>tree(j,d+1)).join('')}`;
+  const tree=(i,d)=>`<div class="cdn" style="margin-inline-start:${d*22}px"><span class="name v">${SETS[i].name}</span>${fx(`${R[i].expr}`)}<span class="cdc">${fx(R[i].val)}</span><span class="lab">${R[i].atom?'גרעין':KINDS[SETS[i].kind].l}</span></div>${R[i].kids.map(j=>tree(j,d+1)).join('')}`;
   /* the proof: the sets the current one rests on, each once, in the order they are needed */
   const order=[],seen=new Set(),go=i=>{if(seen.has(i))return;seen.add(i);R[i].kids.forEach(go);order.push(i)};if(!r.bad)go(CUR);
-  const block=i=>`<div class="qpb"><div class="qph"><span>${SETS[i].name}: ${KINDS[SETS[i].kind].l}</span>${fx(`|${SETS[i].name}| = ${fmt(R[i].c)}`)}</div><div class="qpf">${R[i].steps.map(([f,w],n)=>`<div class="ps"><div class="pf"><span class="pn">${n+1}</span>${fx(f)}</div><div class="pj">${w}</div></div>`).join('')}</div></div>`;
-  const rows=SETS.map((x,i)=>`<tr class="${i===CUR?'cur':''}"><th scope="row"><button data-cs="${i}">${x.name}</button></th><td>${fx(R[i].expr)}</td><td class="c">${R[i].bad?'':fx(fmt(R[i].c))}</td><td>${R[i].bad?'חסרה קבוצת מקור':word(R[i].c)}</td></tr>`).join('');
+  const block=i=>`<div class="qpb"><div class="qph"><span>${SETS[i].name}: ${KINDS[SETS[i].kind].l}</span>${fx(R[i].txt)}</div><div class="qpf">${R[i].steps.map(([f,w],n)=>`<div class="ps"><div class="pf"><span class="pn">${n+1}</span>${fx(f)}</div><div class="pj">${w}</div></div>`).join('')}</div></div>`;
+  const rows=SETS.map((x,i)=>`<tr class="${i===CUR?'cur':''}"><th scope="row"><button data-cs="${i}">${x.name}</button></th><td>${fx(R[i].expr)}</td><td class="c">${R[i].bad?'':fx(R[i].val)}</td><td>${R[i].bad?'חסרה קבוצת מקור':R[i].c?word(R[i].c):'טווח: המבנה לא קובע את העוצמה'}</td></tr>`).join('');
   document.getElementById('main').innerHTML=`<div class="gfwrap cd">
     <section class="gfb"><h3>כל הקבוצות</h3><div class="rlmw"><table class="cdtab"><thead><tr><th></th><th scope="col">המבנה, עד הגרעינים</th><th scope="col">העוצמה</th><th scope="col">סוג</th></tr></thead><tbody>${rows}</tbody></table></div></section>
-    ${r.bad?`<div class="qwarn">הקבוצה ${s.name} נשענת על קבוצה שאינה מוגדרת מעליה.</div>`:`<div class="gfeq fx">|${s.name}| = ${fmt(r.c)}</div>
+    ${r.bad?`<div class="qwarn">הקבוצה ${s.name} נשענת על קבוצה שאינה מוגדרת מעליה.</div>`:`<div class="gfeq fx">${r.txt}</div>
     <section class="gfb"><h3>עץ המבנה של ${s.name}</h3><p class="hint">בכל שורה: הקבוצה, המבנה שלה, העוצמה שלה, והפעולה שבנתה אותה. מתחתיה הקבוצות שמהן נבנתה.</p><div class="cdtree">${tree(CUR,0)}</div></section>
     <section class="gfb"><h3>החישוב, קבוצה אחר קבוצה</h3><p class="hint">מהגרעינים ועד ${s.name}. בכל שורה נוסחה, ומתחתיה הנימוק.</p>${order.map(block).join('')}</section>`}</div>`;
   /* the card: all the sets in order of cardinality */
-  const ok=SETS.map((x,i)=>i).filter(i=>!R[i].bad).sort((i,j)=>(cmp(R[i].c,R[j].c)||0)||i-j),chain=[];
+  const open=SETS.map((x,i)=>i).filter(i=>!R[i].bad&&!R[i].c),ok=SETS.map((x,i)=>i).filter(i=>!R[i].bad&&R[i].c).sort((i,j)=>(cmp(R[i].c,R[j].c)||0)||i-j),chain=[];
   ok.forEach((i,n)=>{if(n)chain.push(same(R[ok[n-1]].c,R[i].c)?' = ':' < ');chain.push(`|${SETS[i].name}|`)});
   const groups=[];for(const i of ok){const g=groups[groups.length-1];if(g&&same(g.c,R[i].c))g.m.push(i);else groups.push({c:R[i].c,m:[i]})}
   document.getElementById('card').innerHTML=`<div class="gfcard cd"><div class="cardhead"><h2>סדר העוצמות</h2></div><div class="cdchain">${fx(chain.join(''))}</div>
     ${groups.map(g=>`<div class="cdg"><div class="cdgh">${fx(fmt(g.c))}<span>${word(g.c)}</span></div><div class="cdgm">${fx(g.m.map(i=>SETS[i].name).join(', '))}</div></div>`).join('')}
+    ${open.length?`<div class="cdg"><div class="cdgh"><span>טווח בלבד</span></div>${open.map(i=>`<div class="cdgm">${fx(R[i].txt)}</div>`).join('')}</div>`:''}
     <p class="qnote" role="note"><b>על מה החישוב נשען.</b> על הגרעינים הידועים ועל כללי חשבון העוצמות: סכום ומכפלה של עוצמות שלפחות אחת מהן אינסופית שווים לגדולה מהשתיים, חזקה של חזקה היא חזקה במכפלה, ומשפט קנטור–ברנשטיין. הכללים האלה משתמשים באקסיומת הבחירה, כמקובל.</p>
     <p class="hint">${fx(sup('2','ℵ₀'))} היא עוצמת הרצף. עוצמה סופית גדולה מכדי לכתוב מסומנת ${fx('<i>N</i>')}.</p></div>`}
 function renderAll(){const R=solve(SETS);renderSide(R);renderMain(R)}
@@ -1997,7 +2040,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.clos
   if(t.dataset.f==='kind'){const K=KINDS[s.kind],prev=SETS[Math.max(0,i-1)].name;if(K.src&&!SETS.slice(0,i).some(x=>x.name===s.a))s.a=prev;if(K.src===2&&!SETS.slice(0,i).some(x=>x.name===s.b))s.b=prev;if(K.n&&(s.n===undefined||s.n===''))s.n=2}renderAll()});
 return{
 /* for tests */
-lib:{F,B,add,mul,pow,cmp,same,fmt,solve,KINDS},
+lib:{F,B,add,mul,pow,cmp,same,fmt,solve,KINDS,setOp},
 render(){
   document.getElementById('conds').innerHTML=`<div class="qb cd"><div class="colhead"><h2>הקבוצות</h2><span class="lab">גרעינים ומה שנבנה מהם</span></div><div id="cdobjs" class="qlist"></div>
     <div class="qbox"><div class="lab">הוסף קבוצה</div><div class="addrow"><button class="addb" data-cadd="atom">+ קבוצה ידועה</button><button class="addb" data-cadd="op">+ קבוצה מפעולה</button></div>
