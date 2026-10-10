@@ -20,6 +20,7 @@ app = (
     + (src / "core.js").read_text(encoding="utf-8") + "\n"
     + (src / "sheet.js").read_text(encoding="utf-8") + "\n"
     + (src / "logic.js").read_text(encoding="utf-8") + "\n"
+    + (src / "gf.js").read_text(encoding="utf-8") + "\n"
     + (src / "ui.js").read_text(encoding="utf-8") + "\n</script>\n"
 )
 html = (

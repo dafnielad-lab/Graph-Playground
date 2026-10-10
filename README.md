@@ -1,7 +1,7 @@
 # The Discrete Playground
 
 A playground for discrete mathematics: describe a situation without programming and see what follows from it.
-Two parts exist: the **Graph Playground** (מגרש גרפים) and a first version of the **Logic Playground** (מגרש לוגיקה): propositions are built from menus, one joint truth table is shown, and marking propositions as given strikes the rows that contradict them, so what follows necessarily can be read off. Parts for sets and cardinalities, relations, combinatorics, recurrences and generating functions are ideas, not code.
+Two parts exist: the **Graph Playground** (מגרש גרפים) and a first version of the **Logic Playground** (מגרש לוגיקה): propositions are built from menus, one joint truth table is shown, and marking propositions as given strikes the rows that contradict them, so what follows necessarily can be read off. A third part, **Generating Functions** (פונקציות יוצרות), counts the solutions of x₁ + x₂ + … = n over the naturals with a condition on every variable, and shows the generating function in open form, in closed form as a product, and as a sum, with the coefficients checked by independent computations. Parts for sets and cardinalities, relations, combinatorics and recurrences are ideas, not code.
 
 ## Graph Playground · מגרש גרפים
 

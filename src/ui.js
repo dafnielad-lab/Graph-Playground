@@ -14,7 +14,7 @@ function mkCond(kind,over){
   else if(K.type==='ind'){c.prop='indep';c.k=Math.min(2,n-1);c.op='ge';c.value=1}
   return Object.assign(c,over||{});
 }
-const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';const logicPart=()=>S.part==='logic';
+const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';const logicPart=()=>S.part==='logic'||S.part==='gf';const PARTS=[['graphs','מגרש גרפים'],['logic','מגרש לוגיקה'],['gf','פונקציות יוצרות']];
 const ranged=()=>!!S.rng&&!single(),nHi=()=>ranged()?Math.max(S.n,S.n2||S.n):S.n,Ns=()=>{const r=[];for(let n=S.n;n<=nHi();n++)r.push(n);return r};
 S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
 const maxN=()=>S.mode==='prufer'?20:S.mode==='manual'?8:(S.type==='tree'?12:8);
@@ -243,8 +243,8 @@ const seg=(act,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button data-ac
 const nStep=(w,val,lo,hi)=>`<div class="seg step"><button data-act="n" data-w="${w}" data-v="-1" aria-label="הפחת צומת" ${val<=lo?'disabled':''}>−</button><b class="num" aria-live="polite">${val}</b><button data-act="n" data-w="${w}" data-v="1" aria-label="הוסף צומת" ${val>=hi?'disabled':''}>+</button></div>`;
 function renderTop(){
   $('.cols').classList.toggle('sheet',sheetMode()||logicPart());$('.cols').classList.toggle('logic',logicPart());
-  if(logicPart()){$('#top').innerHTML=`<div class="grp"><div class="brand"><bdi dir="ltr">The Discrete Playground</bdi></div>${seg('part',[['graphs','מגרש גרפים'],['logic','מגרש לוגיקה']],'logic')}</div>`;return}
-  $('#top').innerHTML=`<div class="grp"><div class="brand"><bdi dir="ltr">The Discrete Playground</bdi></div>${seg('part',[['graphs','מגרש גרפים'],['logic','מגרש לוגיקה']],'graphs')}<button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
+  if(logicPart()){$('#top').innerHTML=`<div class="grp"><div class="brand"><bdi dir="ltr">The Discrete Playground</bdi></div>${seg('part',PARTS,S.part)}</div>`;return}
+  $('#top').innerHTML=`<div class="grp"><div class="brand"><bdi dir="ltr">The Discrete Playground</bdi></div>${seg('part',PARTS,'graphs')}<button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
   ${sheetMode()?'':`<div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
   <div class="grp"><span class="lab">ספירה</span>${seg('lab',[['0','לא מתויג'],['1','מתויג']],S.labeled?'1':'0')}</div>
   <div class="grp"><span class="lab">צמתים</span>${nStep('lo',S.n,1,ranged()?S.n2:maxN())}${ranged()?`<span class="lab">עד</span>${nStep('hi',S.n2,S.n,maxN())}`:''}${single()?'':`<button class="btn sm" data-act="rng" aria-pressed="${!!S.rng}">טווח</button>`}<span class="lab">לכל היותר <span class="num">${maxN()}</span></span></div>`}
@@ -498,7 +498,7 @@ function newTarget(){
 function resetSel(){S.subset=0;S.matching=[];S.augPath=null;S.emb=0;S.outer=0;S.kur=false}
 function refresh(full){
   if(S.n>maxN())S.n=maxN();S.n2=Math.max(S.n,Math.min(maxN(),S.n2||S.n));if(S.mode==='prufer'){if(S.n<2)S.n=2;syncPrufer()}
-  if(logicPart()){renderTop();LOGIC.render();return}
+  if(logicPart()){renderTop();(S.part==='gf'?GF:LOGIC).render();return}
   if(sheetMode()){renderTop();SHEET.render();return}
   if(full){clampConds();renderTop();renderConds()}
   compute();updateCounts();renderMain();renderCard();
