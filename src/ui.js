@@ -14,7 +14,7 @@ function mkCond(kind,over){
   else if(K.type==='ind'){c.prop='indep';c.k=Math.min(2,n-1);c.op='ge';c.value=1}
   return Object.assign(c,over||{});
 }
-const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';const logicPart=()=>S.part==='logic'||S.part==='gf';const PARTS=[['graphs','מגרש גרפים'],['logic','מגרש לוגיקה'],['gf','פונקציות יוצרות']];
+const single=()=>S.mode==='manual'||S.mode==='prufer';const sheetMode=()=>S.mode==='sheet';const logicPart=()=>S.part==='logic'||S.part==='gf'||S.part==='rel';const PARTS=[['graphs','מגרש גרפים'],['rel','מגרש יחסים'],['logic','מגרש לוגיקה'],['gf','פונקציות יוצרות']];
 const ranged=()=>!!S.rng&&!single(),nHi=()=>ranged()?Math.max(S.n,S.n2||S.n):S.n,Ns=()=>{const r=[];for(let n=S.n;n<=nHi();n++)r.push(n);return r};
 S.conds=[mkCond('conn'),mkCond('edges',{value:5}),mkCond('maxdeg',{value:3}),mkCond('pm',{on:false})];
 const maxN=()=>S.mode==='prufer'?20:S.mode==='manual'?8:(S.type==='tree'?12:8);
@@ -498,7 +498,7 @@ function newTarget(){
 function resetSel(){S.subset=0;S.matching=[];S.augPath=null;S.emb=0;S.outer=0;S.kur=false}
 function refresh(full){
   if(S.n>maxN())S.n=maxN();S.n2=Math.max(S.n,Math.min(maxN(),S.n2||S.n));if(S.mode==='prufer'){if(S.n<2)S.n=2;syncPrufer()}
-  if(logicPart()){renderTop();(S.part==='gf'?GF:LOGIC).render();return}
+  if(logicPart()){renderTop();(S.part==='gf'?GF:S.part==='rel'?REL:LOGIC).render();return}
   if(sheetMode()){renderTop();SHEET.render();return}
   if(full){clampConds();renderTop();renderConds()}
   compute();updateCounts();renderMain();renderCard();
