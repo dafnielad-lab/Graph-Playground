@@ -12,6 +12,7 @@ const res=await p.evaluate(()=>{const types=['any','min','max','range','exact','
   for(let t=0;t<300;t++){const k=1+t%4,L=[];for(let i=0;i<k;i++){const ty=types[(t*3+i*7)%10];L.push({type:ty,c:1+((t+i)%5===0?1:0)+((t+i)%11===0?1:0),lo:(t+i)%4,hi:(t+i)%4+((t*5+i)%6),d:1+(t+2*i)%4,r:(t+i)%3})}
     const N=40,R=GF.solve(L,N);if(R){fm+=R.fm?1:0}const brute=m=>{let c=0;const go=(i,rest)=>{if(i===L.length){if(rest===0)c++;return}for(let x=0;x*L[i].c<=rest;x++)if(allowed(L[i],x))go(i+1,rest-x*L[i].c)};go(0,m);return c};
     if(!R){let any=false;for(let m=0;m<=N;m++)if(brute(m))any=true;if(any)bad.push(['null but solutions',JSON.stringify(L)]);continue}
+    if(R&&!R.eqOk)bad.push(['the equation of the recurrence derivation fails',JSON.stringify(L)]);
     for(let m=0;m<=N;m++){n++;const tr=String(brute(m));if(R.product[m]!==tr||R.closed[m]!==tr||(R.rec[m]!==null&&R.rec[m]!==tr)||(R.formula[m]!==null&&R.formula[m]!==tr)||(R.binomial[m]!==null&&R.binomial[m]!==tr)||(R.count[m]!==null&&String(R.count[m])!==tr)){bad.push([m,tr,R.product[m],R.closed[m],R.binomial[m],JSON.stringify(L)]);break}}}
   // known: x1+x2+x3=n, no conditions: C(n+2,2); dice: two dice sum 7 -> 6
   const k1=GF.solve([{type:'any',c:1},{type:'any',c:1},{type:'any',c:1}],10).product[10],dice=GF.solve([{type:'range',lo:1,hi:6,c:1},{type:'range',lo:1,hi:6,c:1}],12).product[7],coins=GF.solve([{type:'any',c:1},{type:'any',c:5},{type:'any',c:10}],100).closed[100];

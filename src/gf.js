@@ -96,6 +96,19 @@ function binomHtml(C){if(!(C.den.length===1&&C.den[0][0]===1))return null;const 
 function polyHtml(cf){let L=1n;for(const c of cf)L=L/gcd(L,c.d)*c.d;const ints=cf.map(c=>c.n*(L/c.d)),parts=[];
   for(let j=ints.length-1;j>=0;j--){const v=ints[j];if(v===0n)continue;const a=v<0n?-v:v,mon=j===0?'':j===1?'n':`n<sup>${j}</sup>`,body=mon?(a===1n?mon:`${a}${mon}`):String(a);parts.push((parts.length?(v<0n?' − ':' + '):(v<0n?'−':''))+body)}
   const top=parts.join('')||'0';return L===1n?top:fr(top,String(L))}
+/* a polynomial from its coefficients, lowest power first */
+function polyStr(c){const t=[];c.forEach((k,e)=>{if(k===0n)return;const a=k<0n?-k:k,mon=X(e),body=e===0?String(a):(a===1n?mon:`${a}${mon}`);t.push((t.length?(k<0n?' − ':' + '):(k<0n?'−':''))+body)});return t.join('')||'0'}
+/* the recurrence, step by step: multiply by the denominator and compare the coefficients of x^n on both sides */
+function recDerive(C,R){const q=denomPoly(C),T=numTerms(C),P=[];for(const [e,k] of T)P[C.A+e]=k;for(let i=0;i<P.length;i++)if(P[i]===undefined)P[i]=0n;
+  const Ps=polyStr(P),Qs=polyStr(q),degP=P.length-1,bot=C.den.map(([s,m])=>pw(one(s),m)).join(' '),sig=`<span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>a<sub>n</sub>x<sup>n</sup>`;
+  const lhs='a<sub>n</sub>'+q.slice(1).map((v,i)=>{if(v===0n)return '';const a=v<0n?-v:v;return (v<0n?' − ':' + ')+(a===1n?'':a)+`a<sub>n − ${i+1}</sub>`}).join('');
+  const L=[[`F(x) = ${fr(Ps,bot)} = ${fr(Ps,Qs)}`,'פותחים את הסוגריים במונה ובמכנה'],[`(${Qs}) · F(x) = ${Ps}`,'מכפילים את שני האגפים במכנה'],[`(${Qs}) · ${sig} = ${Ps}`,'כותבים את הפונקציה כטור, שמקדמיו הם הסדרה המבוקשת'],
+    [`${lhs} = p<sub>n</sub>`,`משווים את המקדם של x<sup>n</sup> בשני האגפים. באגף שמאל, כל מחובר של המכנה מזיז את הטור בחזקה שלו. באגף ימין, p<sub>n</sub> הוא המקדם של x<sup>n</sup> במונה`],
+    [`p<sub>n</sub> = 0,   n ≥ ${degP+1}`,`המונה הוא פולינום ממעלה ${degP}, ואין בו חזקות גבוהות יותר`],
+    [`${recHtml(R)},   n ≥ ${R.from}`,`מעבירים אגפים. התנאי על n מבטיח גם שכל האינדקסים אינם שליליים`],
+    [`a<sub>0</sub>, …, a<sub>${R.from-1}</sub>`,'תנאי ההתחלה מתקבלים מאותה השוואה לערכי n הקטנים, עם המקדמים של המונה, וכשאיבר בעל אינדקס שלילי נחשב אפס']];
+  if(R.from===0)L.pop();
+  return `<div class="gfd"><div class="gfdh">איך היא מתקבלת</div><div class="qpf">${L.map(([f,w],i)=>`<div class="ps"><div class="pf"><span class="pn">${i+1}</span><span class="fx">${f}</span></div><div class="pj">${w}</div></div>`).join('')}</div></div>`}
 function recHtml(R){if(!R.terms.length)return null;if(R.terms.length>14)return null;
   return 'a<sub>n</sub> = '+R.terms.map(([j,v],i)=>{const a=v<0n?-v:v;return (i?(v<0n?' − ':' + '):(v<0n?'−':''))+(a===1n?'':a)+`a<sub>n − ${j}</sub>`}).join('')}
 const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -132,7 +145,7 @@ function renderMain(){
     ${sum?blk('אותה פונקציה, כסכום','המונה נפתח לסכום של חזקות.',`F(x) = ${sum}`):''}
     ${sser?blk('כסכום של טורים',sser.hint,`F(x) = ${sser.html}`):''}
     ${bin?blk('המקדם של x<sup>n</sup>, כנוסחה','בינום שהמספר העליון שלו שלילי שווה אפס.',`a<sub>n</sub> = ${bin}`):''}
-    ${rec?blk('נוסחת נסיגה לסדרה',`מתקבלת מהכפלת שני האגפים במכנה והשוואת מקדמים. תקפה מ־<bdi dir="ltr" class="fx">n = ${R.from}</bdi> והלאה, עם תנאי ההתחלה שמתחתיה.`,`${rec}<div class="gin">${startVals}</div>`):''}
+    ${rec?blk('נוסחת נסיגה לסדרה',`מתקבלת מהכפלת שני האגפים במכנה והשוואת מקדמים. תקפה מ־<bdi dir="ltr" class="fx">n = ${R.from}</bdi> והלאה, עם תנאי ההתחלה שמתחתיה.`,`${rec}<div class="gin">${startVals}</div>${recDerive(C,R)}`):''}
     ${fmHtml?blk('הסדרה בנוסחה מפורשת',(Fm.cls.length===1?'פולינום אחד':`פולינום לכל שארית של n בחלוקה ב־${Fm.M}`)+(Fm.n0>0?`, תקף מ־<bdi dir="ltr" class="fx">n = ${Fm.n0}</bdi> והלאה. האיברים שלפני כן רשומים מתחת.`:', תקף לכל n.'),`${fmHtml}${early?`<div class="gin">${early}</div>`:''}`):Fm.skip?`<section class="gfb"><h3>הסדרה בנוסחה מפורשת</h3><p class="hint">לא מוצגת כאן: הנוסחה מתפצלת ליותר מדי מקרים לפי השארית של n.</p></section>`:''}
     ${blk('כטור אחד','המקדם של כל חזקה הוא מספר הפתרונות.',`F(x) = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>a<sub>n</sub>x<sup>n</sup> = ${seriesForm(a1,N)}`)}
     ${fmHtml?blk('כטור אחד, עם הנוסחה המפורשת',Fm.n0>0?'האיברים הראשונים רשומים בנפרד, ומהם והלאה המקדם הוא הנוסחה.':'המקדם של כל חזקה הוא הנוסחה המפורשת.',`F(x) = ${explicitSeries(Fm,a1)}`):''}
@@ -164,7 +177,9 @@ return{
 /* for tests: coefficients by each way, for a list of variables */
 solve(list,N){const S=list.map(spec);if(!S.every(Boolean))return null;const C=closed(S),a=byProduct(S,N),b=byClosed(C,N);
   const R=recurrence(C),Fm=formula(C);
-  return{rec:a.map((_,n)=>{if(n<R.from)return null;let t=0n;for(const [j,v] of R.terms)t+=v*a[n-j];return String(t)}),formula:a.map((_,n)=>{if(!Fm.cls||n<Fm.n0)return null;const c=Fm.cls.length===1?Fm.cls[0]:Fm.cls[n%Fm.M],v=evalPoly(c.cf,n);return v.d===1n?String(v.n):'frac'}),fm:Fm.cls?Fm.cls.length:0,product:a.map(String),closed:b.map(String),binomial:a.map((_,n)=>{const x=byBinomial(C,n);return x===null?null:String(x)}),count:a.map((_,n)=>n<=18?byCount(S,n,400000):null),C}},
+  /* the equation of the derivation, for every n: the coefficient of x^n in denominator · F equals the coefficient in the numerator */
+  const q=denomPoly(C),Pn=[];for(const [e,k] of numTerms(C))Pn[C.A+e]=k;const eqOk=a.every((_,n)=>{let t=0n;for(let j=0;j<q.length&&j<=n;j++)t+=q[j]*a[n-j];return t===(Pn[n]||0n)});
+  return{eqOk,rec:a.map((_,n)=>{if(n<R.from)return null;let t=0n;for(const [j,v] of R.terms)t+=v*a[n-j];return String(t)}),formula:a.map((_,n)=>{if(!Fm.cls||n<Fm.n0)return null;const c=Fm.cls.length===1?Fm.cls[0]:Fm.cls[n%Fm.M],v=evalPoly(c.cf,n);return v.d===1n?String(v.n):'frac'}),fm:Fm.cls?Fm.cls.length:0,product:a.map(String),closed:b.map(String),binomial:a.map((_,n)=>{const x=byBinomial(C,n);return x===null?null:String(x)}),count:a.map((_,n)=>n<=18?byCount(S,n,400000):null),C}},
 render(){
   document.getElementById('conds').innerHTML=`<div class="qb gf"><div class="colhead"><h2>המשתנים</h2><span class="lab">תנאי לכל משתנה</span></div><div id="gfobjs" class="qlist"></div>
     <div class="qbox"><div class="addrow"><button class="addb" data-add="1">+ משתנה</button></div><p class="hint">המשתנים הם מספרים טבעיים, כולל אפס. מקדם בסכום גדול מאחת אומר שהמשתנה נספר כמה פעמים, כמו מטבע בשווי המקדם.</p></div></div>`;
