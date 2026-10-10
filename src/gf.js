@@ -40,6 +40,13 @@ const X=e=>e===0?'1':e===1?'x':`x<sup>${e}</sup>`,fr=(a,b)=>`<span class="gfr"><
 const one=e=>`1 − ${X(e)}`,pw=(base,k)=>k===1?`(${base})`:`(${base})<sup>${k}</sup>`;
 function openForm(s){/* first terms, dots, and the last term when there is one */
   const t=[];for(let j=0;j<Math.min(s.count,4);j++)t.push(X(s.e0+j*s.step));if(s.count===Infinity)t.push('…');else if(s.count>4){if(s.count>5)t.push('…');t.push(X(s.e0+(s.count-1)*s.step))}return `<span class="gbr">(</span>${t.join(' + ')}<span class="gbr">)</span>`}
+/* a factor as a series in sigma notation: the index runs over the values of the variable when they are consecutive */
+const sig=(from,to,term)=>`<span class="gsg"><span>${to}</span><span class="S">Σ</span><span>i = ${from}</span></span>${term}`;
+const xe=(k,add)=>{const e=(k===1?'i':k+'i')+(add?` + ${add}`:'');return `x<sup>${e}</sup>`};
+function sigmaForm(s){if(s.count===1)return X(s.e0);
+  return s.d===1?sig(s.first,s.count===Infinity?'∞':s.first+s.count-1,xe(s.c,0)):sig(0,s.count===Infinity?'∞':s.count-1,xe(s.step,s.e0))}
+/* the whole function as one series: the first terms that are not zero */
+function seriesForm(a,N){const t=[];for(let n=0;n<=N&&t.length<7;n++)if(a[n]!==0n)t.push((a[n]===1n?'':a[n])+(n===0?(a[n]===1n?'1':''):X(n)));return t.join(' + ')+' + …'}
 function factorClosed(s){const top=s.count===Infinity||s.count===1?X(s.e0):s.e0?`${X(s.e0)}(${one(s.step*s.count)})`:one(s.step*s.count);return s.count===1?top:fr(top,one(s.step))}
 function closedHtml(C){const top=[C.A?X(C.A):''].concat(C.num.map(Lx=>`(${one(Lx)})`)).filter(Boolean).join(' ')||'1',bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');return bot?fr(top,bot):top}
 function sumHtml(C){const T=numTerms(C),bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');if(T.length<2)return null;
@@ -68,6 +75,8 @@ function renderMain(){
   document.getElementById('main').innerHTML=`<div class="gfwrap">
     <div class="gfeq fx">${eq}</div>
     ${blk('הצורה הפתוחה','לכל משתנה סוגריים, ובהם חזקה אחת לכל ערך שהוא יכול לתרום לסכום.',`F(x) = ${S.map(openForm).join(' · ')}`)}
+    ${blk('כמכפלת טורים','אותם סוגריים בכתיב סיגמא.',`F(x) = ${S.map(s=>`<span class="gbr">(</span>${sigmaForm(s)}<span class="gbr">)</span>`).join(' · ')}`)}
+    ${blk('כטור אחד','המקדם של כל חזקה הוא מספר הפתרונות.',`F(x) = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>a<sub>n</sub>x<sup>n</sup> = ${seriesForm(a1,N)}`)}
     ${blk('הצורה הסגורה, גורם לכל משתנה','כל סוגריים הם טור הנדסי.',`F(x) = ${S.map(factorClosed).join(' · ')}`)}
     ${blk('הצורה הסגורה המפושטת, כמכפלה','',`F(x) = ${closedHtml(C)}`)}
     ${sum?blk('אותה פונקציה, כסכום','המונה נפתח לסכום של חזקות.',`F(x) = ${sum}`):''}
@@ -96,7 +105,7 @@ return{
 solve(list,N){const S=list.map(spec);if(!S.every(Boolean))return null;const C=closed(S),a=byProduct(S,N),b=byClosed(C,N);
   return{product:a.map(String),closed:b.map(String),binomial:a.map((_,n)=>{const x=byBinomial(C,n);return x===null?null:String(x)}),count:a.map((_,n)=>n<=18?byCount(S,n,400000):null),C}},
 render(){
-  document.getElementById('conds').innerHTML=`<div class="qb lg gf"><div class="colhead"><h2>המשתנים</h2><span class="lab">תנאי לכל משתנה</span></div><div id="gfobjs" class="qlist"></div>
+  document.getElementById('conds').innerHTML=`<div class="qb gf"><div class="colhead"><h2>המשתנים</h2><span class="lab">תנאי לכל משתנה</span></div><div id="gfobjs" class="qlist"></div>
     <div class="qbox"><div class="addrow"><button class="addb" data-add="1">+ משתנה</button></div><p class="hint">המשתנים הם מספרים טבעיים, כולל אפס. מקדם בסכום גדול מאחת אומר שהמשתנה נספר כמה פעמים, כמו מטבע בשווי המקדם.</p></div></div>`;
   renderAll()}};
 })();

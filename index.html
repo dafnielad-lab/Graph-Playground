@@ -155,7 +155,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .gfwrap{display:flex;flex-direction:column;gap:10px;min-width:0}.gfeq{direction:ltr;text-align:center;font-size:22px;font-weight:700;background:var(--surface);border-radius:12px;padding:10px}
 .gfb{background:var(--surface);border-radius:12px;padding:10px 14px;min-width:0}.gfb h3{margin:0 0 2px;font-size:14px}.gfm{direction:ltr;text-align:left;font-size:19px;line-height:2.5;white-space:normal;overflow-x:auto;padding:4px 0}
 .gfr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.35;margin:0 4px}.gfr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 6px 2px}.gfr>span:last-child{padding:2px 6px 0}
-.gbr{font-size:1.5em;font-weight:300;vertical-align:-.12em;color:var(--muted)}.gbn{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.25;font-size:.8em;padding:0 9px;margin:0 3px;border-inline:1.5px solid currentColor;border-radius:9px}
+.gsg{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 5px 0 2px;font-size:.62em}.gsg .S{font-size:2.5em;line-height:.95;font-weight:300}.gbr{font-size:1.5em;font-weight:300;vertical-align:-.12em;color:var(--muted)}.gbn{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.25;font-size:.8em;padding:0 9px;margin:0 3px;border-inline:1.5px solid currentColor;border-radius:9px}
 .gfn{font-weight:700}.gfset{direction:ltr;text-align:left;font-size:13px;color:var(--muted);padding-inline:4px}.gfcard{display:flex;flex-direction:column;gap:6px}.gfcard h3{margin:8px 0 0;font-size:14px}
 .gft{align-self:flex-start}.gfans{direction:ltr;text-align:left;font-size:22px}.gfans b{color:var(--hi)}.gfv{display:grid;grid-template-columns:16px 1fr;gap:0 6px;align-items:baseline;font-size:13px}.gfv .lab{grid-column:2;margin:0;text-align:start}.gfv b{width:14px;text-align:center}.gfv.ok b{color:var(--good)}.gfv.bad b{color:var(--bad)}
 .gfco{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px}.gfco span{display:flex;flex-direction:column;align-items:center;background:var(--bg);border-radius:6px;padding:2px 4px;min-width:0}.gfco i{font-style:normal;font-size:10.5px;color:var(--muted)}.gfco b{font-size:13px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.gfco .cur{outline:2px solid var(--hi)}
@@ -1253,7 +1253,7 @@ function renderSheet(){
   for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg${sub(by(o.in))}(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
   L.push(['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
-document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb:not(.lg)'))return;const o=O[i];
+document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb:not(.lg):not(.gf)'))return;const o=O[i];
   if(t.dataset.r){const q=parseNum(t.value);(o.tx=o.tx||{})[k]=t.value;(o.rg=o.rg||{})[k]=q.r;o[k]=q.v;t.setAttribute('aria-invalid',String(!!q.bad));
     if(o.t==='v'&&k==='d'){o.dm=q.r?'rng':'eq';o.d1=q.r?q.r[0]:null;o.d2=q.r?q.r[1]:null}}
   else o[k]=t.type==='checkbox'?t.checked:t.value;
@@ -1263,7 +1263,7 @@ document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.clos
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-ex]');if(t){const k=t.dataset.ex;if(EXPL.has(k))EXPL.delete(k);else EXPL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-min]');if(t){const k=t.dataset.min;if(COLG.has(k))COLG.delete(k);else COLG.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
-document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb:not(.lg)'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
+document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb:not(.lg):not(.gf)'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
   if(mo){const o=O[Number(mo.dataset.more)];o.more=!o.more}
   else if(d){removeObj(d.dataset.del)}
   else if(a){const t=a.dataset.add,last=graphs()[graphs().length-1].name;
@@ -1422,6 +1422,13 @@ const X=e=>e===0?'1':e===1?'x':`x<sup>${e}</sup>`,fr=(a,b)=>`<span class="gfr"><
 const one=e=>`1 − ${X(e)}`,pw=(base,k)=>k===1?`(${base})`:`(${base})<sup>${k}</sup>`;
 function openForm(s){/* first terms, dots, and the last term when there is one */
   const t=[];for(let j=0;j<Math.min(s.count,4);j++)t.push(X(s.e0+j*s.step));if(s.count===Infinity)t.push('…');else if(s.count>4){if(s.count>5)t.push('…');t.push(X(s.e0+(s.count-1)*s.step))}return `<span class="gbr">(</span>${t.join(' + ')}<span class="gbr">)</span>`}
+/* a factor as a series in sigma notation: the index runs over the values of the variable when they are consecutive */
+const sig=(from,to,term)=>`<span class="gsg"><span>${to}</span><span class="S">Σ</span><span>i = ${from}</span></span>${term}`;
+const xe=(k,add)=>{const e=(k===1?'i':k+'i')+(add?` + ${add}`:'');return `x<sup>${e}</sup>`};
+function sigmaForm(s){if(s.count===1)return X(s.e0);
+  return s.d===1?sig(s.first,s.count===Infinity?'∞':s.first+s.count-1,xe(s.c,0)):sig(0,s.count===Infinity?'∞':s.count-1,xe(s.step,s.e0))}
+/* the whole function as one series: the first terms that are not zero */
+function seriesForm(a,N){const t=[];for(let n=0;n<=N&&t.length<7;n++)if(a[n]!==0n)t.push((a[n]===1n?'':a[n])+(n===0?(a[n]===1n?'1':''):X(n)));return t.join(' + ')+' + …'}
 function factorClosed(s){const top=s.count===Infinity||s.count===1?X(s.e0):s.e0?`${X(s.e0)}(${one(s.step*s.count)})`:one(s.step*s.count);return s.count===1?top:fr(top,one(s.step))}
 function closedHtml(C){const top=[C.A?X(C.A):''].concat(C.num.map(Lx=>`(${one(Lx)})`)).filter(Boolean).join(' ')||'1',bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');return bot?fr(top,bot):top}
 function sumHtml(C){const T=numTerms(C),bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');if(T.length<2)return null;
@@ -1450,6 +1457,8 @@ function renderMain(){
   document.getElementById('main').innerHTML=`<div class="gfwrap">
     <div class="gfeq fx">${eq}</div>
     ${blk('הצורה הפתוחה','לכל משתנה סוגריים, ובהם חזקה אחת לכל ערך שהוא יכול לתרום לסכום.',`F(x) = ${S.map(openForm).join(' · ')}`)}
+    ${blk('כמכפלת טורים','אותם סוגריים בכתיב סיגמא.',`F(x) = ${S.map(s=>`<span class="gbr">(</span>${sigmaForm(s)}<span class="gbr">)</span>`).join(' · ')}`)}
+    ${blk('כטור אחד','המקדם של כל חזקה הוא מספר הפתרונות.',`F(x) = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>a<sub>n</sub>x<sup>n</sup> = ${seriesForm(a1,N)}`)}
     ${blk('הצורה הסגורה, גורם לכל משתנה','כל סוגריים הם טור הנדסי.',`F(x) = ${S.map(factorClosed).join(' · ')}`)}
     ${blk('הצורה הסגורה המפושטת, כמכפלה','',`F(x) = ${closedHtml(C)}`)}
     ${sum?blk('אותה פונקציה, כסכום','המונה נפתח לסכום של חזקות.',`F(x) = ${sum}`):''}
@@ -1478,7 +1487,7 @@ return{
 solve(list,N){const S=list.map(spec);if(!S.every(Boolean))return null;const C=closed(S),a=byProduct(S,N),b=byClosed(C,N);
   return{product:a.map(String),closed:b.map(String),binomial:a.map((_,n)=>{const x=byBinomial(C,n);return x===null?null:String(x)}),count:a.map((_,n)=>n<=18?byCount(S,n,400000):null),C}},
 render(){
-  document.getElementById('conds').innerHTML=`<div class="qb lg gf"><div class="colhead"><h2>המשתנים</h2><span class="lab">תנאי לכל משתנה</span></div><div id="gfobjs" class="qlist"></div>
+  document.getElementById('conds').innerHTML=`<div class="qb gf"><div class="colhead"><h2>המשתנים</h2><span class="lab">תנאי לכל משתנה</span></div><div id="gfobjs" class="qlist"></div>
     <div class="qbox"><div class="addrow"><button class="addb" data-add="1">+ משתנה</button></div><p class="hint">המשתנים הם מספרים טבעיים, כולל אפס. מקדם בסכום גדול מאחת אומר שהמשתנה נספר כמה פעמים, כמו מטבע בשווי המקדם.</p></div></div>`;
   renderAll()}};
 })();
