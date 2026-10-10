@@ -594,7 +594,8 @@ function derive(u,r,concl,name){
   if(f)lines.push([f,hasHeb(r)?rz(r):ref?`משפט ${ref}`:'כלל']);
   lines.push([`∴  ${concl}`,f?'הצבה':rz(r)]);return prf(lines)}
 function tell(g,k,i,d,one){const v=d.B[k][i],r=d.W[k][i],u=one?[...d.U[k][0],...d.U[k][1]].filter((x,n,A)=>A.findIndex(y=>y.g===x.g&&y.k===x.k&&y.i===x.i)===n):d.U[k][i]||[];
-  return derive(u,r,`${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}`,g.name)}
+  const cl=`${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}`;
+  return `<div class="qpb"><div class="qph"><span>${DEF[k]}: ${one?'הערך':i?'החסם העליון':'החסם התחתון'}</span><bdi dir="ltr" class="fx">${cl}</bdi></div>${derive(u,r,cl,g.name)}</div>`}
 function digestHtml(){
   const G=graphs(),open=!COL.has('Σ'),first=solveAll(),VR=new Map();
   for(const g of G){const d=first.get(g);if(d&&!d.bad)VR.set(g,virtFor(g,d))}
