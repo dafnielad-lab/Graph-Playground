@@ -6,12 +6,12 @@ await p.goto(process.env.PAGE||'file://'+path.resolve(__dirname,'..','index.html
 const res=await p.evaluate(()=>{const L=REL.lib,bad=[];let cnt=0,orders=0,equivs=0;
   const check=(M,id)=>{cnt++;const n=M.length,h=(i,j)=>M[i]>>j&1,P=L.analyze(M),I=L.ident(n),inv=L.inverse(M),sq=L.compose(M,M);
     const all=(f,k)=>{const idx=[];const go=d=>{if(d===k)return f(...idx);for(let i=0;i<n;i++){idx[d]=i;if(!go(d+1))return false}return true};return go(0)};
-    const T={refl:all(a=>h(a,a),1),irr:all(a=>!h(a,a),1),sym:all((a,c)=>!h(a,c)||h(c,a),2),anti:all((a,c)=>!(h(a,c)&&h(c,a))||a===c,2),trans:all((a,c,d)=>!(h(a,c)&&h(c,d))||h(a,d),3),comp:all((a,c)=>a===c||h(a,c)||h(c,a),2)};
+    const T={refl:all(a=>h(a,a),1),irr:all(a=>!h(a,a),1),sym:all((a,c)=>!h(a,c)||h(c,a),2),anti:all((a,c)=>!(h(a,c)&&h(c,a)),2),wanti:all((a,c)=>!(h(a,c)&&h(c,a))||a===c,2),trans:all((a,c,d)=>!(h(a,c)&&h(c,d))||h(a,d),3),comp:all((a,c)=>a===c||h(a,c)||h(c,a),2)};
     for(const k in T){if(P[k].ok!==T[k])bad.push([id,k,'property']);
       /* a witness must really be a counterexample: its pairs are in, its missing pairs are out */
       if(!P[k].ok){if(!P[k].inn.every(([i,j])=>h(i,j))||!P[k].out.every(([i,j])=>!h(i,j))||!(P[k].inn.length+P[k].out.length))bad.push([id,k,'witness'])}}
     /* the algebraic forms shown next to each property */
-    const A={refl:L.subset(I,M),irr:L.inter(M,I).every(r=>r===0),sym:L.same(inv,M),anti:L.subset(L.inter(M,inv),I),trans:L.subset(sq,M),comp:L.same(L.union(L.union(M,inv),I),L.full(n))};
+    const A={refl:L.subset(I,M),irr:L.inter(M,I).every(r=>r===0),sym:L.same(inv,M),anti:L.inter(M,inv).every(r=>r===0),wanti:L.subset(L.inter(M,inv),I),trans:L.subset(sq,M),comp:L.same(L.union(L.union(M,inv),I),L.full(n))};
     for(const k in A)if(A[k]!==T[k])bad.push([id,k,'algebraic form']);
     /* inverse twice, complement twice, composition by definition */
     if(!L.same(L.inverse(inv),M)||!L.same(L.compl(L.compl(M)),M))bad.push([id,'involution']);
@@ -22,7 +22,7 @@ const res=await p.evaluate(()=>{const L=REL.lib,bad=[];let cnt=0,orders=0,equivs
     { /* the classes of the equivalence closure are the connected components of the underlying graph */
       const C=L.classes(ec),seen=new Set();for(const c of C)for(const x of c){if(seen.has(x))bad.push([id,'classes overlap']);seen.add(x)}if(seen.size!==n)bad.push([id,'classes cover']);
       for(const c of C)for(const x of c)for(let y=0;y<n;y++)if(!!(ec[x]>>y&1)!==c.includes(y))bad.push([id,'class content'])}
-    if(P.equiv)equivs++;
+    if(P.equiv)equivs++;if(T.anti&&!T.irr)bad.push([id,'antisymmetric must imply anti-reflexive']);if(P.strict&&!T.anti)bad.push([id,'a strict order must be antisymmetric']);
     if(P.weak||P.strict){orders++;const O=L.order(M),S=M.map((r,i)=>r&~(1<<i)),cov=L.empty(n);for(const [a,c] of O.cover)cov[a]|=1<<c;
       if(!L.same(L.tclose(cov),S))bad.push([id,'Hasse: closure of the covering pairs is not the order']);
       for(const [a,c] of O.cover)for(let d=0;d<n;d++)if((S[a]>>d&1)&&(S[d]>>c&1))bad.push([id,'Hasse: a covering pair with an element between']);

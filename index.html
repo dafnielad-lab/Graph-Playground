@@ -1587,10 +1587,12 @@ function analyze(M){const n=M.length,P={};
   { let w=-1;for(let a=0;a<n&&w<0;a++)if(!has(M,a,a))w=a;set('refl',w<0,[],w<0?[]:[[w,w]])}
   { let w=-1;for(let a=0;a<n&&w<0;a++)if(has(M,a,a))w=a;set('irr',w<0,w<0?[]:[[w,w]])}
   { let w=null;for(let a=0;a<n&&!w;a++)for(let b=0;b<n&&!w;b++)if(has(M,a,b)&&!has(M,b,a))w=[a,b];set('sym',!w,w?[w]:[],w?[[w[1],w[0]]]:[])}
-  { let w=null;for(let a=0;a<n&&!w;a++)for(let b=a+1;b<n&&!w;b++)if(has(M,a,b)&&has(M,b,a))w=[a,b];set('anti',!w,w?[w,[w[1],w[0]]]:[])}
+  /* antisymmetric as in the course: (a, b) in the relation rules out (b, a), so no pair (a, a) either. The wide sense allows a = b */
+  { let w=null;for(let a=0;a<n&&!w;a++)for(let b=a;b<n&&!w;b++)if(has(M,a,b)&&has(M,b,a))w=[a,b];set('anti',!w,w?(w[0]===w[1]?[w]:[w,[w[1],w[0]]]):[])}
+  { let w=null;for(let a=0;a<n&&!w;a++)for(let b=a+1;b<n&&!w;b++)if(has(M,a,b)&&has(M,b,a))w=[a,b];set('wanti',!w,w?[w,[w[1],w[0]]]:[])}
   { let w=null;for(let a=0;a<n&&!w;a++)for(let b=0;b<n&&!w;b++)if(has(M,a,b))for(let c=0;c<n&&!w;c++)if(has(M,b,c)&&!has(M,a,c))w=[a,b,c];set('trans',!w,w?[[w[0],w[1]],[w[1],w[2]]]:[],w?[[w[0],w[2]]]:[])}
   { let w=null;for(let a=0;a<n&&!w;a++)for(let b=a+1;b<n&&!w;b++)if(!has(M,a,b)&&!has(M,b,a))w=[a,b];set('comp',!w,[],w?[w,[w[1],w[0]]]:[])}
-  P.equiv=P.refl.ok&&P.sym.ok&&P.trans.ok;P.weak=P.refl.ok&&P.anti.ok&&P.trans.ok;P.strict=P.irr.ok&&P.trans.ok;P.total=(P.weak||P.strict)&&P.comp.ok;return P}
+  P.equiv=P.refl.ok&&P.sym.ok&&P.trans.ok;P.weak=P.refl.ok&&P.wanti.ok&&P.trans.ok;P.strict=P.irr.ok&&P.trans.ok;P.total=(P.weak||P.strict)&&P.comp.ok;return P}
 /* the classes of an equivalence relation, in order of their first element */
 function classes(M){const n=M.length,seen=new Array(n).fill(false),C=[];for(let a=0;a<n;a++)if(!seen[a]){const c=[];for(let b=0;b<n;b++)if(has(M,a,b)){c.push(b);seen[b]=true}C.push(c)}return C}
 /* an order, weak or strict: its covering pairs, levels and special elements. (a, b) in the relation reads "a is below b" */
@@ -1671,7 +1673,7 @@ function hasseSvg(O){const n=A.length,H=Math.max(...O.lev)+1,by=Array.from({leng
 
 /* ---------- text ---------- */
 const PROPS=[['refl','רפלקסיבי','∀a ∈ A:  (a, a) ∈ X','I ⊆ X'],['irr','אנטי-רפלקסיבי','∀a ∈ A:  (a, a) ∉ X','X ∩ I = ∅'],['sym','סימטרי','(a, b) ∈ X  ⇒  (b, a) ∈ X','X⁻¹ = X'],
-  ['anti','אנטי-סימטרי','(a, b) ∈ X,  (b, a) ∈ X  ⇒  a = b','X ∩ X⁻¹ ⊆ I'],['trans','טרנזיטיבי','(a, b) ∈ X,  (b, c) ∈ X  ⇒  (a, c) ∈ X','X² ⊆ X'],['comp','כל שני איברים שונים ניתנים להשוואה','a ≠ b  ⇒  (a, b) ∈ X  or  (b, a) ∈ X','X ∪ X⁻¹ ∪ I = A × A']];
+  ['anti','אנטי-סימטרי','(a, b) ∈ X  ⇒  (b, a) ∉ X','X ∩ X⁻¹ = ∅'],['wanti','אנטי-סימטרי במובן הרחב','(a, b) ∈ X,  (b, a) ∈ X  ⇒  a = b','X ∩ X⁻¹ ⊆ I'],['trans','טרנזיטיבי','(a, b) ∈ X,  (b, c) ∈ X  ⇒  (a, c) ∈ X','X² ⊆ X'],['comp','כל שני איברים שונים ניתנים להשוואה','a ≠ b  ⇒  (a, b) ∈ X  or  (b, a) ∈ X','X ∪ X⁻¹ ∪ I = A × A']];
 const witness=(k,p,s)=>p.ok?'':[...p.inn.map(q=>`${pr(q)} ∈ ${s}`),...p.out.map(q=>`${pr(q)} ∉ ${s}`)].join(',   ');
 const setOf=a=>`{${a.map(i=>esc(A[i].l)).join(', ')}}`;
 function renderSide(){const two=!!S,ok=Object.entries(PRE).filter(([k,v])=>v[1]());
@@ -1704,7 +1706,7 @@ function renderMain(){const v=cur(),M=v.f(),P=analyze(M),s=v.s,w=HL&&P[HL]&&!P[H
   document.getElementById('card').innerHTML=`<div class="gfcard rl"><div class="cardhead"><h2>תכונות היחס</h2></div><div class="rlkind">${fx(esc(s))} <span>${kind}</span></div>
     ${PROPS.map(([k,name,df,alg])=>{const p=P[k],on=HL===k&&!p.ok;return `<div class="rlp ${p.ok?'ok':'no'}${on?' cur':''}"><div class="rlph"><b>${p.ok?'✓':'✗'}</b><span>${name}</span>${p.ok?'':`<button class="qexb" data-rh="${k}" aria-pressed="${on}">${on?'הסתר':'הראה'}</button>`}</div>
       <div class="rlpd">${fx(X(df))}</div><div class="rlpd alg">${fx(X(alg))}</div>${p.ok?'':`<div class="rlpw"><span>דוגמה נגדית</span>${fx(witness(k,p,esc(s)))}</div>`}</div>`}).join('')}
-    ${!P.equiv?miss(['refl','sym','trans'],'יחס שקילות'):''}${!P.weak&&!P.strict?miss(['refl','anti','trans'],'סדר חלקי רפלקסיבי')+miss(['irr','trans'],'סדר חלקי אנטי-רפלקסיבי'):''}
+    ${!P.equiv?miss(['refl','sym','trans'],'יחס שקילות'):''}${!P.weak&&!P.strict?miss(['refl','wanti','trans'],'סדר חלקי רפלקסיבי')+miss(['irr','trans'],'סדר חלקי אנטי-רפלקסיבי'):''}
     <p class="hint">${fx('I')} הוא יחס הזהות על A. בדוגמה נגדית, ״הראה״ מסמן את הזוגות בגרף ובמטריצה: קו מלא לזוג שביחס, קו מקווקו לזוג שחסר.</p></div>`}
 function renderAll(){renderSide();renderMain()}
 const toggle=(M,i,j)=>{M[i]^=1<<j};
