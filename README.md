@@ -1,7 +1,7 @@
 # The Discrete Playground
 
 A playground for discrete mathematics: describe a situation without programming and see what follows from it.
-The first part, and the only one built so far, is the **Graph Playground** (מגרש גרפים). Parts for relations, cardinalities, combinatorics, recurrences, generating functions and logic are ideas, not code.
+Two parts exist: the **Graph Playground** (מגרש גרפים) and a first version of the **Logic Playground** (מגרש לוגיקה): propositions are built from menus, one joint truth table is shown, and marking propositions as given strikes the rows that contradict them, so what follows necessarily can be read off. Parts for sets and cardinalities, relations, combinatorics, recurrences and generating functions are ideas, not code.
 
 ## Graph Playground · מגרש גרפים
 

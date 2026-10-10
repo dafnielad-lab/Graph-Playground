@@ -746,7 +746,7 @@ function renderSheet(){
   for(const o of O){if(o.t==='v'&&o.q!=='all')L.push([`deg${sub(by(o.in))}(${o.name})`,`הדרגה של ${o.name} ב־${o.in}${o.q==='one'&&o.w?(o.w==='max'?', הגבוהה ביותר':', הנמוכה ביותר'):''}`,dEx(o)!==null?dEx(o):dLo(o)!==null||dHi(o)!==null?`${dLo(o)??'?'} … ${dHi(o)??'?'}`:null]);if(o.t==='s')L.push([`|${o.name}|`,`מספר הצמתים ב־${o.name}`,o.k])}
   L.push(['Γ(X)','קבוצת השכנים של צומתי X',null]);
   document.getElementById('qlegend').innerHTML=L.map(([k,d,v])=>`<div class="${v!==null?'given':''}"><dt class="fx">${k}${v!==null?' = '+v:''}</dt><dd>${d}</dd></div>`).join('')}
-document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb'))return;const o=O[i];
+document.addEventListener('input',ev=>{const t=ev.target,i=t.dataset.i,k=t.dataset.k;if(i===undefined||!t.closest('.qb:not(.lg)'))return;const o=O[i];
   if(t.dataset.r){const q=parseNum(t.value);(o.tx=o.tx||{})[k]=t.value;(o.rg=o.rg||{})[k]=q.r;o[k]=q.v;t.setAttribute('aria-invalid',String(!!q.bad));
     if(o.t==='v'&&k==='d'){o.dm=q.r?'rng':'eq';o.d1=q.r?q.r[0]:null;o.d2=q.r?q.r[1]:null}}
   else o[k]=t.type==='checkbox'?t.checked:t.value;
@@ -756,7 +756,7 @@ document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.clos
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-ex]');if(t){const k=t.dataset.ex;if(EXPL.has(k))EXPL.delete(k);else EXPL.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-min]');if(t){const k=t.dataset.min;if(COLG.has(k))COLG.delete(k);else COLG.add(k);renderSheet()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest&&ev.target.closest('.qsheet [data-tp]');if(t){const k=t.dataset.tp;if(COL.has(k))COL.delete(k);else COL.add(k);renderSheet()}});
-document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
+document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.qb:not(.lg)'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]'),mo=ev.target.closest('[data-more]');
   if(mo){const o=O[Number(mo.dataset.more)];o.more=!o.more}
   else if(d){removeObj(d.dataset.del)}
   else if(a){const t=a.dataset.add,last=graphs()[graphs().length-1].name;
