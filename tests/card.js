@@ -63,6 +63,27 @@ const res=await p.evaluate(()=>{const L=CARD.lib,bad=[];let laws=0,counts=0,know
   wantR([at('A','N'),at('B','pow',{a:'A'}),at('C','pfin',{a:'A'}),at('D','dif',{a:'B',b:'C',rel:'sup'})],Cc,'the infinite subsets of N');wantR([at('A','N'),at('B','pow',{a:'A'}),at('C','pfin',{a:'A'}),at('D','dif',{a:'B',b:'C'})],Cc,'the same, with nothing said about the relation');
   wantR([at('A','R'),at('B','Q'),at('C','sym',{a:'A',b:'B'})],Cc,'R △ Q');wantR([at('A','I'),at('B','Z'),at('C','int',{a:'A',b:'B'})],'0','(0,1) ∩ Z');wantR([at('A','I'),at('B','N'),at('C','uni',{a:'A',b:'B'})],Cc,'(0,1) ∪ N');
   wantR([at('A','N'),at('B','seq',{a:'A'}),at('C','star',{a:'A'}),at('D','uni',{a:'B',b:'C'})],Cc,'infinite and finite sequences together');wantR([at('A','fin',{n:5}),at('B','fin',{n:3}),at('C','dif',{a:'A',b:'B'})],'2','{1..5} ∖ {1..3}');
-  return{bad:bad.slice(0,30),total:bad.length,laws,counts,known,shown,pairsN,tight,nested}});
+  /* ---- infinite sequences with a condition ---- */
+  let cons=0;
+  { const srcs={e:[at('A','fin',{n:0})],one:[at('A','fin',{n:1})],two:[at('A','fin',{n:2})],three:[at('A','fin',{n:3})],N:[at('A','N')],Z:[at('A','Z')],Q:[at('A','Q')],R:[at('A','R')],I:[at('A','I')],PR:[at('A0','R'),at('A','pow',{a:'A0'})]};
+    const get=(src,cond,n)=>{const r=L.solve([...srcs[src],at('S','cond',{a:'A',cond,n})]),x=r[r.length-1];return x.bad?null:x},val=(src,cond,n)=>{const x=get(src,cond,n);return x&&x.c?L.fmt(x.c):x?'range':'bad'};
+    /* 1. relations that must hold between the conditions, whatever the set: parts add up to the whole, a narrower condition is not larger */
+    for(const src in srcs){const c=(cond,n)=>{const x=get(src,cond,n);return x&&x.c},all=L.solve([...srcs[src],at('S','seq',{a:'A'})]).pop().c,k=L.solve(srcs[src]).pop().c;
+      const eqc=(x,y,w)=>{cons++;if(!x||!y||!L.same(x,y))bad.push(['conditions: '+w,src,x&&L.fmt(x),y&&L.fmt(y)])},lec=(x,y,w)=>{cons++;if(!x||!y||L.cmp(x,y)>0)bad.push(['conditions: '+w,src,x&&L.fmt(x),y&&L.fmt(y)])};
+      eqc(L.add(c('never'),c('once')),all,'never + at least once = all');eqc(L.add(c('fintimes'),c('inf')),all,'finitely often + infinitely often = all');lec(c('never'),c('fintimes'),'never ≤ finitely often');lec(c('inf'),c('once'),'infinitely often ≤ at least once');
+      eqc(c('const'),k,'constant = the set');eqc(c('per',1),c('const'),'period 1 = constant');eqc(c('per',2),L.mul(k,k),'period 2 = pairs');lec(c('const'),c('per',3),'constant ≤ period 3');lec(c('per',3),c('anyper'),'period 3 ≤ periodic');lec(c('anyper'),all,'periodic ≤ all');
+      lec(c('const'),c('evconst'),'constant ≤ eventually constant');lec(c('finsup'),c('evconst'),'finite support ≤ eventually constant');lec(c('evconst'),all,'eventually constant ≤ all');lec(c('inj'),all,'one-to-one ≤ all');lec(c('surj'),all,'onto ≤ all');
+      for(const f of ['fixk','fixeven','pairs'])eqc(c(f,2),all,f+' = all');
+      if(get(src,'nd')){lec(c('si'),c('nd'),'increasing ≤ non-decreasing');lec(c('sd'),c('ni'),'decreasing ≤ non-increasing');lec(c('si'),c('inj'),'increasing ≤ one-to-one');lec(c('sd'),c('inj'),'decreasing ≤ one-to-one');lec(c('const'),c('nd'),'constant ≤ non-decreasing');lec(c('const'),c('ni'),'constant ≤ non-increasing')}}
+    /* 2. values written down by hand, independently of the code */
+    const CCC='2<sup>2<sup>ℵ₀</sup></sup>',T={two:{evconst:A0,anyper:A0,finsup:A0,never:'1',fintimes:A0,inf:Cc,once:Cc,inj:'0',surj:Cc,nd:A0,ni:A0,si:'0',sd:'0',const:'2'},
+      N:{const:A0,anyper:A0,evconst:A0,finsup:A0,inj:Cc,surj:Cc,nd:Cc,si:Cc,ni:A0,sd:'0',never:Cc,fintimes:Cc,inf:Cc,once:Cc},R:{const:Cc,anyper:Cc,evconst:Cc,finsup:Cc,inj:Cc,surj:'0',nd:Cc,si:Cc,ni:Cc,sd:Cc,never:Cc},
+      Z:{ni:Cc,sd:Cc,nd:Cc,si:Cc,surj:Cc},Q:{si:Cc,sd:Cc,evconst:A0},I:{sd:Cc,si:Cc,nd:Cc},PR:{const:CCC,evconst:CCC,anyper:CCC,inj:CCC,surj:'0',nd:'bad',never:CCC},
+      one:{const:'1',anyper:'1',evconst:'1',finsup:'1',never:'0',once:'1',inf:'1',fintimes:'0',inj:'0',surj:'1',nd:'1',ni:'1',si:'0',sd:'0'},three:{never:Cc,fintimes:Cc,surj:Cc,nd:A0,evconst:A0,inj:'0'},
+      e:{const:'0',anyper:'0',evconst:'0',finsup:'0',never:'0',once:'0',inf:'0',fintimes:'0',inj:'0',surj:'0',nd:'0',si:'0'}};
+    for(const src in T)for(const cond in T[src]){known++;const g=val(src,cond,2);if(g!==T[src][cond])bad.push(['condition value',src,cond,g,T[src][cond]])}
+    /* 3. the steps end at the value */
+    for(const src in srcs)for(const cond in L.CONDS){const x=get(src,cond,3);if(!x||!x.c)continue;shown++;const last=x.steps[x.steps.length-1][0];if(!last.endsWith(L.fmt(x.c)))bad.push(['condition steps do not end at the value',src,cond,last])}}
+  return{bad:bad.slice(0,30),total:bad.length,laws,counts,known,shown,pairsN,tight,nested,cons}});
 console.log(JSON.stringify(res),'page errors',errs);
 await b.close();process.exit(res.total||errs.length?1:0)})();

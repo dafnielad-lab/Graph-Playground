@@ -1919,6 +1919,7 @@ const KINDS={fin:{l:'קבוצה סופית בגודל נתון',n:true,sym:(a,b,
   fun:{l:'כל הפונקציות מקבוצה לקבוצה',src:2,lab:['מ־','אל'],sym:(a,b)=>`${a} → ${b}`},
   seq:{l:'סדרות אינסופיות של איברי הקבוצה',src:1,sym:a=>`ℕ → ${a}`},tup:{l:'סדרות באורך נתון',src:1,n:true,sym:(a,b,n)=>sup(par(a),n)},
   uni:{l:'איחוד',src:2,rel:true,sym:(a,b)=>`${a} ∪ ${b}`},int:{l:'חיתוך',src:2,rel:true,sym:(a,b)=>`${a} ∩ ${b}`},dif:{l:'הפרש',src:2,rel:true,lab:['מתוך','מסירים את'],sym:(a,b)=>`${a} ∖ ${b}`},sym:{l:'הפרש סימטרי',src:2,rel:true,sym:(a,b)=>`${a} △ ${b}`},
+  cond:{l:'סדרות אינסופיות שמקיימות תנאי',src:1,cond:true,sym:(a,b,n,s)=>`{ a: ℕ → ${a} | ${(CONDS[s&&s.cond]||CONDS.const).t(Math.max(1,n))} }`},
   star:{l:'כל הסדרות הסופיות',src:1,sym:a=>sup(par(a),'*')},pow:{l:'קבוצת החזקה',src:1,sym:a=>`P(${a})`},pfin:{l:'כל התת־קבוצות הסופיות',src:1,sym:a=>`P<sub>fin</sub>(${a})`}};
 const nOf=s=>Math.max(0,Math.min(1000000,Math.floor(Number(s.n))||0));
 /* ---------- the cardinality of a set, with the steps that lead to it. Each step is a formula and the reason for it ---------- */
@@ -1993,22 +1994,74 @@ function ranged(s,A,Bq,list,ia,ib){const K=KINDS[s.kind],X=`|${s.name}|`,ends=q=
   if(s.kind==='sym'&&rel===''&&A&&Bq&&!lt(A.hi,Bq.lo)&&!lt(Bq.hi,A.lo))lo=F(0);
   return{lo,hi,steps:[[same(lo,hi)?`${X} = ${fmt(lo)}`:`${fmt(lo)} ≤ ${X} ≤ ${fmt(hi)}`,'עוצמת אחד המקורות ידועה רק כטווח. מציבים את קצות הטווחים: הקטנים ביותר לחסם התחתון, והגדולים ביותר לעליון']]}}
 
+/* ---------- infinite sequences cut out by a condition. Each condition from a closed list comes with its structure:
+   what the set is equivalent to, or what it lies between. The cardinality then follows as before ---------- */
+const ORD=new Set(['fin','N','Z','Q','R','I']);
+const CONDS={const:{l:'קבועה',t:()=>'aₙ = a₁'},per:{l:'מחזורית, עם מחזור נתון',p:'מחזור',t:p=>`aₙ₊${p} = aₙ`.replace(/₊(\d+)/,(m,d)=>'₊'+d.split('').map(x=>'₀₁₂₃₄₅₆₇₈₉'[x]).join(''))},anyper:{l:'מחזורית, במחזור כלשהו',t:()=>'∃p ∀n: aₙ₊ₚ = aₙ'},
+  evconst:{l:'קבועה ממקום מסוים',t:()=>'∃m ∀n ≥ m: aₙ = aₘ'},finsup:{l:'שווה לאיבר נתון c, פרט למספר סופי של מקומות',t:()=>'∃m ∀n ≥ m: aₙ = c'},
+  fixk:{l:'ערכים נתונים במספר סופי של מקומות',p:'מקומות',t:p=>`a given at ${p} places`},fixeven:{l:'ערכים נתונים בכל המקומות הזוגיים',t:()=>'a₂ₙ given'},pairs:{l:'כל איבר במקום זוגי שווה לקודמו',t:()=>'a₂ₙ = a₂ₙ₋₁'},
+  never:{l:'איבר נתון c אינו מופיע',t:()=>'∀n: aₙ ≠ c'},once:{l:'איבר נתון c מופיע לפחות פעם אחת',t:()=>'∃n: aₙ = c'},inf:{l:'איבר נתון c מופיע אינסוף פעמים',t:()=>'aₙ = c for infinitely many n'},fintimes:{l:'איבר נתון c מופיע רק מספר סופי של פעמים',t:()=>'aₙ = c for finitely many n'},
+  inj:{l:'חד-חד-ערכית: אין איבר שחוזר',t:()=>'a one-to-one'},surj:{l:'על: כל איבר של הקבוצה מופיע',t:()=>'a onto'},
+  nd:{l:'לא יורדת',ord:true,t:()=>'aₙ ≤ aₙ₊₁'},si:{l:'עולה ממש',ord:true,t:()=>'aₙ < aₙ₊₁'},ni:{l:'לא עולה',ord:true,t:()=>'aₙ ≥ aₙ₊₁'},sd:{l:'יורדת ממש',ord:true,t:()=>'aₙ > aₙ₊₁'}};
+function condOf(s,k,srcKind,nm,na){const X=`|${nm}|`,q=CONDS[s.cond]||CONDS.const,key=CONDS[s.cond]?s.cond:'const',p=Math.max(1,nOf(s)),fk=fmt(k),all=pow(k,ALEPH),S=[],big=fin(k)&&!zero(k)&&!one(k);
+  const ex=(c,f,w)=>{S.push([f,w]);return{lo:c,hi:c,steps:S}},CB=c=>ex(c,`${X} = ${fmt(c)}`,'קנטור–ברנשטיין: חסם תחתון וחסם עליון שווים'),seqA=`ℕ → ${na}`;
+  if(q.ord&&!ORD.has(srcKind))return{bad:'התנאי משווה בין איברים, ולכן הקבוצה צריכה להיות קבוצת מספרים: סופית, הטבעיים, השלמים, הרציונליים, הממשיים או הקטע'};
+  if(zero(k))return ex(F(0),`${X} = 0`,`אין אף סדרה אינסופית של איברי קבוצה ריקה`);
+  /* the cardinality of "a finite stretch of free choices, then no more choices": 1, ℵ0 or κ */
+  const tail=(parts,low,lowWhy)=>{S.push([`${nm} = ∪ ${nm}ₘ,   m = 1, 2, 3, …,   ${nm}ₘ ≅ ${parts}`,low[0]]);if(one(k))return ex(F(1),`${X} = 1`,'מעל קבוצה של איבר אחד יש סדרה אחת בלבד');
+    if(fin(k)){S.push([`ℵ₀ ≤ ${X}`,lowWhy]);S.push([`${X} ≤ ℵ₀`,'איחוד בן־מנייה של קבוצות סופיות']);return CB(ALEPH)}
+    S.push([`${fk} ≤ ${X}`,'הסדרות הקבועות מקיימות את התנאי, ויש אחת לכל איבר']);S.push([`${X} ≤ ℵ₀ · ${fk} = ${fk}`,`איחוד בן־מנייה של קבוצות שכל אחת מהן בעוצמה ${fk}`]);return CB(k)};
+  const free=(why)=>{S.push([`${nm} ≅ ${seqA}`,why]);S.push([`${X} = ${sup(par(fk),'ℵ₀')}`,'קבוצות שקולות הן באותה עוצמה']);S.push(...powSteps(k,ALEPH));return{lo:all,hi:all,steps:S}};
+  const between=(lowWhy)=>{S.push([`${fmt(all)} ≤ ${X}`,lowWhy]);S.push([`${X} ≤ |${seqA}| = ${fmt(all)}`,'הקבוצה מוכלת בקבוצת כל הסדרות']);return CB(all)};
+  if(key==='const'){S.push([`${nm} ≅ ${na}`,'סדרה קבועה נקבעת על ידי האיבר שלה, ולכל איבר יש סדרה כזאת']);return ex(k,`${X} = |${na}| = ${fk}`,'קבוצות שקולות הן באותה עוצמה')}
+  if(key==='per'){const c=pow(k,F(p));S.push([`${nm} ≅ ${sup(par(na),p)}`,`סדרה עם מחזור ${p} נקבעת על ידי ${p} האיברים הראשונים שלה, וכל בחירה שלהם נותנת סדרה כזאת`]);S.push([`${X} = ${sup(par(fk),p)}`,'קבוצות שקולות הן באותה עוצמה']);S.push(...powSteps(k,F(p)));return{lo:c,hi:c,steps:S}}
+  if(key==='anyper')return tail(sup(par(na),'m'),['לפי אורך המחזור m: סדרה עם מחזור m נקבעת על ידי m האיברים הראשונים'],'לכל m יש סדרה שהמחזור הקצר ביותר שלה הוא m: בלוק באורך m שבו איבר אחד פעם אחת ואחריו רק איבר אחר, וחוזר חלילה');
+  if(key==='evconst')return tail(`${sup(par(na),'m')}`,['לפי המקום m שממנו הסדרה קבועה: היא נקבעת על ידי m האיברים הראשונים'],'לכל m יש סדרה שנעשית קבועה בדיוק במקום m: איבר אחד בכל המקומות שלפני m, ואיבר אחר ממנו והלאה');
+  if(key==='finsup')return tail(`${sup(par(na),'m')}`,['לפי המקום m שממנו כל האיברים שווים ל־c: הסדרה נקבעת על ידי האיברים שלפניו'],'לכל m יש סדרה ששונה מ־c בדיוק במקום m');
+  if(key==='fixk')return free(`${p} המקומות הנתונים אינם בחירה. נשארים ℵ₀ מקומות חופשיים, והסדרה נקבעת על ידי האיברים שבהם`);
+  if(key==='fixeven')return free('המקומות הזוגיים אינם בחירה. המקומות האי־זוגיים חופשיים, ויש ℵ₀ כאלה');
+  if(key==='pairs')return free('האיברים במקומות האי־זוגיים חופשיים, והם קובעים את השאר');
+  if(key==='never'){const m=fin(k)?(k.n===null?F(null):F(k.n-1n)):k,c=pow(m,ALEPH);S.push([`${nm} = ℕ → (${na} ∖ {c})`,'אלה בדיוק הסדרות של שאר האיברים']);S.push([`|${na} ∖ {c}| = ${fmt(m)}`,fin(k)?'איבר אחד פחות':'הסרת איבר אחד אינה משנה עוצמה אינסופית']);S.push([`${X} = ${sup(par(fmt(m)),'ℵ₀')}`,'סדרה אינסופית היא פונקציה מהטבעיים']);S.push(...powSteps(m,ALEPH));return{lo:c,hi:c,steps:S}}
+  if(key==='once'){if(one(k))return ex(F(1),`${X} = 1`,'הסדרה היחידה מכילה את c');return between('סדרה שמתחילה ב־c וממשיכה באופן חופשי מקיימת את התנאי, ויש כאלה כמספר כל הסדרות')}
+  if(key==='inf'){if(one(k))return ex(F(1),`${X} = 1`,'הסדרה היחידה היא c בכל מקום');return between('c בכל המקומות הזוגיים, והמקומות האי־זוגיים חופשיים')}
+  if(key==='fintimes'){if(one(k))return ex(F(0),`${X} = 0`,'הסדרה היחידה היא c בכל מקום, אינסוף פעמים');
+    if(fin(k)&&k.n===2n){S.push([`${nm} = { a | ∃m ∀n ≥ m: aₙ = d },   ${na} = {c, d}`,'כש־c מופיע מספר סופי של פעמים, ממקום מסוים מופיע רק האיבר השני']);S.push([`ℵ₀ ≤ ${X}`,'לכל m יש סדרה שבה c מופיע בדיוק במקום m']);S.push([`${X} ≤ ℵ₀`,'איחוד בן־מנייה, לפי המקום האחרון של c, של קבוצות סופיות']);return CB(ALEPH)}
+    S.push([`ℕ → (${na} ∖ {c})  ⊆  ${nm}`,'סדרה שבה c אינו מופיע כלל מקיימת את התנאי']);S.push([`|ℕ → (${na} ∖ {c})| = ${fmt(all)}`,fin(k)?'אחרי הסרת c נשארים לפחות שני איברים, והעוצמה היא עוצמת הרצף':'הסרת איבר אחד אינה משנה עוצמה אינסופית']);return between('לפי שתי השורות הקודמות')}
+  if(key==='inj'){if(fin(k))return ex(F(0),`${X} = 0`,'עקרון שובך היונים: בסדרה אינסופית של איברי קבוצה סופית יש איבר שחוזר');
+    S.push([`|${na} × ℕ| = ${fk} · ℵ₀ = ${fk}`,`ולכן מספיק לספור סדרות חד-חד-ערכיות של איברי ${na} × ℕ`]);return between(`לכל סדרה f של איברי ${na}, הסדרה n ↦ (f(n), n) חד-חד-ערכית, וסדרות שונות נותנות סדרות שונות`)}
+  if(key==='surj'){if(one(k))return ex(F(1),`${X} = 1`,'הסדרה היחידה מכסה את האיבר היחיד');if(!fin(k)&&k.k>=1)return ex(F(0),`${X} = 0`,'בסדרה מופיעים לכל היותר ℵ₀ איברים שונים, והקבוצה גדולה מזה');
+    return between(fin(k)?`${fk} המקומות הראשונים עוברים על כל האיברים, והשאר חופשיים`:'במקומות האי־זוגיים עוברים על כל האיברים, כי הקבוצה בת־מנייה, והמקומות הזוגיים חופשיים')}
+  /* monotone sequences of numbers */
+  const up=key==='nd'||key==='si',strict=key==='si'||key==='sd';
+  if(srcKind==='fin'){if(strict)return ex(F(0),`${X} = 0`,'סדרה מונוטונית ממש היא חד-חד-ערכית, ובקבוצה סופית אין מספיק איברים');if(one(k))return ex(F(1),`${X} = 1`,'יש סדרה אחת בלבד');
+    S.push([`${nm} ⊆ { a | ∃m ∀n ≥ m: aₙ = aₘ }`,'מעל קבוצה סופית הסדרה משתנה מספר סופי של פעמים, ולכן היא קבועה ממקום מסוים']);S.push([`${X} ≤ ℵ₀`,'הסדרות הקבועות ממקום מסוים מעל קבוצה סופית הן בנות־מנייה']);S.push([`ℵ₀ ≤ ${X}`,'לכל m יש סדרה מונוטונית שמשתנה בדיוק במקום m']);return CB(ALEPH)}
+  if(srcKind==='N'&&!up){if(strict)return ex(F(0),`${X} = 0`,'אין סדרה אינסופית יורדת ממש של טבעיים: מתחת לכל טבעי יש מספר סופי של טבעיים');
+    S.push([`${nm} ⊆ { a | ∃m ∀n ≥ m: aₙ = aₘ }`,'סדרה לא עולה של טבעיים יורדת מספר סופי של פעמים, ולכן היא קבועה ממקום מסוים']);S.push([`${X} ≤ ℵ₀`,'הסדרות של טבעיים שקבועות ממקום מסוים הן בנות־מנייה']);S.push([`ℵ₀ ≤ ${X}`,'הסדרות הקבועות מקיימות את התנאי']);return CB(ALEPH)}
+  const C1=B(1);
+  if(srcKind==='N'){if(strict){S.push([`${nm} ≅ { T ⊆ ℕ | T infinite }`,'סדרה עולה ממש נקבעת על ידי קבוצת האיברים שלה, וכל קבוצה אינסופית של טבעיים מסודרת כסדרה עולה אחת']);S.push([`|P(ℕ)| = ${fmt(C1)},   |P<sub>fin</sub>(ℕ)| = ℵ₀`,'הקבוצות האינסופיות הן כל התת־קבוצות פרט לסופיות']);return ex(C1,`${X} = ${fmt(C1)}`,'הסרת קבוצה קטנה מקבוצה אינסופית אינה משנה את העוצמה')}
+    S.push([`${nm} ≅ ℕ × (ℕ → ℕ)`,'סדרה לא יורדת נקבעת על ידי האיבר הראשון ועל ידי סדרת ההפרשים, וכל בחירה כזאת מתאימה']);return ex(C1,`${X} = ℵ₀ · ${sup('ℵ₀','ℵ₀')} = ℵ₀ · ${fmt(C1)} = ${fmt(C1)}`,maxWhy)}
+  S.push([`${fmt(C1)} ≤ ${X}`,`ב־${na} יש סדרה אינסופית ${up?'עולה':'יורדת'} ממש b₁, b₂, …. כל סדרה עולה ממש של טבעיים n₁ < n₂ < … נותנת תת־סדרה שונה שלה, ויש ${fmt(C1)} כאלה`]);S.push([`${X} ≤ |${seqA}| = ${fmt(all)}`,'הקבוצה מוכלת בקבוצת כל הסדרות']);return CB(C1)}
+
 /* ---------- state ---------- */
-let SETS=[{name:'A',kind:'N'},{name:'B',kind:'fin',n:2},{name:'C',kind:'fun',a:'A',b:'B'},{name:'D',kind:'R'},{name:'E',kind:'seq',a:'D'},{name:'F',kind:'pow',a:'D'},{name:'G',kind:'star',a:'A'},{name:'H',kind:'Q'},{name:'J',kind:'dif',a:'D',b:'H'},{name:'K',kind:'int',a:'C',b:'E'}],CUR=8;
+let SETS=[{name:'A',kind:'N'},{name:'B',kind:'fin',n:2},{name:'C',kind:'fun',a:'A',b:'B'},{name:'D',kind:'R'},{name:'E',kind:'seq',a:'D'},{name:'F',kind:'pow',a:'D'},{name:'G',kind:'star',a:'A'},{name:'H',kind:'Q'},{name:'J',kind:'dif',a:'D',b:'H'},{name:'K',kind:'int',a:'C',b:'E'},{name:'L',kind:'cond',a:'A',cond:'si'},{name:'M',kind:'cond',a:'B',cond:'evconst'}],CUR=10;
 /* every set in order: its cardinality, its steps, and its full expression in terms of the atoms. A set may use only sets listed before it */
 function solve(list){const out=[];list.forEach((s,i)=>{const K=KINDS[s.kind],ix=nm=>{const j=list.findIndex(x=>x.name===nm);return j>=0&&j<i?j:-1},ia=K.src?ix(s.a):-1,ib=K.src===2?ix(s.b):-1;
   if((K.src>=1&&ia<0)||(K.src===2&&ib<0)){out.push({bad:true,expr:'?',kids:[]});return}
   const A=ia>=0?out[ia]:null,Bq=ib>=0?out[ib]:null;if((A&&A.bad)||(Bq&&Bq.bad)){out.push({bad:true,expr:'?',kids:[]});return}
   const exactIn=(!A||A.c)&&(!Bq||Bq.c),rel=K.rel?(s.rel||autoRel(list[ia],list[ib])):'';
+  if(K.cond){const ex0=K.sym(KINDS[list[ia].kind].src?par(A.expr):A.expr,'',nOf(s),s),hi0=pow(A.hi,ALEPH);
+    const r=A.c?condOf(s,A.c,list[ia].kind,s.name,s.a):{lo:F(0),hi:hi0,steps:[[`0 ≤ |${s.name}| ≤ ${fmt(hi0)}`,`עוצמת ${s.a} ידועה רק כטווח, והתנאי אינו תלוי בה באופן מונוטוני. נשאר רק החסם של כל הסדרות`]]};
+    if(r.bad){out.push({bad:true,msg:r.bad,expr:ex0,kids:[ia]});return}const c=same(r.lo,r.hi)?r.lo:null;
+    out.push({c,lo:r.lo,hi:r.hi,steps:r.steps,expr:ex0,atom:false,kids:[ia],txt:c?`|${s.name}| = ${fmt(c)}`:`${fmt(r.lo)} ≤ |${s.name}| ≤ ${fmt(r.hi)}`,val:c?fmt(c):`${fmt(r.lo)} … ${fmt(r.hi)}`});return}
   const r=!exactIn?ranged(s,A,Bq,list,ia,ib):K.rel?setOp(s.kind,rel,A.c,Bq.c,s.name,s.a,s.b):(q=>({lo:q.c,hi:q.c,steps:q.steps}))(cardOf(s,A&&A.c,Bq&&Bq.c,s.name,s.a,s.b));
   const atom=!K.src,expr=K.sym(A?(KINDS[list[ia].kind].src?par(A.expr):A.expr):'',Bq?(KINDS[list[ib].kind].src?par(Bq.expr):Bq.expr):'',nOf(s)),c=same(r.lo,r.hi)?r.lo:null;
   out.push({c,lo:r.lo,hi:r.hi,steps:r.steps,expr,atom,rel,auto:K.rel&&!s.rel&&rel?rel:'',kids:[ia,ib].filter(x=>x>=0),txt:c?`|${s.name}| = ${fmt(c)}`:`${fmt(r.lo)} ≤ |${s.name}| ≤ ${fmt(r.hi)}`,val:c?fmt(c):`${fmt(r.lo)} … ${fmt(r.hi)}`})});return out}
 const fx=t=>`<bdi dir="ltr" class="fx">${t}</bdi>`;
-const short=s=>KINDS[s.kind].sym(s.a||'',s.b||'',nOf(s));
+const short=s=>KINDS[s.kind].sym(s.a||'',s.b||'',nOf(s),s);
 function renderSide(R){const opt=(l,c)=>l.map(([v,t])=>`<option value="${v}" ${v===c?'selected':''}>${t}</option>`).join('');
   document.getElementById('cdobjs').innerHTML=SETS.map((s,i)=>{const K=KINDS[s.kind],before=SETS.slice(0,i).map(x=>[x.name,x.name]),kinds=Object.entries(KINDS).filter(([k,x])=>!x.src||i>0).map(([k,x])=>[k,x.l]);
     return `<div class="qbox${i===CUR?' rlcur':''}"><div class="qrow"><button class="name v rlnm" data-cs="${i}" aria-pressed="${i===CUR}" aria-label="הצג את ${s.name}">${s.name}</button><select data-ci="${i}" data-f="kind" aria-label="סוג הקבוצה">${opt(kinds,s.kind)}</select>${SETS.length>1?`<button class="x" data-cdel="${i}" aria-label="הסר את ${s.name}">×</button>`:''}</div>
-      ${K.src||K.n?`<div class="qrow">${K.src?`<label class="cell">${K.lab?K.lab[0]:'של'}<select data-ci="${i}" data-f="a">${opt(before,s.a)}</select></label>`:''}${K.src===2?`<label class="cell">${K.lab?K.lab[1]:'ושל'}<select data-ci="${i}" data-f="b">${opt(before,s.b)}</select></label>`:''}${K.n?`<label class="cell">${s.kind==='fin'?'גודל':'אורך'}<input type="number" min="0" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${nOf(s)}"></label>`:''}</div>`:''}${K.rel?`<div class="qrow"><label class="cell">היחס בין השתיים<select data-ci="${i}" data-f="rel">${opt(Object.entries(RELS).map(([v,t])=>[v,v===''&&R[i].auto?`מזוהה לבד: ${RELS[R[i].auto]}`:t]),s.rel||'')}</select></label></div>`:''}
+      ${K.src||K.n?`<div class="qrow">${K.src?`<label class="cell">${K.lab?K.lab[0]:'של'}<select data-ci="${i}" data-f="a">${opt(before,s.a)}</select></label>`:''}${K.src===2?`<label class="cell">${K.lab?K.lab[1]:'ושל'}<select data-ci="${i}" data-f="b">${opt(before,s.b)}</select></label>`:''}${K.n?`<label class="cell">${s.kind==='fin'?'גודל':'אורך'}<input type="number" min="0" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${nOf(s)}"></label>`:''}</div>`:''}${K.cond?`<div class="qrow"><label class="cell">התנאי<select data-ci="${i}" data-f="cond">${opt(Object.entries(CONDS).map(([v,x])=>[v,x.l]),s.cond||'const')}</select></label>${(CONDS[s.cond]||{}).p?`<label class="cell">${CONDS[s.cond].p}<input type="number" min="1" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${Math.max(1,nOf(s))}"></label>`:''}</div>`:''}${K.rel?`<div class="qrow"><label class="cell">היחס בין השתיים<select data-ci="${i}" data-f="rel">${opt(Object.entries(RELS).map(([v,t])=>[v,v===''&&R[i].auto?`מזוהה לבד: ${RELS[R[i].auto]}`:t]),s.rel||'')}</select></label></div>`:''}
       <div class="gfset fx">${s.name} = ${short(s)}${R[i].bad?'':`,   ${R[i].txt}`}</div></div>`}).join('')}
 function renderMain(R){if(CUR>=SETS.length)CUR=SETS.length-1;const s=SETS[CUR],r=R[CUR];
   /* the structure tree: the set, and under it the sets it is built from, down to the atoms */
@@ -2016,10 +2069,10 @@ function renderMain(R){if(CUR>=SETS.length)CUR=SETS.length-1;const s=SETS[CUR],r
   /* the proof: the sets the current one rests on, each once, in the order they are needed */
   const order=[],seen=new Set(),go=i=>{if(seen.has(i))return;seen.add(i);R[i].kids.forEach(go);order.push(i)};if(!r.bad)go(CUR);
   const block=i=>`<div class="qpb"><div class="qph"><span>${SETS[i].name}: ${KINDS[SETS[i].kind].l}</span>${fx(R[i].txt)}</div><div class="qpf">${R[i].steps.map(([f,w],n)=>`<div class="ps"><div class="pf"><span class="pn">${n+1}</span>${fx(f)}</div><div class="pj">${w}</div></div>`).join('')}</div></div>`;
-  const rows=SETS.map((x,i)=>`<tr class="${i===CUR?'cur':''}"><th scope="row"><button data-cs="${i}">${x.name}</button></th><td>${fx(R[i].expr)}</td><td class="c">${R[i].bad?'':fx(R[i].val)}</td><td>${R[i].bad?'חסרה קבוצת מקור':R[i].c?word(R[i].c):'טווח: המבנה לא קובע את העוצמה'}</td></tr>`).join('');
+  const rows=SETS.map((x,i)=>`<tr class="${i===CUR?'cur':''}"><th scope="row"><button data-cs="${i}">${x.name}</button></th><td>${fx(R[i].expr)}</td><td class="c">${R[i].bad?'':fx(R[i].val)}</td><td>${R[i].bad?(R[i].msg?'התנאי אינו מתאים לקבוצה':'חסרה קבוצת מקור'):R[i].c?word(R[i].c):'טווח: המבנה לא קובע את העוצמה'}</td></tr>`).join('');
   document.getElementById('main').innerHTML=`<div class="gfwrap cd">
     <section class="gfb"><h3>כל הקבוצות</h3><div class="rlmw"><table class="cdtab"><thead><tr><th></th><th scope="col">המבנה, עד הגרעינים</th><th scope="col">העוצמה</th><th scope="col">סוג</th></tr></thead><tbody>${rows}</tbody></table></div></section>
-    ${r.bad?`<div class="qwarn">הקבוצה ${s.name} נשענת על קבוצה שאינה מוגדרת מעליה.</div>`:`<div class="gfeq fx">${r.txt}</div>
+    ${r.bad?`<div class="qwarn">${r.msg||`הקבוצה ${s.name} נשענת על קבוצה שאינה מוגדרת מעליה.`}</div>`:`<div class="gfeq fx">${r.txt}</div>
     <section class="gfb"><h3>עץ המבנה של ${s.name}</h3><p class="hint">בכל שורה: הקבוצה, המבנה שלה, העוצמה שלה, והפעולה שבנתה אותה. מתחתיה הקבוצות שמהן נבנתה.</p><div class="cdtree">${tree(CUR,0)}</div></section>
     <section class="gfb"><h3>החישוב, קבוצה אחר קבוצה</h3><p class="hint">מהגרעינים ועד ${s.name}. בכל שורה נוסחה, ומתחתיה הנימוק.</p>${order.map(block).join('')}</section>`}</div>`;
   /* the card: all the sets in order of cardinality */
@@ -2037,10 +2090,10 @@ document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest||!t.close
   else if(del&&SETS.length>1){const i=Number(del.dataset.cdel);SETS.splice(i,1);if(CUR>=i&&CUR>0)CUR--;renderAll()}
   else if(add){const name=[...NAMES].find(x=>!SETS.some(s=>s.name===x));if(!name)return;const src=SETS[CUR].name;SETS.push(add.dataset.cadd==='atom'?{name,kind:'N'}:{name,kind:'pow',a:src,b:src,n:2});CUR=SETS.length-1;renderAll()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.closest('.cd')||t.dataset.ci===undefined)return;const s=SETS[Number(t.dataset.ci)],i=Number(t.dataset.ci);if(!s)return;s[t.dataset.f]=t.value;
-  if(t.dataset.f==='kind'){const K=KINDS[s.kind],prev=SETS[Math.max(0,i-1)].name;if(K.src&&!SETS.slice(0,i).some(x=>x.name===s.a))s.a=prev;if(K.src===2&&!SETS.slice(0,i).some(x=>x.name===s.b))s.b=prev;if(K.n&&(s.n===undefined||s.n===''))s.n=2}renderAll()});
+  if(t.dataset.f==='kind'){const K=KINDS[s.kind],prev=SETS[Math.max(0,i-1)].name;if(K.src&&!SETS.slice(0,i).some(x=>x.name===s.a))s.a=prev;if(K.src===2&&!SETS.slice(0,i).some(x=>x.name===s.b))s.b=prev;if(K.n&&(s.n===undefined||s.n===''))s.n=2;if(K.cond&&!s.cond)s.cond='evconst'}if(t.dataset.f==='cond'&&CONDS[s.cond].p&&!(Number(s.n)>=1))s.n=2;renderAll()});
 return{
 /* for tests */
-lib:{F,B,add,mul,pow,cmp,same,fmt,solve,KINDS,setOp},
+lib:{F,B,add,mul,pow,cmp,same,fmt,solve,KINDS,setOp,CONDS},
 render(){
   document.getElementById('conds').innerHTML=`<div class="qb cd"><div class="colhead"><h2>הקבוצות</h2><span class="lab">גרעינים ומה שנבנה מהם</span></div><div id="cdobjs" class="qlist"></div>
     <div class="qbox"><div class="lab">הוסף קבוצה</div><div class="addrow"><button class="addb" data-cadd="atom">+ קבוצה ידועה</button><button class="addb" data-cadd="op">+ קבוצה מפעולה</button></div>
