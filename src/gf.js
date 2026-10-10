@@ -84,6 +84,9 @@ function sumSeries(C){const T=numTerms(C);if(!C.den.length||T.length>12)return n
   const D={A:0,num:[],den:C.den},Fd=formula(D),bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');
   const def=`<div class="gin">${fr('1',bot)} = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>b<sub>n</sub>x<sup>n</sup>${Fd.cls?',   '+(Fd.cls.length===1?`b<sub>n</sub> = ${polyHtml(Fd.cls[0].cf)}`:`<span class="gcs">${Fd.cls.map(c=>`<span><span>b<sub>n</sub> = ${polyHtml(c.cf)}</span><span class="gcd">n ≡ ${c.r} (mod ${Fd.M})</span></span>`).join('')}</span>`):''}</div>`;
   return{html:html+def,hint:'כל חזקה במונה מזיזה את הטור של המכנה. המקדמים של הטור הזה מסומנים b.'}}
+function explicitSeries(Fm,a){const t=[];for(let n=0;n<Fm.n0;n++)if(a[n]!==0n){const m=a[n]<0n?-a[n]:a[n];t.push((t.length?(a[n]<0n?' − ':' + '):(a[n]<0n?'−':''))+(m===1n?'':m)+(n===0?(m===1n?'1':''):X(n)))}
+  const one=Fm.cls.length===1;
+  return t.join('')+Fm.cls.map((c,i)=>(t.length||i?' + ':'')+`<span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = ${Fm.n0}${one?'':`<br>n ≡ ${c.r} (mod ${Fm.M})`}</span></span><span class="gbr">(</span>${polyHtml(c.cf)}<span class="gbr">)</span>x<sup>n</sup>`).join('')}
 function binomHtml(C){if(!(C.den.length===1&&C.den[0][0]===1))return null;const k=C.den[0][1],T=numTerms(C);if(T.length>12)return null;
   const term=e=>{const sh=C.A+e;return `<span class="gbn"><span>${sh?`n − ${sh} + ${k-1}`:`n + ${k-1}`}</span><span>${k-1}</span></span>`};
   return T.map(([e,sg],i)=>{const a=sg<0n?-sg:sg;return (i?(sg<0n?' − ':' + '):(sg<0n?'−':''))+(a===1n?'':a+'·')+term(e)}).join('')}
@@ -129,6 +132,7 @@ function renderMain(){
     ${rec?blk('נוסחת נסיגה לסדרה',`מתקבלת מהכפלת שני האגפים במכנה והשוואת מקדמים. תקפה מ־<bdi dir="ltr" class="fx">n = ${R.from}</bdi> והלאה, עם תנאי ההתחלה שמתחתיה.`,`${rec}<div class="gin">${startVals}</div>`):''}
     ${fmHtml?blk('הסדרה בנוסחה מפורשת',(Fm.cls.length===1?'פולינום אחד':`פולינום לכל שארית של n בחלוקה ב־${Fm.M}`)+(Fm.n0>0?`, תקף מ־<bdi dir="ltr" class="fx">n = ${Fm.n0}</bdi> והלאה. האיברים שלפני כן רשומים מתחת.`:', תקף לכל n.'),`${fmHtml}${early?`<div class="gin">${early}</div>`:''}`):Fm.skip?`<section class="gfb"><h3>הסדרה בנוסחה מפורשת</h3><p class="hint">לא מוצגת כאן: הנוסחה מתפצלת ליותר מדי מקרים לפי השארית של n.</p></section>`:''}
     ${blk('כטור אחד','המקדם של כל חזקה הוא מספר הפתרונות.',`F(x) = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>a<sub>n</sub>x<sup>n</sup> = ${seriesForm(a1,N)}`)}
+    ${fmHtml?blk('כטור אחד, עם הנוסחה המפורשת',Fm.n0>0?'האיברים הראשונים רשומים בנפרד, ומהם והלאה המקדם הוא הנוסחה.':'המקדם של כל חזקה הוא הנוסחה המפורשת.',`F(x) = ${explicitSeries(Fm,a1)}`):''}
   </div>`;
   const row=(lab,st,txt)=>`<div class="gfv ${st}"><b>${st==='ok'?'✓':st==='bad'?'✗':'·'}</b><span>${lab}</span><span class="lab">${txt}</span></div>`;
   document.getElementById('card').innerHTML=`<div class="gfcard"><div class="cardhead"><h2>מספר הפתרונות</h2></div>
