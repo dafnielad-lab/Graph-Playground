@@ -167,7 +167,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .rlmw{overflow:auto;max-width:100%}.rlmx{border-collapse:collapse;margin:4px auto;font-variant-numeric:tabular-nums}.rlmx th{font-size:13px;font-weight:700;padding:2px 5px;color:var(--muted);white-space:nowrap}.rlmx td{width:32px;height:32px;min-width:32px;text-align:center;border:1px solid var(--line);font-size:15px;padding:0;color:var(--ink)}
 .rlmx td.dg{background:var(--bg)}.rlmx td.on{background:var(--track)}.rlmx td.h{background:var(--hi-soft);color:var(--hi)}.rlmx td.wi{outline:3px solid var(--bad);outline-offset:-3px}.rlmx td.wo{outline:3px dashed var(--bad);outline-offset:-3px}
 .rlmx td button{display:block;width:100%;height:100%;min-height:30px;border:0;background:transparent;color:inherit;font-size:inherit;padding:0;cursor:pointer}.rlmx td button:hover{background:var(--hi-soft)}.rlmx.sm td{width:24px;height:24px;min-width:24px;font-size:12px}.rlmx.sm td button{min-height:22px}.rlmx.sm th{font-size:11px;padding:1px 3px}
-.rlt{flex:1 1 auto;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.rl .gfset{white-space:normal}.rlcl{direction:ltr;display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.rlc{background:var(--bg);border-radius:8px;padding:3px 10px;font-size:15px}
+.rlt{flex:1 1 auto;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.rl .gfset{white-space:normal}.qbox.rlcur{outline:2px solid var(--accent)}.rlnm{border:0;cursor:pointer;font-size:inherit;min-height:32px}.rlnm[aria-pressed="false"]{background:var(--muted)}.rlcl{direction:ltr;display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.rlc{background:var(--bg);border-radius:8px;padding:3px 10px;font-size:15px}
 .rlfacts{display:flex;flex-direction:column;gap:4px;min-width:0}.rlf{display:flex;flex-direction:column;background:var(--bg);border-radius:8px;padding:3px 10px}.rlf>span{font-size:12px;color:var(--muted)}.rlf .fx{direction:ltr;text-align:left;font-size:15px;white-space:normal}
 .rlkind{display:flex;gap:8px;align-items:baseline;font-weight:700;font-size:15px}.rlkind .fx{color:var(--hi);font-size:17px}.rlp{border-inline-start:3px solid var(--line);background:var(--bg);border-radius:6px;padding:3px 8px}.rlp.ok{border-color:var(--good)}.rlp.no{border-color:var(--bad)}.rlp.cur{outline:2px solid var(--bad)}
 .rlph{display:flex;gap:6px;align-items:baseline;font-size:14px}.rlph span{flex:1 1 auto}.rlp.ok .rlph b{color:var(--good)}.rlp.no .rlph b{color:var(--bad)}.rlpd{direction:ltr;text-align:left;font-size:13px}.rlpd .fx{white-space:normal}.rlpd.alg{color:var(--muted);font-size:12.5px}
@@ -1610,7 +1610,7 @@ function order(M){const n=M.length,T=M.map((r,i)=>r&~(1<<i)),cover=[];
   return{cover,lev,min,max,least,greatest,chain,anti,inc}}
 
 /* ---------- state ---------- */
-let KIND='div',PARAM={range:5,div:12,pow:3,custom:'a, b, c, d'},A=[],R=[],S=null,VIEW='R',HL=null,SEL=null;
+let KIND='div',PARAM={range:5,div:12,pow:3,custom:'a, b, c, d'},A=[],RELS=[],CUR=0,HL=null,SEL=null;
 const divisors=N=>{const o=[];for(let d=1;d<=N;d++)if(N%d===0)o.push(d);return o};
 function buildSet(){let els=[];
   if(KIND==='range'){const n=Math.max(1,Math.min(MAXN,Math.floor(Number(PARAM.range))||1));els=Array.from({length:n},(_,i)=>({l:String(i+1),num:i+1}))}
@@ -1627,23 +1627,27 @@ const PRE={empty:['היחס הריק',()=>true,()=>false],full:['היחס המל
   cop:['זרים, המחלק המשותף הגדול הוא אחת',numeric,(a,b)=>{let x=Math.abs(a.num),y=Math.abs(b.num);while(y)[x,y]=[y,x%y];return x===1}],
   sub:['הכלה, a ⊆ b',sets,(a,b)=>(a.mask&~b.mask)===0],psub:['הכלה ממש, a ⊂ b',sets,(a,b)=>(a.mask&~b.mask)===0&&a.mask!==b.mask],dis:['זרות, a ∩ b = ∅',sets,(a,b)=>(a.mask&b.mask)===0],card:['אותו מספר איברים',sets,(a,b)=>a.sz===b.sz]};
 const fill=k=>{const f=PRE[k][2],n=A.length,M=empty(n);for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(f(A[i],A[j],i,j))M[i]|=1<<j;return M};
-function resetSet(keep){const old=A.length;A=buildSet();const n=A.length;
-  if(keep&&R.length){const m=(1<<n)-1,fit=M=>Array.from({length:n},(_,i)=>i<old?M[i]&m:0);R=fit(R);if(S)S=fit(S)}else{R=empty(n);if(S)S=empty(n)}HL=null;SEL=null}
-A=buildSet();R=fill('div');
-
-/* ---------- the views: the relation itself and what is built from it ---------- */
-const VIEWS={R:{l:'היחס R',s:'R',f:()=>R},S:{l:'היחס S',s:'S',two:true,f:()=>S},
-  inv:{l:'היחס ההפוך',s:'R⁻¹',def:'R⁻¹ = { (b, a) | (a, b) ∈ R }',f:()=>inverse(R)},
-  cmp:{l:'המשלים',s:'R′',def:'R′ = (A × A) ∖ R',f:()=>compl(R)},
-  sq:{l:'ההרכבה של R עם עצמו',s:'R²',def:'R² = RR = { (a, c) | ∃b: (a, b) ∈ R, (b, c) ∈ R }',f:()=>compose(R,R)},
-  rc:{l:'הסגור הרפלקסיבי',s:'R ∪ I',def:'R ∪ I,   I = { (a, a) | a ∈ A }',add:true,f:()=>union(R,ident(R.length))},
-  sc:{l:'הסגור הסימטרי',s:'R ∪ R⁻¹',def:'R ∪ R⁻¹',add:true,f:()=>union(R,inverse(R))},
-  tc:{l:'הסגור הטרנזיטיבי',s:'R⁺',def:'R⁺ = R ∪ R² ∪ R³ ∪ …',add:true,f:()=>tclose(R)},
-  ec:{l:'סגור השקילות',s:'E',def:'E = (R ∪ R⁻¹ ∪ I)⁺,   the smallest equivalence relation containing R',add:true,f:()=>tclose(union(union(R,inverse(R)),ident(R.length)))},
-  uni:{l:'איחוד',s:'R ∪ S',two:true,def:'R ∪ S',f:()=>union(R,S)},int:{l:'חיתוך',s:'R ∩ S',two:true,def:'R ∩ S',f:()=>inter(R,S)},dif:{l:'הפרש',s:'R ∖ S',two:true,def:'R ∖ S',f:()=>diff(R,S)},
-  rs:{l:'הרכבה RS',s:'RS',two:true,def:'RS = { (a, c) | ∃b: (a, b) ∈ R, (b, c) ∈ S }',f:()=>compose(R,S)},sr:{l:'הרכבה SR',s:'SR',two:true,def:'SR = { (a, c) | ∃b: (a, b) ∈ S, (b, c) ∈ R }',f:()=>compose(S,R)}};
-const cur=()=>{if(!VIEWS[VIEW]||(VIEWS[VIEW].two&&!S))VIEW='R';return VIEWS[VIEW]};
-const editable=()=>VIEW==='R'||VIEW==='S',target=()=>VIEW==='S'?S:R;
+/* the relations: a free one holds its own pairs (M); a derived one names an operation and the relations it is built from */
+const NAMES='RSTUVWQPNMLK',SUP='⁰¹²³⁴⁵⁶⁷⁸⁹',pwr=(P,k)=>{let o=ident(P.length);for(let i=0;i<k;i++)o=compose(o,P);return o};
+const OPS={tc:{l:'סגור טרנזיטיבי',add:true,sym:a=>`${a}⁺`,def:a=>`${a} ∪ ${a}² ∪ ${a}³ ∪ …`,f:P=>tclose(P)},
+  rc:{l:'סגור רפלקסיבי',add:true,sym:a=>`${a} ∪ I`,def:a=>`${a} ∪ I,   I = { (x, x) | x ∈ A }`,f:P=>union(P,ident(P.length))},
+  sc:{l:'סגור סימטרי',add:true,sym:a=>`${a} ∪ ${a}⁻¹`,def:a=>`${a} ∪ ${a}⁻¹`,f:P=>union(P,inverse(P))},
+  ec:{l:'סגור שקילות',add:true,sym:a=>`(${a} ∪ ${a}⁻¹ ∪ I)⁺`,def:a=>`(${a} ∪ ${a}⁻¹ ∪ I)⁺,   the smallest equivalence relation containing ${a}`,f:P=>tclose(union(union(P,inverse(P)),ident(P.length)))},
+  pow:{l:'חזקה',k:true,sym:(a,b,k)=>a+String(k).split('').map(d=>SUP[d]).join(''),def:(a,b,k)=>k===0?'I,   the identity relation on A':k===1?a:`${a.repeat(Math.min(k,6))}${k>6?'…':''},   ${a} composed with itself ${k} times`,f:(P,Q,k)=>pwr(P,k)},
+  inv:{l:'היחס ההפוך',sym:a=>`${a}⁻¹`,def:a=>`{ (y, x) | (x, y) ∈ ${a} }`,f:P=>inverse(P)},
+  cmp:{l:'המשלים',sym:a=>`(A × A) ∖ ${a}`,def:a=>`(A × A) ∖ ${a}`,f:P=>compl(P)},
+  comp:{l:'הרכבה של שני יחסים',two:true,sym:(a,b)=>a+b,def:(a,b)=>`{ (x, z) | ∃y: (x, y) ∈ ${a}, (y, z) ∈ ${b} }`,f:(P,Q)=>compose(P,Q)},
+  uni:{l:'איחוד',two:true,sym:(a,b)=>`${a} ∪ ${b}`,def:(a,b)=>`${a} ∪ ${b}`,f:(P,Q)=>union(P,Q)},
+  int:{l:'חיתוך',two:true,sym:(a,b)=>`${a} ∩ ${b}`,def:(a,b)=>`${a} ∩ ${b}`,f:(P,Q)=>inter(P,Q)},
+  dif:{l:'הפרש',two:true,sym:(a,b)=>`${a} ∖ ${b}`,def:(a,b)=>`${a} ∖ ${b}`,f:(P,Q)=>diff(P,Q)}};
+const kOf=r=>Math.max(0,Math.min(9,Math.floor(Number(r.k))||0));
+/* every relation as a matrix, in order: a derived relation may only use relations listed before it, so there are no loops */
+function evalAll(){const n=A.length,V=[];RELS.forEach((r,i)=>{if(!r.op){V.push(r.M);return}const ix=nm=>{const j=RELS.findIndex(x=>x.name===nm);return j>=0&&j<i?V[j]:empty(n)};V.push(OPS[r.op].f(ix(r.a),ix(r.b),kOf(r)))});return V}
+const symOf=r=>r.op?OPS[r.op].sym(r.a,r.b,kOf(r)):r.name;
+function resetSet(keep){const old=A.length;A=buildSet();const n=A.length,m=(1<<n)-1;
+  for(const r of RELS)if(!r.op)r.M=keep?Array.from({length:n},(_,i)=>i<old?r.M[i]&m:0):empty(n);HL=null;SEL=null}
+A=buildSet();RELS=[{name:'R',M:fill('div')}];
+const editable=()=>!RELS[CUR].op;
 
 /* ---------- drawing ---------- */
 const fx=t=>`<bdi dir="ltr" class="fx">${t}</bdi>`,pr=([i,j])=>`(${esc(A[i].l)}, ${esc(A[j].l)})`;
@@ -1662,7 +1666,7 @@ function graphSvg(M,added,w){const n=A.length,W=440,cx=W/2,cy=W/2,RR=n===1?0:Mat
   return `<svg class="rlsvg" viewBox="0 0 ${W} ${W}" role="img" aria-label="הגרף המכוון של היחס">${DEFS}${E}${N}</svg>`}
 function matrixHtml(M,added,w,name,small){const n=A.length,key=(i,j)=>i+','+j,wi=new Set((w?w.inn:[]).map(p=>key(...p))),wo=new Set((w?w.out:[]).map(p=>key(...p)));
   return `<div class="rlmw"><table class="rlmx${small?' sm':''}" dir="ltr"><thead><tr><th></th>${A.map(e=>`<th scope="col">${esc(e.l)}</th>`).join('')}</tr></thead><tbody>${A.map((e,i)=>`<tr><th scope="row">${esc(e.l)}</th>${A.map((f,j)=>{const on=has(M,i,j),c=[on?'on':'',on&&added&&has(added,i,j)?'h':'',wi.has(key(i,j))?'wi':'',wo.has(key(i,j))?'wo':'',i===j?'dg':''].filter(Boolean).join(' ');
-    return `<td class="${c}">${name?`<button data-rc="${name}|${i}|${j}" aria-label="(${esc(e.l)}, ${esc(f.l)})" aria-pressed="${!!on}">${on?'●':''}</button>`:on?'●':''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`}
+    return `<td class="${c}">${name!==null&&name!==undefined?`<button data-rc="${name}|${i}|${j}" aria-label="(${esc(e.l)}, ${esc(f.l)})" aria-pressed="${!!on}">${on?'●':''}</button>`:on?'●':''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`}
 /* the Hasse diagram: one level for every step of the longest chain below an element, lines for covering pairs only */
 function hasseSvg(O){const n=A.length,H=Math.max(...O.lev)+1,by=Array.from({length:H},()=>[]);for(let a=0;a<n;a++)by[O.lev[a]].push(a);
   const W=440,gap=H>1?Math.min(86,340/(H-1)):0,hgt=Math.max(120,(H-1)*gap+80),x=new Array(n).fill(0);
@@ -1676,15 +1680,23 @@ const PROPS=[['refl','רפלקסיבי','∀a ∈ A:  (a, a) ∈ X','I ⊆ X'],[
   ['anti','אנטי-סימטרי','(a, b) ∈ X  ⇒  (b, a) ∉ X','X ∩ X⁻¹ = ∅'],['wanti','אנטי-סימטרי במובן הרחב','(a, b) ∈ X,  (b, a) ∈ X  ⇒  a = b','X ∩ X⁻¹ ⊆ I'],['trans','טרנזיטיבי','(a, b) ∈ X,  (b, c) ∈ X  ⇒  (a, c) ∈ X','X² ⊆ X'],['comp','כל שני איברים שונים ניתנים להשוואה','a ≠ b  ⇒  (a, b) ∈ X  or  (b, a) ∈ X','X ∪ X⁻¹ ∪ I = A × A']];
 const witness=(k,p,s)=>p.ok?'':[...p.inn.map(q=>`${pr(q)} ∈ ${s}`),...p.out.map(q=>`${pr(q)} ∉ ${s}`)].join(',   ');
 const setOf=a=>`{${a.map(i=>esc(A[i].l)).join(', ')}}`;
-function renderSide(){const two=!!S,ok=Object.entries(PRE).filter(([k,v])=>v[1]());
-  const preset=t=>`<select data-rp="${t}" aria-label="יחס מוכן"><option value="">יחס מוכן…</option>${ok.map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select>`;
+function renderSide(){const ok=Object.entries(PRE).filter(([k,v])=>v[1]()),V=evalAll();
+  const opt=(list,c)=>list.map(([v,l])=>`<option value="${v}" ${v===c?'selected':''}>${l}</option>`).join('');
+  const box=(r,i)=>{const head=`<button class="name v rlnm" data-rsel="${i}" aria-pressed="${i===CUR}" aria-label="הצג את ${r.name}">${r.name}</button>`,del=RELS.length>1?`<button class="x" data-rdel="${i}" aria-label="הסר את ${r.name}">×</button>`:'';
+    if(!r.op)return `<div class="qbox${i===CUR?' rlcur':''}"><div class="qrow">${head}<select data-rp="${i}" aria-label="יחס מוכן"><option value="">יחס מוכן…</option>${ok.map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select>${del}</div>${matrixHtml(r.M,null,null,i,true)}</div>`;
+    const o=OPS[r.op],before=RELS.slice(0,i).map(x=>[x.name,x.name]);
+    return `<div class="qbox${i===CUR?' rlcur':''}"><div class="qrow">${head}<select data-ro="${i}" data-f="op" aria-label="פעולה">${opt(Object.entries(OPS).filter(([k,x])=>!x.two||i>=1).map(([k,x])=>[k,x.l]),r.op)}</select>${del}</div>
+      <div class="qrow"><label class="cell">${o.two?'ראשון':'של'}<select data-ro="${i}" data-f="a">${opt(before,r.a)}</select></label>${o.two?`<label class="cell">שני<select data-ro="${i}" data-f="b">${opt(before,r.b)}</select></label>`:''}${o.k?`<label class="cell">מעריך<input type="number" min="0" max="9" class="rn" dir="ltr" data-ro="${i}" data-f="k" value="${kOf(r)}"></label>`:''}</div>
+      <div class="gfset fx">${r.name} = ${esc(symOf(r))},   |${r.name}| = ${size(V[i])}</div></div>`};
   const par=KIND==='custom'?`<input type="text" dir="ltr" class="rlt" data-rk="custom" value="${esc(PARAM.custom)}" aria-label="האיברים, מופרדים בפסיקים">`:`<label class="cell">${KIND==='range'?'עד':KIND==='div'?'המחלקים של':'קבוצת החזקה של {1,…,k}, k ='}<input type="number" min="1" max="${KIND==='range'?MAXN:KIND==='pow'?3:100000}" class="rn" dir="ltr" data-rk="${KIND}" value="${esc(PARAM[KIND])}"></label>`;
-  document.getElementById('rlobjs').innerHTML=`<div class="qbox"><div class="qrow"><span class="name">A</span><select data-rk="kind" aria-label="סוג הקבוצה">${[['range','המספרים מאחת עד'],['div','המחלקים של מספר'],['pow','קבוצת חזקה'],['custom','איברים שאני כותב']].map(([v,l])=>`<option value="${v}" ${v===KIND?'selected':''}>${l}</option>`).join('')}</select></div>
+  const room=RELS.length<NAMES.length;
+  document.getElementById('rlobjs').innerHTML=`<div class="qbox"><div class="qrow"><span class="name">A</span><select data-rk="kind" aria-label="סוג הקבוצה">${opt([['range','המספרים מאחת עד'],['div','המחלקים של מספר'],['pow','קבוצת חזקה'],['custom','איברים שאני כותב']],KIND)}</select></div>
       <div class="qrow">${par}</div><div class="gfset fx">A = ${setOf(A.map((_,i)=>i))},   |A| = ${A.length}</div></div>
-    <div class="qbox"><div class="qrow"><span class="name v">R</span>${preset('R')}</div>${matrixHtml(R,null,null,'R',true)}<p class="hint">לחיצה על תא מוסיפה או מסירה זוג. השורה היא האיבר הראשון בזוג.</p></div>
-    ${two?`<div class="qbox"><div class="qrow"><span class="name v">S</span>${preset('S')}<button class="x" data-rs="0" aria-label="הסר את היחס השני">×</button></div>${matrixHtml(S,null,null,'S',true)}</div>`:`<div class="qbox"><div class="addrow"><button class="addb" data-rs="1">+ יחס שני, S</button></div><p class="hint">יחס שני מאפשר איחוד, חיתוך, הפרש והרכבה.</p></div>`}`}
-function renderMain(){const v=cur(),M=v.f(),P=analyze(M),s=v.s,w=HL&&P[HL]&&!P[HL].ok?P[HL]:null,added=v.add?diff(M,R):null,nAdd=added?size(added):0,ps=pairs(M);
-  const opts=Object.entries(VIEWS).filter(([k,x])=>!x.two||S).map(([k,x])=>`<option value="${k}" ${k===VIEW?'selected':''}>${x.l}${k==='R'||k==='S'?'':'  —  '+x.s}</option>`).join('');
+    ${RELS.map(box).join('')}
+    <div class="qbox"><div class="lab">הוסף יחס</div><div class="addrow"><button class="addb" data-radd="free" ${room?'':'disabled'}>+ יחס חופשי</button><button class="addb" data-radd="op" ${room?'':'disabled'}>+ יחס מפעולה</button></div>
+      <p class="hint">יחס חופשי: לחיצה על תא במטריצה מוסיפה או מסירה זוג, והשורה היא האיבר הראשון בזוג. יחס מפעולה נבנה מיחסים שמעליו ומתעדכן איתם: סגור, חזקה, הפוך, משלים, הרכבה, איחוד, חיתוך והפרש. לחיצה על שם היחס מציגה אותו.</p></div>`}
+function renderMain(){if(CUR>=RELS.length)CUR=RELS.length-1;const V=evalAll(),r=RELS[CUR],M=V[CUR],P=analyze(M),s=r.name,o=r.op?OPS[r.op]:null,w=HL&&P[HL]&&!P[HL].ok?P[HL]:null,si=o?RELS.findIndex(x=>x.name===r.a):-1,added=o&&o.add&&si>=0?diff(M,V[si]):null,nAdd=added?size(added):0,ps=pairs(M);
+  const opts=RELS.map((x,k)=>`<option value="${k}" ${k===CUR?'selected':''}>${x.name}${x.op?'  =  '+esc(symOf(x))+'   —   '+OPS[x.op].l:''}</option>`).join('');
   let extra='';
   if(P.equiv){const C=classes(M);extra+=`<section class="gfb"><h3>יחס שקילות: מחלקות השקילות</h3><p class="hint">המחלקות מחלקות את A לקבוצות זרות. מספר המחלקות: ${C.length}.</p><div class="rlcl">${C.map(c=>`<span class="rlc">${fx(`[${esc(A[c[0]].l)}] = ${setOf(c)}`)}</span>`).join('')}</div><div class="rlset">${fx(`A / ${s} = { ${C.map(setOf).join(', ')} }`)}</div></section>`}
   if(P.weak||P.strict){const O=order(M),li=(t,x)=>`<div class="rlf"><span>${t}</span>${fx(x)}</div>`;
@@ -1693,14 +1705,14 @@ function renderMain(){const v=cur(),M=v.f(),P=analyze(M),s=v.s,w=HL&&P[HL]&&!P[H
         ${li('שרשרת ארוכה ביותר',O.chain.map(i=>esc(A[i].l)).join(P.strict?'  ,  ':'  ,  ')+`   (${O.chain.length})`)}${li('אנטי-שרשרת גדולה ביותר',setOf(O.anti)+`   (${O.anti.length})`)}
         ${li('זוגות כיסוי, הקווים בדיאגרמה',String(O.cover.length))}${li('זוגות שאינם ניתנים להשוואה',O.inc.length?(O.inc.length<=8?O.inc.map(([a,b])=>`{${esc(A[a].l)}, ${esc(A[b].l)}}`).join(', '):String(O.inc.length)):'אין')}</div></div></section>`}
   document.getElementById('main').innerHTML=`<div class="gfwrap rl">
-    <section class="gfb rlhead"><div class="rlbar"><label class="cell">מה מוצג<select data-rv="1">${opts}</select></label>${editable()?'':`<button class="btn sm" data-rset="1">קבע את התוצאה כ־R</button>`}</div>
-      ${v.def?`<div class="rldef">${fx(v.def)}</div>`:''}${v.add?`<p class="hint">${nAdd?`זוגות שנוספו ל־R מסומנים בצבע. מספרם: ${nAdd}.`:'לא נוסף אף זוג: R כבר מקיים את התכונה.'}</p>`:''}</section>
-    <div class="rlrow"><section class="gfb rlg"><h3>הגרף המכוון</h3>${graphSvg(M,added,w)}<p class="hint">${editable()?(SEL===null?'לחיצה על איבר ואחריה על איבר שני מוסיפה או מסירה חץ. לחיצה שנייה על אותו איבר: הזוג של האיבר עם עצמו.':`נבחר ${fx(esc(A[SEL].l))}. לחץ על האיבר שאליו החץ.`):'התצוגה הזאת מחושבת מ־R ואינה ניתנת לעריכה.'}</p></section>
-      <section class="gfb rlm"><h3>המטריצה</h3>${matrixHtml(M,added,w,editable()?VIEW:null,false)}<p class="hint">נקודה בשורה של a ובעמודה של b: הזוג ${fx('(a, b)')} ביחס.</p></section></div>
+    <section class="gfb rlhead"><div class="rlbar"><label class="cell">מה מוצג<select data-rv="1">${opts}</select></label>${editable()?'':`<button class="btn sm" data-rfz="1">הפוך ליחס חופשי לעריכה</button>`}</div>
+      ${o?`<div class="rldef">${fx(`${s} = ${esc(symOf(r))}${o.def(r.a,r.b,kOf(r))===symOf(r)?'':' = '+esc(o.def(r.a,r.b,kOf(r)))}`)}</div>`:''}${o&&o.add?`<p class="hint">${nAdd?`זוגות שנוספו ל־${r.a} מסומנים בצבע. מספרם: ${nAdd}.`:`לא נוסף אף זוג: ${r.a} כבר מקיים את התכונה.`}</p>`:''}</section>
+    <div class="rlrow"><section class="gfb rlg"><h3>הגרף המכוון</h3>${graphSvg(M,added,w)}<p class="hint">${editable()?(SEL===null?'לחיצה על איבר ואחריה על איבר שני מוסיפה או מסירה חץ. לחיצה שנייה על אותו איבר: הזוג של האיבר עם עצמו.':`נבחר ${fx(esc(A[SEL].l))}. לחץ על האיבר שאליו החץ.`):'היחס הזה מחושב מיחסים אחרים ומתעדכן איתם, ולכן אינו נערך ישירות.'}</p></section>
+      <section class="gfb rlm"><h3>המטריצה</h3>${matrixHtml(M,added,w,editable()?CUR:null,false)}<p class="hint">נקודה בשורה של a ובעמודה של b: הזוג ${fx('(a, b)')} ביחס.</p></section></div>
     <section class="gfb"><h3>היחס כקבוצת זוגות</h3><div class="rlset">${fx(`${s} = ${ps.length?`{ ${ps.map(pr).join(', ')} }`:'∅'}`)}</div><div class="rlset sm">${fx(`|${s}| = ${ps.length},   |A × A| = ${A.length*A.length}`)}</div></section>
     ${extra}</div>`;
   /* the card: the properties, each with its definition and a counterexample when it fails */
-  const X=t=>/ /.test(s)?t.replace(/X/g,`(${s})`):t.replace(/X(?=⁻¹|²)/g,s.length>1?`(${s})`:s).replace(/X/g,s);
+  const X=t=>t.replace(/X/g,s);
   const kind=P.equiv&&P.weak?'גם יחס שקילות וגם סדר חלקי: זה יחס השוויון':P.equiv?'יחס שקילות':P.total?(P.strict?'סדר מלא (אנטי-רפלקסיבי)':'סדר מלא (רפלקסיבי)'):P.weak?'סדר חלקי (רפלקסיבי)':P.strict?'סדר חלקי (אנטי-רפלקסיבי)':'לא יחס שקילות ולא יחס סדר';
   const miss=(need,name)=>{const m=need.filter(k=>!P[k].ok).map(k=>PROPS.find(p=>p[0]===k)[1]);return m.length?`<div class="rlmiss"><b>${name}:</b> חסר ${m.join(', ')}</div>`:''};
   document.getElementById('card').innerHTML=`<div class="gfcard rl"><div class="cardhead"><h2>תכונות היחס</h2></div><div class="rlkind">${fx(esc(s))} <span>${kind}</span></div>
@@ -1710,19 +1722,25 @@ function renderMain(){const v=cur(),M=v.f(),P=analyze(M),s=v.s,w=HL&&P[HL]&&!P[H
     <p class="hint">${fx('I')} הוא יחס הזהות על A. בדוגמה נגדית, ״הראה״ מסמן את הזוגות בגרף ובמטריצה: קו מלא לזוג שביחס, קו מקווקו לזוג שחסר.</p></div>`}
 function renderAll(){renderSide();renderMain()}
 const toggle=(M,i,j)=>{M[i]^=1<<j};
+/* removing or freezing: a relation built from the removed one keeps its current pairs as a free relation */
+const freeze=(i,V)=>{RELS[i]={name:RELS[i].name,M:V[i].slice()}};
 document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest||!t.closest('.rl'))return;
-  const c=t.closest('[data-rc]'),nd=t.closest('[data-rn]'),h=t.closest('[data-rh]'),rs=t.closest('[data-rs]'),st=t.closest('[data-rset]');
-  if(c){const [nm,i,j]=c.dataset.rc.split('|');toggle(nm==='S'?S:R,Number(i),Number(j));SEL=null;renderAll()}
-  else if(nd&&editable()){const i=Number(nd.dataset.rn);if(SEL===null){SEL=i;renderMain()}else{toggle(target(),SEL,i);SEL=null;renderAll()}}
+  const c=t.closest('[data-rc]'),nd=t.closest('[data-rn]'),h=t.closest('[data-rh]'),sel=t.closest('[data-rsel]'),del=t.closest('[data-rdel]'),add=t.closest('[data-radd]'),fz=t.closest('[data-rfz]');
+  if(c){const [k,i,j]=c.dataset.rc.split('|').map(Number);if(RELS[k]&&!RELS[k].op){toggle(RELS[k].M,i,j);SEL=null;renderAll()}}
+  else if(nd&&editable()){const i=Number(nd.dataset.rn);if(SEL===null){SEL=i;renderMain()}else{toggle(RELS[CUR].M,SEL,i);SEL=null;renderAll()}}
   else if(h){HL=HL===h.dataset.rh?null:h.dataset.rh;renderMain()}
-  else if(rs){if(rs.dataset.rs==='1'){S=empty(A.length)}else{S=null}renderAll()}
-  else if(st){R=cur().f().slice();VIEW='R';HL=null;renderAll()}});
+  else if(sel){CUR=Number(sel.dataset.rsel);HL=null;SEL=null;renderAll()}
+  else if(fz){freeze(CUR,evalAll());renderAll()}
+  else if(del&&RELS.length>1){const i=Number(del.dataset.rdel),V=evalAll(),nm=RELS[i].name;RELS.forEach((r,k)=>{if(r.op&&(r.a===nm||(OPS[r.op].two&&r.b===nm)))freeze(k,V)});RELS.splice(i,1);if(CUR>=i&&CUR>0)CUR--;HL=null;SEL=null;renderAll()}
+  else if(add){const name=[...NAMES].find(x=>!RELS.some(r=>r.name===x));if(!name)return;const src=RELS[CUR].name;
+    RELS.push(add.dataset.radd==='op'?{name,op:'tc',a:src,b:src,k:2}:{name,M:empty(A.length)});CUR=RELS.length-1;HL=null;SEL=null;renderAll()}});
 document.addEventListener('keydown',ev=>{const nd=ev.target.closest&&ev.target.closest('.rl [data-rn]');if(nd&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();nd.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.closest('.rl'))return;
-  if(t.dataset.rv){VIEW=t.value;HL=null;SEL=null;renderMain()}
-  else if(t.dataset.rp){if(t.value){const M=fill(t.value);if(t.dataset.rp==='S')S=M;else R=M;HL=null;renderAll()}}
-  else if(t.dataset.rk==='kind'){KIND=t.value;resetSet(false);R=fill(KIND==='div'?'div':KIND==='pow'?'sub':KIND==='range'?'le':'empty');renderAll()}
-  else if(t.dataset.rk){PARAM[t.dataset.rk]=t.value;const was=KIND;resetSet(was==='range');if(was==='div')R=fill('div');else if(was==='pow')R=fill('sub');renderAll()}});
+  if(t.dataset.rv){CUR=Number(t.value);HL=null;SEL=null;renderAll()}
+  else if(t.dataset.rp!==undefined){const r=RELS[Number(t.dataset.rp)];if(t.value&&r&&!r.op){r.M=fill(t.value);HL=null;renderAll()}}
+  else if(t.dataset.ro!==undefined){const r=RELS[Number(t.dataset.ro)];if(r&&r.op){r[t.dataset.f]=t.value;HL=null;renderAll()}}
+  else if(t.dataset.rk==='kind'){KIND=t.value;resetSet(false);const f=RELS.find(r=>!r.op);if(f)f.M=fill(KIND==='div'?'div':KIND==='pow'?'sub':KIND==='range'?'le':'empty');renderAll()}
+  else if(t.dataset.rk){PARAM[t.dataset.rk]=t.value;const was=KIND;resetSet(was==='range');const f=RELS.find(r=>!r.op);if(f&&was==='div')f.M=fill('div');else if(f&&was==='pow')f.M=fill('sub');renderAll()}});
 return{
 /* for tests */
 lib:{empty,full,ident,union,inter,diff,compl,inverse,compose,tclose,analyze,classes,order,pairs,size,same,subset},
