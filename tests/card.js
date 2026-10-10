@@ -84,6 +84,26 @@ const res=await p.evaluate(()=>{const L=CARD.lib,bad=[];let laws=0,counts=0,know
     for(const src in T)for(const cond in T[src]){known++;const g=val(src,cond,2);if(g!==T[src][cond])bad.push(['condition value',src,cond,g,T[src][cond]])}
     /* 3. the steps end at the value */
     for(const src in srcs)for(const cond in L.CONDS){const x=get(src,cond,3);if(!x||!x.c)continue;shown++;const last=x.steps[x.steps.length-1][0];if(!last.endsWith(L.fmt(x.c)))bad.push(['condition steps do not end at the value',src,cond,last])}}
-  return{bad:bad.slice(0,30),total:bad.length,laws,counts,known,shown,pairsN,tight,nested,cons}});
+  /* ---- conditions against real sequences: words over a small alphabet, checked by rules written here and not taken from the page ---- */
+  let prefixes=0,parts=0;
+  { const condVal=(n,cond,p)=>{const r=L.solve([at('A','fin',{n}),at('S','cond',{a:'A',cond,n:p})]),x=r[1];return x};
+    /* conditions that a finite beginning can violate. ok(w): the word w does not violate it yet. Places are numbered from 1; c is the letter 0; given values are 0 */
+    const LOCAL={const:w=>w.every(x=>x===w[0]),per:(w,p)=>w.every((x,i)=>i<p||x===w[i-p]),fixk:(w,p)=>w.every((x,i)=>i>=p||x===0),fixeven:w=>w.every((x,i)=>(i+1)%2||x===0),pairs:w=>w.every((x,i)=>(i+1)%2||x===w[i-1]),
+      never:w=>w.every(x=>x!==0),inj:w=>new Set(w).size===w.length,nd:w=>w.every((x,i)=>!i||w[i-1]<=x),si:w=>w.every((x,i)=>!i||w[i-1]<x),ni:w=>w.every((x,i)=>!i||w[i-1]>=x),sd:w=>w.every((x,i)=>!i||w[i-1]>x)};
+    /* the number of beginnings of length len that can still be continued for extra more places: for these conditions a sequence exists exactly when every beginning can be continued */
+    const count=(n,ok,len,extra,p)=>{let c=0;const ext=(w,d)=>{if(d===0)return true;for(let v=0;v<n;v++){w.push(v);const g=ok(w,p)&&ext(w,d-1);w.pop();if(g)return true}return false};
+      const go=w=>{if(w.length===len){if(ext(w,extra))c++;return}for(let v=0;v<n;v++){w.push(v);if(ok(w,p))go(w);w.pop()}};go([]);return c};
+    for(const n of [1,2,3])for(const cond in LOCAL)for(const p of (cond==='per'||cond==='fixk'?[1,2,3]:[2])){prefixes++;const x=condVal(n,cond,p),c6=count(n,LOCAL[cond],6,n+2,p),c9=count(n,LOCAL[cond],9,n+2,p),tag=[cond,'n='+n,'p='+p,L.fmt(x.c),c6,c9];
+      /* a finite set of sequences has exactly that many beginnings once they are long enough to tell the sequences apart */
+      if(x.c.t==='f'){if(c9!==Number(x.c.n)||c6!==c9)bad.push(['finite claim against counted beginnings',...tag])}
+      /* countable here means: grows without bound, but only like a polynomial. The continuum means: doubles again and again */
+      else if(x.c.k===0){if(!(c9>c6)||c9>Math.pow(10,n))bad.push(['countable claim against counted beginnings',...tag])}
+      else if(c9<8*c6/4||c9<16)bad.push(['continuum claim against counted beginnings',...tag])}
+    /* the pieces of the unions: sequences constant from place m, with period m, equal to c after place m. Counted as words of length 8 */
+    const PIECE={evconst:(w,m)=>w.every((x,i)=>i<m-1||x===w[m-1]),anyper:(w,m)=>w.every((x,i)=>i<m||x===w[i-m]),finsup:(w,m)=>w.every((x,i)=>i<m||x===0)};
+    for(const n of [2,3])for(const cond in PIECE){const x=condVal(n,cond,2),from=x.steps.parts?x.steps.parts.from:null;if(from===null){bad.push(['no pieces recorded',cond]);continue}
+      for(let m=from;m<=4;m++){parts++;let c=0;const go=w=>{if(w.length===8){if(PIECE[cond](w,m))c++;return}for(let v=0;v<n;v++){w.push(v);go(w);w.pop()}};go([]);if(c!==Math.pow(n,m))bad.push(['piece of the union is not A^m',cond,'n='+n,'m='+m,c,Math.pow(n,m)])}
+      if(from===1){let c=0;const go=w=>{if(w.length===8){if(PIECE[cond](w,0))c++;return}for(let v=0;v<n;v++){w.push(v);go(w);w.pop()}};/* nothing to check below the first piece */}}}
+  return{bad:bad.slice(0,30),total:bad.length,laws,counts,known,shown,pairsN,tight,nested,cons,prefixes,parts}});
 console.log(JSON.stringify(res),'page errors',errs);
 await b.close();process.exit(res.total||errs.length?1:0)})();

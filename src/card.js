@@ -106,7 +106,7 @@ function ranged(s,A,Bq,list,ia,ib){const K=KINDS[s.kind],X=`|${s.name}|`,ends=q=
    what the set is equivalent to, or what it lies between. The cardinality then follows as before ---------- */
 const ORD=new Set(['fin','N','Z','Q','R','I']);
 const CONDS={const:{l:'קבועה',t:()=>'aₙ = a₁'},per:{l:'מחזורית, עם מחזור נתון',p:'מחזור',t:p=>`aₙ₊${p} = aₙ`.replace(/₊(\d+)/,(m,d)=>'₊'+d.split('').map(x=>'₀₁₂₃₄₅₆₇₈₉'[x]).join(''))},anyper:{l:'מחזורית, במחזור כלשהו',t:()=>'∃p ∀n: aₙ₊ₚ = aₙ'},
-  evconst:{l:'קבועה ממקום מסוים',t:()=>'∃m ∀n ≥ m: aₙ = aₘ'},finsup:{l:'שווה לאיבר נתון c, פרט למספר סופי של מקומות',t:()=>'∃m ∀n ≥ m: aₙ = c'},
+  evconst:{l:'קבועה ממקום מסוים',t:()=>'∃m ∀n ≥ m: aₙ = aₘ'},finsup:{l:'שווה לאיבר נתון c, פרט למספר סופי של מקומות',t:()=>'∃m ∀n > m: aₙ = c'},
   fixk:{l:'ערכים נתונים במספר סופי של מקומות',p:'מקומות',t:p=>`a given at ${p} places`},fixeven:{l:'ערכים נתונים בכל המקומות הזוגיים',t:()=>'a₂ₙ given'},pairs:{l:'כל איבר במקום זוגי שווה לקודמו',t:()=>'a₂ₙ = a₂ₙ₋₁'},
   never:{l:'איבר נתון c אינו מופיע',t:()=>'∀n: aₙ ≠ c'},once:{l:'איבר נתון c מופיע לפחות פעם אחת',t:()=>'∃n: aₙ = c'},inf:{l:'איבר נתון c מופיע אינסוף פעמים',t:()=>'aₙ = c for infinitely many n'},fintimes:{l:'איבר נתון c מופיע רק מספר סופי של פעמים',t:()=>'aₙ = c for finitely many n'},
   inj:{l:'חד-חד-ערכית: אין איבר שחוזר',t:()=>'a one-to-one'},surj:{l:'על: כל איבר של הקבוצה מופיע',t:()=>'a onto'},
@@ -116,7 +116,7 @@ function condOf(s,k,srcKind,nm,na){const X=`|${nm}|`,q=CONDS[s.cond]||CONDS.cons
   if(q.ord&&!ORD.has(srcKind))return{bad:'התנאי משווה בין איברים, ולכן הקבוצה צריכה להיות קבוצת מספרים: סופית, הטבעיים, השלמים, הרציונליים, הממשיים או הקטע'};
   if(zero(k))return ex(F(0),`${X} = 0`,`אין אף סדרה אינסופית של איברי קבוצה ריקה`);
   /* the cardinality of "a finite stretch of free choices, then no more choices": 1, ℵ0 or κ */
-  const tail=(parts,low,lowWhy)=>{S.push([`${nm} = ∪ ${nm}ₘ,   m = 1, 2, 3, …,   ${nm}ₘ ≅ ${parts}`,low[0]]);if(one(k))return ex(F(1),`${X} = 1`,'מעל קבוצה של איבר אחד יש סדרה אחת בלבד');
+  const tail=(parts,low,lowWhy,from)=>{S.parts={from:from||1};S.push([`${nm} = ∪ ${nm}ₘ,   m = ${from===0?'0, 1, 2, …':'1, 2, 3, …'},   ${nm}ₘ ≅ ${parts}`,low[0]]);if(one(k))return ex(F(1),`${X} = 1`,'מעל קבוצה של איבר אחד יש סדרה אחת בלבד');
     if(fin(k)){S.push([`ℵ₀ ≤ ${X}`,lowWhy]);S.push([`${X} ≤ ℵ₀`,'איחוד בן־מנייה של קבוצות סופיות']);return CB(ALEPH)}
     S.push([`${fk} ≤ ${X}`,'הסדרות הקבועות מקיימות את התנאי, ויש אחת לכל איבר']);S.push([`${X} ≤ ℵ₀ · ${fk} = ${fk}`,`איחוד בן־מנייה של קבוצות שכל אחת מהן בעוצמה ${fk}`]);return CB(k)};
   const free=(why)=>{S.push([`${nm} ≅ ${seqA}`,why]);S.push([`${X} = ${sup(par(fk),'ℵ₀')}`,'קבוצות שקולות הן באותה עוצמה']);S.push(...powSteps(k,ALEPH));return{lo:all,hi:all,steps:S}};
@@ -125,7 +125,7 @@ function condOf(s,k,srcKind,nm,na){const X=`|${nm}|`,q=CONDS[s.cond]||CONDS.cons
   if(key==='per'){const c=pow(k,F(p));S.push([`${nm} ≅ ${sup(par(na),p)}`,`סדרה עם מחזור ${p} נקבעת על ידי ${p} האיברים הראשונים שלה, וכל בחירה שלהם נותנת סדרה כזאת`]);S.push([`${X} = ${sup(par(fk),p)}`,'קבוצות שקולות הן באותה עוצמה']);S.push(...powSteps(k,F(p)));return{lo:c,hi:c,steps:S}}
   if(key==='anyper')return tail(sup(par(na),'m'),['לפי אורך המחזור m: סדרה עם מחזור m נקבעת על ידי m האיברים הראשונים'],'לכל m יש סדרה שהמחזור הקצר ביותר שלה הוא m: בלוק באורך m שבו איבר אחד פעם אחת ואחריו רק איבר אחר, וחוזר חלילה');
   if(key==='evconst')return tail(`${sup(par(na),'m')}`,['לפי המקום m שממנו הסדרה קבועה: היא נקבעת על ידי m האיברים הראשונים'],'לכל m יש סדרה שנעשית קבועה בדיוק במקום m: איבר אחד בכל המקומות שלפני m, ואיבר אחר ממנו והלאה');
-  if(key==='finsup')return tail(`${sup(par(na),'m')}`,['לפי המקום m שממנו כל האיברים שווים ל־c: הסדרה נקבעת על ידי האיברים שלפניו'],'לכל m יש סדרה ששונה מ־c בדיוק במקום m');
+  if(key==='finsup')return tail(`${sup(par(na),'m')}`,['לפי מספר m של מקומות ראשונים שאחריהם כל האיברים שווים ל־c: הסדרה נקבעת על ידי m האיברים הראשונים'],'לכל m יש סדרה ששונה מ־c בדיוק במקום m',0);
   if(key==='fixk')return free(`${p} המקומות הנתונים אינם בחירה. נשארים ℵ₀ מקומות חופשיים, והסדרה נקבעת על ידי האיברים שבהם`);
   if(key==='fixeven')return free('המקומות הזוגיים אינם בחירה. המקומות האי־זוגיים חופשיים, ויש ℵ₀ כאלה');
   if(key==='pairs')return free('האיברים במקומות האי־זוגיים חופשיים, והם קובעים את השאר');
