@@ -1,9 +1,10 @@
-const {chromium}=require('playwright');
-(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const p=await b.newPage();
+const {chromium}=require('playwright'),path=require('path');
+/* usage: node soundness.js [max n] [step for n ≥ 7] [noauto];  CHROMIUM and PAGE override the browser and the page */
+(async()=>{const b=await chromium.launch(process.env.CHROMIUM||require('fs').existsSync('/opt/pw-browsers/chromium')?{executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'}:{});const p=await b.newPage();
 p.on('pageerror',e=>console.log('PAGEERR',e.message));
-await p.goto('file:///home/claude/graph-playground/index.html#open');
-const MAXN=Number(process.argv[2]||7),STEP=Number(process.argv[3]||1);
-const res=await p.evaluate(({MAXN,STEP})=>{
+await p.goto((process.env.PAGE||'file://'+path.resolve(__dirname,'..','index.html'))+'#open');
+const MAXN=Number(process.argv[2]||7),STEP=Number(process.argv[3]||1),AUTO=process.argv[4]!=='noauto';
+const res=await p.evaluate(({MAXN,STEP,AUTO})=>{
   const cycLens=(a,n)=>{const S=new Set();for(let s0=0;s0<n;s0++){const go=(v,mask,len)=>{let nb=a[v];while(nb){const u=low(nb);nb&=nb-1;if(u===s0&&len>=3)S.add(len);else if(u>s0&&!(mask>>u&1))go(u,mask|1<<u,len+1)}};go(s0,1<<s0,1)}return[...S].sort((x,y)=>x-y)};
   const truth=(a,n)=>{const d=degs(a),m=nEdges(a),c=nComps(a,n),al=alpha(a,n),nu=maxMatch(a,n),pl=isPlanar(a,n)?1:0;
     return{n,m,c,D:Math.max(...d),dl:Math.min(...d),chi:chi(a,n),al,nu,be:n-al,om:omega(a,n),pl,bp:isBip(a,n)?1:0,fo:m===n-c?1:0,ham:isHam(a,n)?1:0,eu:isEuler(a,n)&&m>0?1:0,
@@ -13,23 +14,28 @@ const res=await p.evaluate(({MAXN,STEP})=>{
     'יש זיווג מושלם':t=>2*t.nu===t.n,'אין זיווג מושלם':t=>2*t.nu!==t.n,'יש בגרף מעגל אחד בדיוק':t=>t.m===t.n-t.c+1,'הגרף מלא':t=>t.m===t.n*(t.n-1)/2,'יש בגרף מעגל, ולכן הוא אינו יער':t=>!t.fo,
     'מספר הצמתים זוגי':t=>t.n%2===0,'העץ הוא מסלול':t=>t.fo&&t.c===1&&t.D<=2,'העץ הוא כוכב':t=>t.fo&&t.c===1&&t.D===t.n-1,'הגרף אינו אוילרי: כל הדרגות אי-זוגיות':t=>!t.eu,
     'כל הפאות משולשים, ואי אפשר להוסיף קשת בלי לאבד מישוריות':t=>t.pl&&t.m===3*t.n-6,'כל הפאות מרובעות':t=>t.pl&&t.tf&&t.m===2*t.n-4};
-  const check=(tag,id,r,t)=>{cnt[tag]=(cnt[tag]||0)+1;if(!r){bad.push([tag,id,'missing']);return}if(r.bad){bad.push([tag,id,'FALSE CONTRADICTION']);return}
+  let caps=0,stopped=false;const check=(tag,id,r,t)=>{cnt[tag]=(cnt[tag]||0)+1;if(r&&r.cap)caps++;if(!r){bad.push([tag,id,'missing']);return}if(r.bad){bad.push([tag,id,'FALSE CONTRADICTION']);return}
     for(const k in r.B){const tv=t[k];if(tv===null||tv===undefined)continue;const [lo,hi]=r.B[k];if(tv<lo||(hi!=='inf'&&tv>hi))bad.push([tag,id,`${k}: true ${tv} not in [${lo},${hi}]`])}
-    for(const s of r.N){const f=insight[s];if(f){if(!f(t))bad.push([tag,id,'false insight: '+s])}else if(/מעגל פשוט על/.test(s)){}else bad.push([tag,id,'unchecked insight: '+s])}
+    for(const s of r.N){const f=insight[s];if(f){if(!f(t))bad.push([tag,id,'false insight: '+s])}else if(/מעגל פשוט על/.test(s)){const k=Number(s.match(/(\d+)/)[1]);if(t.cyc&&!t.cyc.some(x=>x>=k))bad.push([tag,id,'false insight: '+s])}else bad.push([tag,id,'unchecked insight: '+s])}
     if(r.P){let aL=1e9,aH=-1,nL=1e9,nH=-1;for(let i=0;i<t.n;i++)for(let j=i+1;j<t.n;j++){const sm=t.d[i]+t.d[j];if(t.a[i]>>j&1){aL=Math.min(aL,sm);aH=Math.max(aH,sm)}else{nL=Math.min(nL,sm);nH=Math.max(nH,sm)}}
       if(aH>=0){if(aL<r.P.adjLo)bad.push([tag,id,`adj sum ${aL} < ${r.P.adjLo}`]);if(r.P.adjHi!=='inf'&&aH>r.P.adjHi)bad.push([tag,id,`adj sum ${aH} > ${r.P.adjHi}`])}
       if(nH>=0){if(nL<r.P.nadjLo)bad.push([tag,id,`nonadj sum ${nL} < ${r.P.nadjLo}`]);if(r.P.nadjHi!=='inf'&&nH>r.P.nadjHi)bad.push([tag,id,`nonadj sum ${nH} > ${r.P.nadjHi}`])}
       if(r.P.ore&&!t.ham)bad.push([tag,id,'Ore says Hamiltonian, false'])}};
   const yn=x=>x?'y':'n';
   { const t1=truth([0],1);check('S0 single vertex',  '1#0',SHEET.solve([G('G',{n:1})])[0],t1);check('S0 single vertex, tree','1#0',SHEET.solve([G('G',{n:1,tr:'y'})])[0],t1);check('S0 single vertex, flags','1#0',SHEET.solve([G('G',{n:1,pl:'y',bp:'y',eu:'u'})])[0],t1)}
-  for(let n=2;n<=MAXN;n++){const U=universe('G',n).graphs;for(let i=0;i<U.length;i+=(n>=7?STEP:1)){const a=U[i],t=truth(a,n),id=n+'#'+i;if(bad.length>60)break;
+  for(let n=2;n<=MAXN;n++){const U=universe('G',n).graphs;for(let i=0;i<U.length;i+=(n>=7?STEP:1)){const a=U[i],t=truth(a,n),id=n+'#'+i;if(bad.length>60){stopped=true;break}
     const run=l=>{try{return SHEET.solve(l)}catch(e){bad.push(['throw',id,e.message]);return[]}};
+    const auto=l=>{try{return SHEET.solve(l,true)}catch(e){bad.push(['throw auto',id,e.message]);return[]}};
     const tr=t.fo?(t.c===1?'y':'f'):'n';
     check('S1 n,m,c,flags',id,run([G('G',{n,m:t.m,c:t.c,pl:yn(t.pl),bp:yn(t.bp),tr,tf:yn(t.tf),sc:isoCount(a,compl(a,n),n,true)?'y':'u'})])[0],t);
     check('S2 n,degrees',id,run(t.reg?[G('G',{n}),{t:'v',name:'a',in:'G',q:'all',d:t.D,cut:false}]:[G('G',{n,D:t.D,dl:t.dl})])[0],t);
     check('S3 n,chi,alpha,omega',id,run([G('G',{n,chi:t.chi,al:t.al,om:t.om})])[0],t);
     check('S4 n,nu,props',id,run([G('G',{n,nu:t.nu,eu:t.eu?'y':'u',ha:t.ham?'y':'u',pm:2*t.nu===n?'y':'u'})])[0],t);
     check('S4b only n,m',id,run([G('G',{n,m:t.m})])[0],t);
+    if(AUTO){const tc=truth(compl(a,n),n);
+      for(const [tag,l] of [['A1 auto: n,m,c,flags',[G('G',{n,m:t.m,c:t.c,pl:yn(t.pl),bp:yn(t.bp),tr})]],['A2 auto: degrees',[G('G',{n,D:t.D,dl:t.dl})]],['A3 auto: chi,alpha,omega',[G('G',{n,chi:t.chi,al:t.al,om:t.om})]],
+        ['A4 auto: nothing on n',[G('G',{m:t.m,c:t.c,D:t.D,dl:t.dl,tr})]],['A5 auto: degree sequence',[G('G',{ds:t.d.join(','),tr})]],['A6 auto: leaves counted',[G('G',{tr}),{t:'v',name:'q',in:'G',q:'cnt',d:t.d[0],k:t.d.filter(x=>x===t.d[0]).length,cut:false}]]]){
+        const r=auto(l);check(tag,id,r[0],t);const k=r.find(x=>x.name!=='G'&&/^[^−+]+$/.test(x.name));if(k)check(tag+' (complement)',id,k,tc)}}
     check('S20 degree sequence',id,run([G('G',{ds:t.d.join(','),pl:yn(t.pl),bp:yn(t.bp),tr})])[0],t);
     check('S21 allowed degrees',id,run([G('G',{n,c:t.c,dset:[...new Set(t.d)].join(','),tr})])[0],t);
     { const cnt={};t.d.forEach(x=>cnt[x]=(cnt[x]||0)+1);const vs=Object.entries(cnt).map(([dv,k],j)=>({t:'v',name:'q'+j,in:'G',q:'cnt',d:Number(dv),k,cut:false}));
@@ -83,6 +89,19 @@ const res=await p.evaluate(({MAXN,STEP})=>{
         const r4=run([G('G',{n}),G('K',{op:'join',src:'G',m:tj.m,D:tj.D,dl:tj.dl,chi:tj.chi,al:tj.al,nu:tj.nu,om:tj.om,pl:yn(tj.pl),bp:yn(tj.bp)})]);check('S17 back from join',id,r4[0],Object.assign({},t,{c:null}));
         const r5=run([G('G',{n,c:t.c}),G('K',{op:'join',src:'G',m:tj.m,D:tj.D,dl:tj.dl,chi:tj.chi,al:tj.al,nu:tj.nu,om:tj.om})]);check('S18 back from join, c known',id,r5[0],t)}}
   }}
-  return{bad:bad.slice(0,60),cnt}},{MAXN,STEP});
+  /* fixed cases beyond the catalogue: families whose values are known */
+  { const reg=(tag,l,want,auto)=>{let r;try{r=SHEET.solve(l,auto)[0]}catch(e){bad.push([tag,'-',e.message]);return}cnt[tag]=1;if(want.bad!==undefined){if(r.bad!==want.bad)bad.push([tag,'-','bad = '+r.bad])}
+      for(const k in want.v||{}){const [lo,hi]=r.B[k],x=want.v[k];if(r.bad||x<lo||(hi!=='inf'&&x>hi))bad.push([tag,'-',`${k}: true ${x} not in [${lo},${hi}]`])}};
+    reg('R1 K2 as a forest with two leaves, auto',[G('G',{tr:'f'}),{t:'v',name:'q',in:'G',q:'cnt',d:1,k:2}],{bad:false,v:{n:2,al:1,m:1}},true);
+    reg('R2 full binary tree of depth 20',[G('G',{n:2097151,D:3,dm:40,tr:'y'})],{bad:false,v:{n:2097151,m:2097150}});
+    reg('R3 sequence 3,3,1,1 is not graphic',[G('G',{ds:'3,3,1,1'})],{bad:true});
+    reg('R4 triangle with a pendant vertex',[G('G',{ds:'3,2,2,1'})],{bad:false,v:{lv:1,n:4,m:4}});
+    reg('R5 path on 50 vertices, auto',[G('G',{n:50,tr:'y',D:2})],{bad:false,v:{m:49,al:25,nu:25,dm:49,lv:2,chi:2}},true);
+    reg('R6 cycle on 31 vertices, auto',[G('G',{n:31,c:1,D:2,dl:2})],{bad:false,v:{m:31,al:15,nu:15,chi:3,dm:15}},true);
+    reg('R7 complete graph on 40 vertices, auto',[G('G',{n:40,om:40})],{bad:false,v:{m:780,al:1,chi:40,nu:20,dm:1}},true);
+    reg('R8 star on 100 vertices, auto',[G('G',{n:100,tr:'y',D:99})],{bad:false,v:{lv:99,al:99,nu:1,dm:2}},true)}
+  return{bad:bad.slice(0,60),total:bad.length,stopped,caps,cnt}},{MAXN,STEP,AUTO});
 console.log(res.cnt);console.log(res.bad.length?res.bad.map(x=>x.join(' | ')).join('\n'):'NO VIOLATIONS');
-await b.close()})();
+if(res.stopped)console.log('STOPPED EARLY: more than 60 violations, the catalogue was not fully checked');
+console.log('results where the round budget stopped the inference:',res.caps);
+await b.close();process.exit(res.bad.length||res.stopped?1:0)})();
