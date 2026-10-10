@@ -1323,7 +1323,7 @@ function tokens(nd,out,main){const w=c=>{if(c.v||c.op==='not')tokens(c,out);else
   if(nd.v)out.push({t:nd.v,nd,main});else if(nd.op==='not'){out.push({t:OPS.not[0],nd,main});w(nd.a)}else{w(nd.a);out.push({t:OPS[nd.op][0],nd,main});w(nd.b)}return out}
 const evalT=(nd,asg)=>nd.v?asg[nd.v]:nd.op==='not'?!evalT(nd.a,asg):EV[nd.op](evalT(nd.a,asg),evalT(nd.b,asg));
 function detailTable(rows,F){const V=vars(),k=V.length,blocks=L.filter(x=>x.t==='f').map(x=>({x,i:L.indexOf(x),tk:tokens(tree(x),[],true)}));
-  const tag=(x,f)=>x.given!=='u'?'<span class="lgtag g">נתון</span>':f.forced?`<span class="lgtag ${f.forced}">נובע</span>`:'';
+  const tag=(x,f)=>x.given!=='u'?`<span class="lgtag g">נתון: ${x.given==='T'?'אמת':'שקר'}</span>`:f.forced?`<span class="lgtag ${f.forced}">נובע: ${f.forced==='T'?'אמת':'שקר'}</span>`:'';
   const h1=`<th class="rn" rowspan="2"></th>`+V.map(v=>{const i=L.indexOf(v);return `<th rowspan="2" class="v${v.given!=='u'?' giv':''}"><span class="fx nm">${esc(v.name)}</span>${tag(v,F[i])}</th>`}).join('')+blocks.map(b=>`<th colspan="${b.tk.length}" class="blk${b.x.given!=='u'?' giv':''}"><span class="fx nm">${esc(b.x.name)}</span>${tag(b.x,F[b.i])}</th>`).join('');
   const h2=blocks.map(b=>b.tk.map((t,j)=>`<th class="tk${j===0?' blk':''}${t.main?' main':''}${t.nd?'':' par'}"><span class="fx">${esc(t.t)}</span></th>`).join('')).join('');
   const body=rows.map((r,n)=>{const asg={};V.forEach((v,i)=>{asg[v.name]=!((n>>(k-1-i))&1)});
@@ -1332,7 +1332,7 @@ function detailTable(rows,F){const V=vars(),k=V.length,blocks=L.filter(x=>x.t===
   return `<table class="lgtab det" dir="ltr"><thead><tr>${h1}</tr><tr>${h2}</tr></thead><tbody>${body}</tbody></table>`}
 function renderTable(){
   const rows=table(),F=facts(rows),live=rows.filter(r=>r.ok).length,given=L.filter(x=>x.given!=='u');
-  const head=L.map((x,i)=>{const f=F[i],tag=x.given!=='u'?'<span class="lgtag g">נתון</span>':f.forced?`<span class="lgtag ${f.forced}">נובע</span>`:'';
+  const head=L.map((x,i)=>{const f=F[i],tag=x.given!=='u'?`<span class="lgtag g">נתון: ${x.given==='T'?'אמת':'שקר'}</span>`:f.forced?`<span class="lgtag ${f.forced}">נובע: ${f.forced==='T'?'אמת':'שקר'}</span>`:'';
     return `<th scope="col" class="${atom(x)?'v':''}${x.given!=='u'?' giv':''}"><span class="fx nm">${esc(x.name)}</span>${x.t==='f'?`<span class="fx tx">${esc(text(x))}</span>`:''}${tag}</th>`}).join('');
   const body=rows.map((r,n)=>`<tr class="${r.ok?'':'out'}"><td class="rn">${n+1}</td>${r.vals.map((v,i)=>`<td class="${v?'T':'F'}${L[i].given!=='u'?' giv':''}${L[i].given!=='u'&&(L[i].given==='T')!==v?' clash':''}">${v?'T':'F'}</td>`).join('')}</tr>`).join('');
   document.getElementById('main').innerHTML=`<div class="lgwrap"><div class="colhead"><h2>לוח אמת משותף</h2><span class="lab">${given.length?`${live} מתוך ${rows.length} שורות מתיישבות עם הנתונים`:`${rows.length} שורות`}</span></div>
