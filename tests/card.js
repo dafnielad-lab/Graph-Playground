@@ -48,21 +48,39 @@ const res=await p.evaluate(()=>{const L=CARD.lib,bad=[];let laws=0,counts=0,know
         if(rel===''&&a<=3&&b<=3){const key=k+'|'+a+'|'+b,e=seenR[key]||(seenR[key]={lo:99,hi:-1,r});e.lo=Math.min(e.lo,T[k]);e.hi=Math.max(e.hi,T[k])}}}
     /* with no assumption the range is exactly what really occurs: six elements leave room for every case when both sets have at most three */
     for(const key in seenR){tight++;const e=seenR[key];if(Number(e.r.lo.n)!==e.lo||Number(e.r.hi.n)!==e.hi)bad.push(['range not tight',key,e.lo,e.hi,L.fmt(e.r.lo),L.fmt(e.r.hi)])}}
-  { /* a construction over a set known only as a range must contain what it gives for every value in the range */
-    const kinds=Object.keys(L.KINDS).filter(k=>L.KINDS[k].src),others=[{kind:'fin',n:0},{kind:'fin',n:1},{kind:'fin',n:3},{kind:'N'},{kind:'R'}];
-    for(const a of [0,1,2,3])for(const b2 of [0,1,2])for(const mk of ['uni','int','dif','sym'])for(const o of others)for(const kind of kinds)for(const side of [0,1]){
-      const base=[{name:'P',kind:'fin',n:a},{name:'Q',kind:'fin',n:b2},{name:'P1',kind:'tup',a:'P',n:1},{name:'Q1',kind:'tup',a:'Q',n:1},{name:'U',kind:mk,a:'P1',b:'Q1'},Object.assign({name:'O'},o),{name:'O1',kind:'tup',a:'O',n:1}];
-      const X={name:'X',kind,a:side?'O1':'U',b:side?'U':'O1',n:2},R=L.solve([...base,X]),u=R[4],x=R[R.length-1];
-      for(let v=Number(u.lo.n);v<=Number(u.hi.n);v++){nested++;const R2=L.solve([{name:'U0',kind:'fin',n:v},{name:'U',kind:'tup',a:'U0',n:1},Object.assign({name:'O'},o),{name:'O1',kind:'tup',a:'O',n:1},X]),y=R2[R2.length-1];
-        if(L.cmp(x.lo,y.lo)>0||L.cmp(y.hi,x.hi)>0)bad.push(['range does not contain a case',mk,kind,a,b2,v,JSON.stringify(o),L.fmt(x.lo),L.fmt(x.hi),L.fmt(y.lo),L.fmt(y.hi)])}}}
+  { /* random lists of finite sets, built for real as sets of strings: every cardinality claimed must contain the true size, and every relation read off the structure must be true */
+    const tuples=(A,n)=>{let o=[[]];for(let t=0;t<n;t++)o=o.flatMap(x=>A.map(y=>[...x,y]));return o.map(x=>'('+x.join(',')+')')},subsets=A=>{const o=[];for(let m=0;m<1<<A.length;m++)o.push('{'+A.filter((_,t)=>m>>t&1).join(',')+'}');return o};
+    const build=(s,A,Bq)=>{const k=s.kind;if(k==='fin')return Array.from({length:s.n},(_,t)=>String(t+1));if(k==='prod')return A.flatMap(x=>Bq.map(y=>'<'+x+'|'+y+'>'));if(k==='tup')return tuples(A,s.n);if(k==='pow'||k==='pfin')return subsets(A);
+      if(k==='sum')return [...A.map(x=>'L:'+x),...Bq.map(y=>'R:'+y)];if(k==='fun'){let o=[[]];for(const x of A)o=o.flatMap(f=>Bq.map(y=>[...f,x+'↦'+y]));return o.map(f=>'['+f.join(';')+']')}
+      const SA=new Set(A),SB=new Set(Bq);if(k==='uni')return [...new Set([...A,...Bq])];if(k==='int')return A.filter(x=>SB.has(x));if(k==='dif')return A.filter(x=>!SB.has(x));return [...A.filter(x=>!SB.has(x)),...Bq.filter(x=>!SA.has(x))]};
+    let seed=24681357;const rnd=()=>(seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff;
+    const kinds=['prod','prod','tup','pow','pfin','fun','sum','uni','int','dif','sym','uni','int','dif','sym','dif','int'],names='ABCDEFGHJK';let exactN=0,relN=0;
+    for(let t=0;t<4000;t++){const list=[],real=[];for(let q=0;q<3;q++){list.push({name:names[q],kind:'fin',n:Math.floor(rnd()*4)});real.push(build(list[q]))}
+      for(let q=3;q<9;q++){for(let tries=0;tries<20;tries++){const k=kinds[Math.floor(rnd()*kinds.length)],a=Math.floor(rnd()*q),b2=Math.floor(rnd()*q),s={name:names[q],kind:k,a:names[a],b:names[b2],n:Math.floor(rnd()*3)};
+          if((k==='pow'||k==='pfin')&&real[a].length>6)continue;if(k==='fun'&&Math.pow(Math.max(real[b2].length,1),real[a].length)>300)continue;if(k==='tup'&&Math.pow(Math.max(real[a].length,1),s.n)>300)continue;if(k==='prod'&&real[a].length*real[b2].length>300)continue;
+          list.push(s);real.push(build(s,real[a],real[b2]));break}if(list.length<=q)break}
+      const R=L.solve(list),memo=new Map();
+      for(let q=0;q<list.length;q++){nested++;const x=R[q],v=L.F(real[q].length);if(x.bad){bad.push(['unexpected bad set',JSON.stringify(list)]);continue}if(x.c)exactN++;
+        if(L.cmp(x.lo,v)>0||L.cmp(v,x.hi)>0)bad.push(['true size outside the claim',list[q].name,real[q].length,L.fmt(x.lo),L.fmt(x.hi),JSON.stringify(list)])}
+      for(let q=0;q<list.length;q++)for(let w=0;w<list.length;w++){const r=L.relOf(q,w,list,memo);if(!r)continue;relN++;const SA=new Set(real[q]),SB=new Set(real[w]),sub=real[q].every(x=>SB.has(x)),sup=real[w].every(x=>SA.has(x)),dis=!real[q].some(x=>SB.has(x));
+        if((r==='eq'&&!(sub&&sup))||(r==='sub'&&!sub)||(r==='sup'&&!sup)||(r==='dis'&&!dis))bad.push(['false relation between sets',r,list[q].name,list[w].name,JSON.stringify(list)])}}
+    tight=[tight,exactN,relN].join('/')}
   /* infinite sets whose answer is known */
-  const wantR=(l,v,what)=>{known++;const r=L.solve(l),x=r[r.length-1],g=x.c?L.fmt(x.c):L.fmt(x.lo)+' … '+L.fmt(x.hi);if(g!==v)bad.push(['known value',what,g,v])};
+  const wantR=(l,v,what)=>{known++;const r=L.solve(l),x=r[r.length-1],g=x.c?L.fmt(x.c):L.fmt(x.lo)+' … '+L.fmt(x.hi);if(v==='range'?!!x.c:g!==v)bad.push(['known value',what,g,v])};
   const at=(n,k,x)=>Object.assign({name:n,kind:k},x||{});
   wantR([at('A','R'),at('B','Q'),at('C','dif',{a:'A',b:'B'})],Cc,'the irrationals');wantR([at('A','R'),at('B','N'),at('C','uni',{a:'A',b:'B'})],Cc,'R ∪ N');wantR([at('A','N'),at('B','R'),at('C','int',{a:'A',b:'B'})],A0,'N ∩ R');
   wantR([at('A','Z'),at('B','N'),at('C','dif',{a:'A',b:'B'})],'0 … '+A0,'Z ∖ N: not settled by cardinalities alone');wantR([at('A','N'),at('B','Z'),at('C','dif',{a:'A',b:'B'})],'0','N ∖ Z');
   wantR([at('A','N'),at('B','pow',{a:'A'}),at('C','pfin',{a:'A'}),at('D','dif',{a:'B',b:'C',rel:'sup'})],Cc,'the infinite subsets of N');wantR([at('A','N'),at('B','pow',{a:'A'}),at('C','pfin',{a:'A'}),at('D','dif',{a:'B',b:'C'})],Cc,'the same, with nothing said about the relation');
   wantR([at('A','R'),at('B','Q'),at('C','sym',{a:'A',b:'B'})],Cc,'R △ Q');wantR([at('A','I'),at('B','Z'),at('C','int',{a:'A',b:'B'})],'0','(0,1) ∩ Z');wantR([at('A','I'),at('B','N'),at('C','uni',{a:'A',b:'B'})],Cc,'(0,1) ∪ N');
   wantR([at('A','N'),at('B','seq',{a:'A'}),at('C','star',{a:'A'}),at('D','uni',{a:'B',b:'C'})],Cc,'infinite and finite sequences together');wantR([at('A','fin',{n:5}),at('B','fin',{n:3}),at('C','dif',{a:'A',b:'B'})],'2','{1..5} ∖ {1..3}');
+  /* what the structure settles */
+  const RR=[at('A','R'),at('M','Q'),at('B','prod',{a:'A',b:'A'}),at('C','prod',{a:'M',b:'A'})];
+  wantR([...RR,at('D','dif',{a:'B',b:'C'})],Cc,'(R × R) ∖ (Q × R)');wantR([...RR,at('D','int',{a:'B',b:'C'})],Cc,'(R × R) ∩ (Q × R)');wantR([...RR,at('E','prod',{a:'A',b:'M'}),at('D','int',{a:'C',b:'E'})],A0,'(Q × R) ∩ (R × Q) = Q × Q');
+  wantR([...RR,at('D','dif',{a:'B',b:'B'})],'0','a set minus itself');wantR([...RR,at('E','prod',{a:'M',b:'M'}),at('D','dif',{a:'B',b:'E'})],Cc,'R² ∖ Q²');
+  wantR([at('A','N'),at('B','fin',{n:2}),at('C','fun',{a:'A',b:'B'}),at('D','R'),at('E','seq',{a:'D'}),at('K','int',{a:'C',b:'E'})],Cc,'functions from N into {1,2}, against sequences of reals: a sequence is such a function');
+  wantR([at('A','fin',{n:2}),at('D','R'),at('C','seq',{a:'A'}),at('E','seq',{a:'D'}),at('K','int',{a:'C',b:'E'})],Cc,'binary sequences ∩ real sequences');wantR([at('A','R'),at('M','Q'),at('B','pow',{a:'A'}),at('C','pow',{a:'M'}),at('D','dif',{a:'B',b:'C'})],CC,'P(R) ∖ P(Q)');
+  wantR([at('A','R'),at('M','Q'),at('B','seq',{a:'A'}),at('C','seq',{a:'M'}),at('D','dif',{a:'B',b:'C'})],Cc,'real sequences that are not all rational');wantR([at('A','N'),at('M','fin',{n:2}),at('B','star',{a:'A'}),at('C','star',{a:'M'}),at('D','dif',{a:'B',b:'C'})],A0,'N* ∖ {1,2}*');
+  wantR([at('A','N'),at('B','pow',{a:'A'}),at('C','pow',{a:'A'}),at('D','sym',{a:'B',b:'C'})],'0','P(N) △ P(N)');wantR([at('A','R'),at('B','seq',{a:'A'}),at('C','cond',{a:'A',cond:'evconst'}),at('D','dif',{a:'B',b:'C'})],'0 … '+Cc,'sequences that are not eventually constant: equal cardinalities, not settled');
   /* ---- infinite sequences with a condition ---- */
   let cons=0;
   { const srcs={e:[at('A','fin',{n:0})],one:[at('A','fin',{n:1})],two:[at('A','fin',{n:2})],three:[at('A','fin',{n:3})],N:[at('A','N')],Z:[at('A','Z')],Q:[at('A','Q')],R:[at('A','R')],I:[at('A','I')],PR:[at('A0','R'),at('A','pow',{a:'A0'})]};

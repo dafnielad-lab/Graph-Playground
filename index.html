@@ -1918,7 +1918,7 @@ const fmt=c=>fin(c)?(c.n===null?'<i>N</i>':c.n.toString().length>40?c.n.toString
 const word=c=>fin(c)?(zero(c)?'הקבוצה הריקה':c.n===null?'סופית, גדולה מכדי לכתוב':'סופית'):c.k===0?'בת־מנייה':c.k===1?'עוצמת הרצף':'גדולה מעוצמת הרצף';
 
 /* ---------- the kinds of sets ---------- */
-const NAMES='ABCDEFGHJKLM';
+const NAMES='ABCDEFGHJKLMNPQRSTUVWXYZ';
 const KINDS={fin:{l:'קבוצה סופית בגודל נתון',n:true,sym:(a,b,n)=>n===0?'∅':n===1?'{1}':n===2?'{1, 2}':`{1, …, ${n}}`},
   N:{l:'הטבעיים',sym:()=>'ℕ'},Z:{l:'השלמים',sym:()=>'ℤ'},Q:{l:'הרציונליים',sym:()=>'ℚ'},R:{l:'הממשיים',sym:()=>'ℝ'},I:{l:'הקטע הפתוח בין אפס לאחת',sym:()=>'(0, 1)'},
   sum:{l:'איחוד זר של שתי קבוצות',src:2,sym:(a,b)=>`${a} ⊔ ${b}`},prod:{l:'מכפלה קרטזית',src:2,sym:(a,b)=>`${a} × ${b}`},
@@ -1964,7 +1964,7 @@ function cardOf(s,ca,cb,nm,na,nb){const k=s.kind,X=`|${nm}|`,S=[];let c;
 /* ---------- union, intersection, difference: the cardinalities of the two sets do not settle the answer, so the result is a range
    unless something is known about how the sets sit: disjoint, or one inside the other ---------- */
 const lt=(x,y)=>cmp(x,y)<0,mn=(x,y)=>lt(y,x)?y:x,mx=(x,y)=>lt(x,y)?y:x,minus=(x,y)=>x.n===null||y.n===null?null:F(x.n>y.n?x.n-y.n:0n);
-const RELS={'':'לא נתון',dis:'זרות',sub:'הראשונה מוכלת בשנייה',sup:'השנייה מוכלת בראשונה'};
+const RELS={eq:'שוות','':'לא נתון',dis:'זרות',sub:'הראשונה מוכלת בשנייה',sup:'השנייה מוכלת בראשונה'};
 /* what is known without being told: the standard sets sit inside one another, and the open interval misses the integers */
 function autoRel(sa,sb){const rank={fin:0,N:1,Z:2,Q:3,R:4},a=sa.kind,b=sb.kind;if(a==='fin'&&nOf(sa)===0)return 'sub';if(b==='fin'&&nOf(sb)===0)return 'sup';
   if(a in rank&&b in rank){if(a==='fin'&&b==='fin')return nOf(sa)<=nOf(sb)?'sub':'sup';return rank[a]<=rank[b]?'sub':'sup'}
@@ -1992,6 +1992,78 @@ function setOp(kind,rel,a,b,nm,na,nb){const X=`|${nm}|`,fa=fmt(a),fb=fmt(b),S=[]
   if(fin(a)&&fin(b)){const d=lt(a,b)?minus(b,a):minus(a,b),lo=d||F(0),hi=add(a,b);return same(lo,hi)?ex(lo,`${X} = ${fmt(lo)}`,'אחת הקבוצות ריקה'):rg(lo,hi,`${fmt(lo)} ≤ ${X} ≤ ${fmt(hi)}`,'החסם התחתון כשאחת מוכלת בשנייה, והעליון כשהן זרות')}
   if(!same(a,b)){const big=mx(a,b),[P,Q]=lt(b,a)?[na,nb]:[nb,na];S.push([`|${P} ∖ ${Q}| = ${fmt(big)}`,`${Q} קטנה מ־${P}, ולכן הסרתה אינה משנה את העוצמה האינסופית`]);return ex(big,`${fmt(big)} ≤ ${X} ≤ ${fa} + ${fb} = ${fmt(big)}`,`${P} ∖ ${Q} מוכלת בהפרש הסימטרי, והוא מוכל באיחוד`)}
   return rg(F(0),a,`0 ≤ ${X} ≤ ${fa}`,'שתי הקבוצות באותה עוצמה אינסופית, וההפרש הסימטרי תלוי בקבוצות עצמן')}
+/* ---------- how two sets sit, read off their structure: equal, one inside the other, or disjoint ---------- */
+const flip=r=>r==='sub'?'sup':r==='sup'?'sub':r,inS=r=>r==='eq'||r==='sub',inP=r=>r==='eq'||r==='sup';
+/* a sequence is a function from the naturals: the two constructions are compared as one */
+const mapOf=(s,i,list)=>{const ix=nm=>{const q=list.findIndex(x=>x.name===nm);return q>=0&&q<i?q:-1};return s.kind==='seq'?{dom:null,cod:ix(s.a)}:s.kind==='fun'?{dom:ix(s.a),cod:ix(s.b)}:null};
+const domEq=(m1,m2,list,memo)=>m1.dom===null&&m2.dom===null?true:m1.dom===null?m2.dom>=0&&list[m2.dom].kind==='N':m2.dom===null?m1.dom>=0&&list[m1.dom].kind==='N':m1.dom>=0&&m2.dom>=0&&relOf(m1.dom,m2.dom,list,memo)==='eq';
+function relOf(i,j,list,memo){if(i===j)return 'eq';const key=i+','+j;if(memo.has(key))return memo.get(key);memo.set(key,'');
+  const si=list[i],sj=list[j],ix=(nm,lim)=>{const q=list.findIndex(x=>x.name===nm);return q>=0&&q<lim?q:-1},R=(a,b)=>a<0||b<0?'':relOf(a,b,list,memo);
+  const ai=ix(si.a,i),bi=ix(si.b,i),aj=ix(sj.a,j),bj=ix(sj.b,j),Ki=KINDS[si.kind],Kj=KINDS[sj.kind];
+  /* rules that look at the first set only; the mirror image is taken afterwards */
+  const one=(s,a,b,K,me,other)=>{const k=s.kind,r=x=>x<0?'':relOf(x,other,list,memo);
+    if(k==='dif'){if(inS(r(a)))return 'sub';if(r(a)==='dis')return 'dis';if(b>=0&&inS(relOf(other,b,list,memo)))return 'dis'}
+    if(k==='int'){if(inS(r(a))||inS(r(b)))return 'sub';if(r(a)==='dis'||r(b)==='dis')return 'dis'}
+    if(k==='uni'){if(inS(r(a))&&inS(r(b)))return 'sub';if(inP(r(a))||inP(r(b)))return 'sup';if(r(a)==='dis'&&r(b)==='dis')return 'dis'}
+    if(k==='cond'){const o=list[other];if(o.kind==='seq'){const q=ix(o.a,other);if(inS(R(a,q)))return 'sub'}}
+    return ''};
+  let res='';
+  if(!Ki.src&&!Kj.src)res=si.kind===sj.kind&&(si.kind!=='fin'||nOf(si)===nOf(sj))?'eq':autoRel(si,sj);
+  else if(!Ki.src&&si.kind==='fin'&&nOf(si)===0)res='sub';else if(!Kj.src&&sj.kind==='fin'&&nOf(sj)===0)res='sup';
+  else if(si.kind===sj.kind&&['seq','star','pow','pfin'].includes(si.kind)||(si.kind==='tup'&&sj.kind==='tup'&&nOf(si)===nOf(sj))){const r=R(ai,aj);res=r==='dis'?(si.kind==='seq'||(si.kind==='tup'&&nOf(si)>=1)?'dis':''):r}
+  else if(si.kind==='prod'&&sj.kind==='prod'){const r1=R(ai,aj),r2=R(bi,bj);res=r1==='eq'&&r2==='eq'?'eq':inS(r1)&&inS(r2)?'sub':inP(r1)&&inP(r2)?'sup':r1==='dis'||r2==='dis'?'dis':''}
+  else if(mapOf(si,i,list)&&mapOf(sj,j,list)&&domEq(mapOf(si,i,list),mapOf(sj,j,list),list,memo)){const r=R(mapOf(si,i,list).cod,mapOf(sj,j,list).cod);res=r==='dis'?'':r}
+  else if(si.kind==='cond'&&sj.kind==='cond'&&si.cond===sj.cond&&nOf(si)===nOf(sj)&&R(ai,aj)==='eq')res='eq';
+  if(!res)res=one(si,ai,bi,Ki,i,j);if(!res)res=flip(one(sj,aj,bj,Kj,j,i));
+  memo.set(key,res);return res}
+/* a set operation between two sets of the list, by position. First what the structure gives: the same construction on both sides
+   lets the operation move inside it. Otherwise the cardinalities and the relation between the sets */
+const rng=(lo,hi,steps)=>({lo,hi,steps}),isEx=r=>same(r.lo,r.hi),show=(X,r)=>isEx(r)?`${X} = ${fmt(r.lo)}`:`${fmt(r.lo)} ≤ ${X} ≤ ${fmt(r.hi)}`;
+function plainOp(kind,rel,P,Q,nm,na,nb){if(isEx(P)&&isEx(Q))return setOp(kind,rel,P.lo,Q.lo,nm,na,nb);let lo=null,hi=null;
+  for(const a of [P.lo,P.hi])for(const b of [Q.lo,Q.hi]){const r=setOp(kind,rel,a,b,nm,na,nb);lo=lo===null?r.lo:mn(lo,r.lo);hi=hi===null?r.hi:mx(hi,r.hi)}
+  if(kind==='sym'&&rel===''&&!lt(P.hi,Q.lo)&&!lt(Q.hi,P.lo))lo=F(0);
+  return rng(lo,hi,[[show(`|${nm}|`,{lo,hi}),'עוצמת אחד המקורות ידועה רק כטווח. מציבים את קצות הטווחים: הקטנים ביותר לחסם התחתון, והגדולים ביותר לעליון']])}
+const OPSYM={uni:'∪',int:'∩',dif:'∖',sym:'△'};
+function opCalc(kind,i,j,ctx,nm,userRel){const {list,out,memo}=ctx,P=out[i],Q=out[j],na=list[i].name,nb=list[j].name,X=`|${nm}|`,rel=userRel||relOf(i,j,list,memo);
+  if(rel==='eq'){const keep=kind==='uni'||kind==='int';return keep?rng(P.lo,P.hi,[[`${nm} = ${na},   ${show(X,P)}`,`${na} ו־${nb} הן אותה קבוצה`]]):rng(F(0),F(0),[[`${nm} = ∅,   ${X} = 0`,`${na} ו־${nb} הן אותה קבוצה`]])}
+  if(!userRel){const r=structOp(kind,i,j,ctx,nm);if(r)return r}
+  return plainOp(kind,rel,P,Q,nm,na,nb)}
+function structOp(kind,i,j,ctx,nm){const {list,out,memo}=ctx,si=list[i],sj=list[j],X=`|${nm}|`,o=OPSYM[kind],M1=mapOf(si,i,list),M2=mapOf(sj,j,list);if(si.kind!==sj.kind&&!(M1&&M2))return null;
+  const ix=(q,lim)=>{const t=list.findIndex(x=>x.name===q);return t>=0&&t<lim?t:-1},k=si.kind,S=[],sub=(kd,a,c)=>opCalc(kd,a,c,ctx,`${list[a].name} ${OPSYM[kd]} ${list[c].name}`,''),nmOp=(kd,a,c)=>`${list[a].name} ${OPSYM[kd]} ${list[c].name}`;
+  if(k==='prod'){const a=ix(si.a,i),b=ix(si.b,i),c=ix(sj.a,j),d=ix(sj.b,j);if(a<0||b<0||c<0||d<0)return null;const A=out[a],Bq=out[b],[An,Bn,Cn,Dn]=[a,b,c,d].map(t=>list[t].name);
+    if(kind==='int'){const r1=sub('int',a,c),r2=sub('int',b,d),r=rng(mul(r1.lo,r2.lo),mul(r1.hi,r2.hi));S.push([`${nm} = (${An} ∩ ${Cn}) × (${Bn} ∩ ${Dn})`,'זוג נמצא בשתי המכפלות בדיוק כשכל רכיב שלו נמצא בשני הגורמים המתאימים']);S.push(...r1.steps,...r2.steps);
+      S.push([isEx(r)?`${X} = ${fmt(r1.lo)} · ${fmt(r2.lo)} = ${fmt(r.lo)}`:show(X,r),isEx(r)?'מכפלה קרטזית: מכפלת העוצמות':'מכפלת קצות הטווחים']);return rng(r.lo,r.hi,S)}
+    if(kind==='dif'){if(isEx(A)&&isEx(Bq)&&fin(A.lo)&&fin(Bq.lo)&&A.lo.n!==null&&Bq.lo.n!==null){const i1=sub('int',a,c),i2=sub('int',b,d),tot=mul(A.lo,Bq.lo),lo=minus(tot,mul(i1.hi,i2.hi)),hi=minus(tot,mul(i1.lo,i2.lo));if(!lo||!hi)return null;
+        S.push([`${nm} = (${An} × ${Bn}) ∖ ((${An} ∩ ${Cn}) × (${Bn} ∩ ${Dn}))`,'מהמכפלה הראשונה מוסרים בדיוק הזוגות שנמצאים גם בשנייה, והם מכפלת החיתוכים']);S.push(...i1.steps,...i2.steps);const r=rng(lo,hi);
+        S.push([isEx(r)?`${X} = ${fmt(A.lo)} · ${fmt(Bq.lo)} − ${fmt(i1.lo)} · ${fmt(i2.lo)} = ${fmt(lo)}`:show(X,r),isEx(r)?'קבוצות סופיות, והמוסרת מוכלת במקור: חיסור':'חיסור בקצות הטווחים']);return rng(lo,hi,S)}
+      const d1=sub('dif',a,c),d2=sub('dif',b,d),lo=mx(mul(d1.lo,Bq.lo),mul(A.lo,d2.lo)),hi=add(mul(d1.hi,Bq.hi),mul(A.hi,d2.hi)),r=rng(lo,hi);
+      S.push([`${nm} = ((${An} ∖ ${Cn}) × ${Bn}) ∪ (${An} × (${Bn} ∖ ${Dn}))`,'זוג נשאר בהפרש בדיוק כשהרכיב הראשון שלו מחוץ ל־'+Cn+' או השני מחוץ ל־'+Dn]);S.push(...d1.steps,...d2.steps);
+      S.push([`|(${An} ∖ ${Cn}) × ${Bn}| ${isEx(d1)&&isEx(Bq)?'= '+fmt(mul(d1.lo,Bq.lo)):'≤ '+fmt(mul(d1.hi,Bq.hi))},   |${An} × (${Bn} ∖ ${Dn})| ${isEx(d2)&&isEx(A)?'= '+fmt(mul(A.lo,d2.lo)):'≤ '+fmt(mul(A.hi,d2.hi))}`,'מכפלה קרטזית: מכפלת העוצמות']);
+      S.push([show(X,r),isEx(r)?'האיחוד אינו קטן מכל אחד מהחלקים ואינו גדול מסכומם, והחסמים שווים':'האיחוד אינו קטן מכל אחד מהחלקים ואינו גדול מסכומם']);return rng(lo,hi,S)}
+    /* union and symmetric difference move inside only when the other factor is shared */
+    const m=ctx.memo,same2=relOf(b,d,list,m)==='eq',same1=relOf(a,c,list,m)==='eq';if(!same1&&!same2)return null;
+    const r0=same2?sub(kind,a,c):sub(kind,b,d),F0=same2?Bq:A,r=rng(mul(r0.lo,F0.lo),mul(r0.hi,F0.hi));
+    S.push([same2?`${nm} = (${An} ${o} ${Cn}) × ${Bn}`:`${nm} = ${An} × (${Bn} ${o} ${Dn})`,'הגורם האחר משותף לשתי המכפלות, ולכן הפעולה נעשית בגורם השונה בלבד']);S.push(...r0.steps);S.push([show(X,r),'מכפלה קרטזית: מכפלת העוצמות']);return rng(r.lo,r.hi,S)}
+  /* constructions made of components taken from one set: sequences, tuples, functions from a fixed set, subsets */
+  let a,c,e=null,wrap;
+  if((si.kind===sj.kind&&['seq','star','pow','pfin'].includes(k))||(k==='tup'&&sj.kind==='tup'&&nOf(si)===nOf(sj))){a=ix(si.a,i);c=ix(sj.a,j);e=k==='seq'?ALEPH:k==='tup'?F(nOf(si)):null}
+  else if(M1&&M2){if(!domEq(M1,M2,list,memo)||(M1.dom!==null&&(M1.dom<0||!isEx(out[M1.dom]))))return null;a=M1.cod;c=M2.cod;e=M1.dom===null?ALEPH:out[M1.dom].lo}
+  else return null;
+  if(a<0||c<0||(kind!=='int'&&kind!=='dif'))return null;
+  const An=list[a].name,Cn=list[c].name,A=out[a],form=t=>KINDS[k].sym(k==='fun'?list[ix(si.a,i)].name:t,k==='fun'?t:'',nOf(si),si);
+  const m=x=>k==='pow'?pow(F(2),x):k==='pfin'?(fin(x)?pow(F(2),x):x):k==='star'?(zero(x)?F(1):fin(x)?ALEPH:x):pow(x,e);
+  if(kind==='int'){const r0=sub('int',a,c),r=rng(m(r0.lo),m(r0.hi));S.push([`${nm} = ${form(`(${An} ∩ ${Cn})`)}`,'איבר נמצא בשתי הקבוצות בדיוק כשכל הרכיבים שלו נמצאים בשני המקורות']);S.push(...r0.steps);S.push([show(X,r),isEx(r)?'אותה בנייה, מעל החיתוך':'אותה בנייה, מעל קצות הטווח של החיתוך']);return rng(r.lo,r.hi,S)}
+  if(!isEx(A))return null;const whole=m(A.lo),d=sub('dif',a,c);
+  S.push([`${nm} = ${form(An)} ∖ ${form(`(${An} ∩ ${Cn})`)}`,`איבר של הראשונה נמצא גם בשנייה בדיוק כשכל הרכיבים שלו ב־${Cn}`]);
+  if(e&&zero(e))return rng(F(0),F(0),[...S,[`${X} = 0`,'בלי רכיבים יש איבר אחד בלבד, והוא משותף לשתיהן']]);
+  if(fin(whole)&&whole.n!==null){const i0=sub('int',a,c),lo=minus(whole,m(i0.hi)),hi=minus(whole,m(i0.lo));if(!lo||!hi)return null;const r=rng(lo,hi);S.push(...i0.steps);
+    S.push([isEx(r)?`${X} = ${fmt(whole)} − ${fmt(m(i0.lo))} = ${fmt(lo)}`:show(X,r),isEx(r)?'קבוצות סופיות, והמוסרת מוכלת במקור: חיסור':'חיסור בקצות הטווחים']);return rng(lo,hi,S)}
+  S.push(...d.steps);
+  if(zero(d.hi))return rng(F(0),F(0),[...S,[`${X} = 0`,`אין ב־${An} איבר מחוץ ל־${Cn}`]]);
+  if(e&&one(e))return rng(d.lo,d.hi,[...S,[show(X,d),'רכיב אחד בלבד: ההפרש הוא ההפרש של המקורות']]);
+  if(!zero(d.lo))return rng(whole,whole,[...S,[`${X} = ${fmt(whole)}`,`יש ב־${An} איבר מחוץ ל־${Cn}. כבר האיברים שבהם הוא מופיע ברכיב אחד קבוע, והשאר חופשיים, נותנים את מלוא העוצמה`]]);
+  return rng(F(0),whole,[...S,[`0 ≤ ${X} ≤ ${fmt(whole)}`,`לא ידוע אם יש ב־${An} איבר מחוץ ל־${Cn}`]])}
+
 /* a construction over sets whose cardinality is only known as a range: the ends of the ranges, since every construction here only grows when its sets grow */
 function ranged(s,A,Bq,list,ia,ib){const K=KINDS[s.kind],X=`|${s.name}|`,ends=q=>q?(same(q.lo,q.hi)?[q.lo]:[q.lo,q.hi]):[null];let lo=null,hi=null;
   const rel=K.rel?(s.rel||autoRel(list[ia],list[ib])):'';
@@ -2051,15 +2123,15 @@ function condOf(s,k,srcKind,nm,na){const X=`|${nm}|`,q=CONDS[s.cond]||CONDS.cons
 /* ---------- state ---------- */
 let SETS=[{name:'A',kind:'N'},{name:'B',kind:'fin',n:2},{name:'C',kind:'fun',a:'A',b:'B'},{name:'D',kind:'R'},{name:'E',kind:'seq',a:'D'},{name:'F',kind:'pow',a:'D'},{name:'G',kind:'star',a:'A'},{name:'H',kind:'Q'},{name:'J',kind:'dif',a:'D',b:'H'},{name:'K',kind:'int',a:'C',b:'E'},{name:'L',kind:'cond',a:'A',cond:'si'},{name:'M',kind:'cond',a:'B',cond:'evconst'}],CUR=10;
 /* every set in order: its cardinality, its steps, and its full expression in terms of the atoms. A set may use only sets listed before it */
-function solve(list){const out=[];list.forEach((s,i)=>{const K=KINDS[s.kind],ix=nm=>{const j=list.findIndex(x=>x.name===nm);return j>=0&&j<i?j:-1},ia=K.src?ix(s.a):-1,ib=K.src===2?ix(s.b):-1;
+function solve(list){const out=[],ctx={list,out,memo:new Map()};list.forEach((s,i)=>{const K=KINDS[s.kind],ix=nm=>{const j=list.findIndex(x=>x.name===nm);return j>=0&&j<i?j:-1},ia=K.src?ix(s.a):-1,ib=K.src===2?ix(s.b):-1;
   if((K.src>=1&&ia<0)||(K.src===2&&ib<0)){out.push({bad:true,expr:'?',kids:[]});return}
   const A=ia>=0?out[ia]:null,Bq=ib>=0?out[ib]:null;if((A&&A.bad)||(Bq&&Bq.bad)){out.push({bad:true,expr:'?',kids:[]});return}
-  const exactIn=(!A||A.c)&&(!Bq||Bq.c),rel=K.rel?(s.rel||autoRel(list[ia],list[ib])):'';
+  const exactIn=(!A||A.c)&&(!Bq||Bq.c),rel=K.rel?(s.rel||relOf(ia,ib,list,ctx.memo)):'';
   if(K.cond){const ex0=K.sym(KINDS[list[ia].kind].src?par(A.expr):A.expr,'',nOf(s),s),hi0=pow(A.hi,ALEPH);
     const r=A.c?condOf(s,A.c,list[ia].kind,s.name,s.a):{lo:F(0),hi:hi0,steps:[[`0 ≤ |${s.name}| ≤ ${fmt(hi0)}`,`עוצמת ${s.a} ידועה רק כטווח, והתנאי אינו תלוי בה באופן מונוטוני. נשאר רק החסם של כל הסדרות`]]};
     if(r.bad){out.push({bad:true,msg:r.bad,expr:ex0,kids:[ia]});return}const c=same(r.lo,r.hi)?r.lo:null;
     out.push({c,lo:r.lo,hi:r.hi,steps:r.steps,expr:ex0,atom:false,kids:[ia],txt:c?`|${s.name}| = ${fmt(c)}`:`${fmt(r.lo)} ≤ |${s.name}| ≤ ${fmt(r.hi)}`,val:c?fmt(c):`${fmt(r.lo)} … ${fmt(r.hi)}`});return}
-  const r=!exactIn?ranged(s,A,Bq,list,ia,ib):K.rel?setOp(s.kind,rel,A.c,Bq.c,s.name,s.a,s.b):(q=>({lo:q.c,hi:q.c,steps:q.steps}))(cardOf(s,A&&A.c,Bq&&Bq.c,s.name,s.a,s.b));
+  const r=K.rel?opCalc(s.kind,ia,ib,ctx,s.name,s.rel||''):!exactIn?ranged(s,A,Bq,list,ia,ib):(q=>({lo:q.c,hi:q.c,steps:q.steps}))(cardOf(s,A&&A.c,Bq&&Bq.c,s.name,s.a,s.b));
   const atom=!K.src,expr=K.sym(A?(KINDS[list[ia].kind].src?par(A.expr):A.expr):'',Bq?(KINDS[list[ib].kind].src?par(Bq.expr):Bq.expr):'',nOf(s)),c=same(r.lo,r.hi)?r.lo:null;
   out.push({c,lo:r.lo,hi:r.hi,steps:r.steps,expr,atom,rel,auto:K.rel&&!s.rel&&rel?rel:'',kids:[ia,ib].filter(x=>x>=0),txt:c?`|${s.name}| = ${fmt(c)}`:`${fmt(r.lo)} ≤ |${s.name}| ≤ ${fmt(r.hi)}`,val:c?fmt(c):`${fmt(r.lo)} … ${fmt(r.hi)}`})});return out}
 const fx=t=>`<bdi dir="ltr" class="fx">${t}</bdi>`;
@@ -2067,7 +2139,7 @@ const short=s=>KINDS[s.kind].sym(s.a||'',s.b||'',nOf(s),s);
 function renderSide(R){const opt=(l,c)=>l.map(([v,t])=>`<option value="${v}" ${v===c?'selected':''}>${t}</option>`).join('');
   document.getElementById('cdobjs').innerHTML=SETS.map((s,i)=>{const K=KINDS[s.kind],before=SETS.slice(0,i).map(x=>[x.name,x.name]),kinds=Object.entries(KINDS).filter(([k,x])=>!x.src||i>0).map(([k,x])=>[k,x.l]);
     return `<div class="qbox${i===CUR?' rlcur':''}"><div class="qrow"><button class="name v rlnm" data-cs="${i}" aria-pressed="${i===CUR}" aria-label="הצג את ${s.name}">${s.name}</button><select data-ci="${i}" data-f="kind" aria-label="סוג הקבוצה">${opt(kinds,s.kind)}</select>${SETS.length>1?`<button class="x" data-cdel="${i}" aria-label="הסר את ${s.name}">×</button>`:''}</div>
-      ${K.src||K.n?`<div class="qrow">${K.src?`<label class="cell">${K.lab?K.lab[0]:'של'}<select data-ci="${i}" data-f="a">${opt(before,s.a)}</select></label>`:''}${K.src===2?`<label class="cell">${K.lab?K.lab[1]:'ושל'}<select data-ci="${i}" data-f="b">${opt(before,s.b)}</select></label>`:''}${K.n?`<label class="cell">${s.kind==='fin'?'גודל':'אורך'}<input type="number" min="0" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${nOf(s)}"></label>`:''}</div>`:''}${K.cond?`<div class="qrow"><label class="cell">התנאי<select data-ci="${i}" data-f="cond">${opt(Object.entries(CONDS).map(([v,x])=>[v,x.l]),s.cond||'const')}</select></label>${(CONDS[s.cond]||{}).p?`<label class="cell">${CONDS[s.cond].p}<input type="number" min="1" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${Math.max(1,nOf(s))}"></label>`:''}</div>`:''}${K.rel?`<div class="qrow"><label class="cell">היחס בין השתיים<select data-ci="${i}" data-f="rel">${opt(Object.entries(RELS).map(([v,t])=>[v,v===''&&R[i].auto?`מזוהה לבד: ${RELS[R[i].auto]}`:t]),s.rel||'')}</select></label></div>`:''}
+      ${K.src||K.n?`<div class="qrow">${K.src?`<label class="cell">${K.lab?K.lab[0]:'של'}<select data-ci="${i}" data-f="a">${opt(before,s.a)}</select></label>`:''}${K.src===2?`<label class="cell">${K.lab?K.lab[1]:'ושל'}<select data-ci="${i}" data-f="b">${opt(before,s.b)}</select></label>`:''}${K.n?`<label class="cell">${s.kind==='fin'?'גודל':'אורך'}<input type="number" min="0" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${nOf(s)}"></label>`:''}</div>`:''}${K.cond?`<div class="qrow"><label class="cell">התנאי<select data-ci="${i}" data-f="cond">${opt(Object.entries(CONDS).map(([v,x])=>[v,x.l]),s.cond||'const')}</select></label>${(CONDS[s.cond]||{}).p?`<label class="cell">${CONDS[s.cond].p}<input type="number" min="1" class="rn" dir="ltr" data-ci="${i}" data-f="n" value="${Math.max(1,nOf(s))}"></label>`:''}</div>`:''}${K.rel?`<div class="qrow"><label class="cell">היחס בין השתיים<select data-ci="${i}" data-f="rel">${opt(Object.entries(RELS).filter(([v])=>v!=='eq').map(([v,t])=>[v,v===''?(R[i].auto?`מזוהה לבד: ${RELS[R[i].auto]}`:'לא נתון: לפי המבנה'):t]),s.rel||'')}</select></label></div>`:''}
       <div class="gfset fx">${s.name} = ${short(s)}${R[i].bad?'':`,   ${R[i].txt}`}</div></div>`}).join('')}
 function renderMain(R){if(CUR>=SETS.length)CUR=SETS.length-1;const s=SETS[CUR],r=R[CUR];
   /* the structure tree: the set, and under it the sets it is built from, down to the atoms */
@@ -2099,7 +2171,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.clos
   if(t.dataset.f==='kind'){const K=KINDS[s.kind],prev=SETS[Math.max(0,i-1)].name;if(K.src&&!SETS.slice(0,i).some(x=>x.name===s.a))s.a=prev;if(K.src===2&&!SETS.slice(0,i).some(x=>x.name===s.b))s.b=prev;if(K.n&&(s.n===undefined||s.n===''))s.n=2;if(K.cond&&!s.cond)s.cond='evconst'}if(t.dataset.f==='cond'&&CONDS[s.cond].p&&!(Number(s.n)>=1))s.n=2;renderAll()});
 return{
 /* for tests */
-lib:{F,B,add,mul,pow,cmp,same,fmt,solve,KINDS,setOp,CONDS},
+lib:{F,B,add,mul,pow,cmp,same,fmt,solve,KINDS,setOp,CONDS,relOf},
 render(){
   document.getElementById('conds').innerHTML=`<div class="qb cd"><div class="colhead"><h2>הקבוצות</h2><span class="lab">גרעינים ומה שנבנה מהם</span></div><div id="cdobjs" class="qlist"></div>
     <div class="qbox"><div class="lab">הוסף קבוצה</div><div class="addrow"><button class="addb" data-cadd="atom">+ קבוצה ידועה</button><button class="addb" data-cadd="op">+ קבוצה מפעולה</button></div>
