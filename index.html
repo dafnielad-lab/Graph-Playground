@@ -127,6 +127,13 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qmv{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start;cursor:pointer;margin-top:4px}
 .qitems.one{grid-template-columns:minmax(0,1fr)}.qi.wide .qf{gap:0 18px}
 .qpf{margin:3px 0;display:flex;flex-direction:column;gap:5px}.qpf .ps{min-width:0}.qpf .pf{direction:ltr;text-align:left;display:flex;gap:8px;align-items:baseline}.qpf .fx{white-space:normal;font-size:13.5px;min-width:0}.qpf .pn{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums;flex:none}.qpf .pj{direction:rtl;text-align:right;color:var(--muted);font-size:12px;line-height:1.4}
+.qtw{overflow-x:auto;margin-top:6px}.qtab{border-collapse:collapse;width:100%;font-size:13px;direction:rtl}
+.qtab th,.qtab td{padding:4px 8px;border-bottom:1px solid var(--track);white-space:nowrap;text-align:center;vertical-align:baseline}
+.qtab thead th{color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:1px solid var(--line)}.qtab thead th.fx{font-size:14px;color:var(--ink)}
+.qtab th[scope=row]{text-align:start;font-weight:500;color:var(--ink)}.qtab .nm{color:var(--muted);font-size:11.5px;margin-inline-start:6px}
+.qtab td.fx{font-size:13px;color:var(--muted)}.qtab td.fx .qv{color:var(--hi);font-weight:700}.qtab .na{opacity:.45}.qtab td.bad{color:var(--bad);text-align:start}.qtab td.bx{text-align:end}
+@media (max-width:1250px){.qtab{font-size:11.5px}.qtab th,.qtab td{padding:3px 4px}.qtab td.fx{font-size:11.5px}.qtab thead th.fx{font-size:12.5px}.qtab .nm{display:none}}
+.qtab tr.exr td{white-space:normal;text-align:start;padding:2px 0 8px}.qtab .qexb{margin:0}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
@@ -1089,10 +1096,14 @@ function digestHtml(){
     /* the standard moves on this graph */
     const mv=[],oo=OPN.has(g.name);
     if(oo){for(const r of pairRows(g,d,memo)){const key=g.name+'|p'+mv.length,opn=EXPL.has(key);mv.push(`<div class="qi der"><div class="qn">${r.t}</div><div class="qf"><span class="fx qsub">${r.f}</span><button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${opn?`<div class="qex">${r.e}</div>`:''}</div>`)}
-      for(const v of VR.get(g)||[]){const e=memo.get(v.h);if(!e)continue;const key=g.name+'|v'+v.h.name,opn=EXPL.has(key),ks=['n','m','c','D','dl','chi','al','nu','om'].filter(k=>!(e.B[k][0]===D0[k]&&e.B[k][1]===Infinity));
-        const fs=e.bad?'<span class="qins">הפעולה סותרת את הנתונים</span>':ks.map(k=>{const [lo,hi]=e.B[k],sym=SYM[k]+sub(v.h);return `<span class="fx qsub">${lo===hi?`${sym} = ${V(lo)}`:`${lo>D0[k]?V(lo)+' ≤ ':''}${sym}${hi<Infinity?' ≤ '+V(hi):''}`}</span>`}).join('');
-        const ex=opn&&!e.bad?`<div class="qex">${ks.map(k=>{const [lo,hi]=e.B[k],one=lo===hi&&(e.W[k][0]===e.W[k][1]||lo===D0[k]);return one?tell(v.h,k,lo===D0[k]?1:0,e,true):(lo>D0[k]?tell(v.h,k,0,e):'')+(hi<Infinity?tell(v.h,k,1,e):'')}).join('')}</div>`:'';
-        mv.push(`<div class="qi der wide"><div class="qn">${v.title} <span class="ref"><bdi dir="ltr" class="fx">${v.h.name}</bdi></span></div><div class="qf">${fs}<button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר הסבר':'הסבר'}</button></div>${ex}</div>`)}}
+      /* the standard moves as one table: a row for each move, a column for each quantity */
+      const KS=['n','m','c','D','dl','chi','al','nu','om'],tb=[];
+      const cell=([lo,hi],k)=>lo===hi?`<span class="qv">${lo}</span>`:lo>D0[k]&&hi<Infinity?`<span class="qv">${lo}</span> … <span class="qv">${hi}</span>`:hi<Infinity?`≤ <span class="qv">${hi}</span>`:lo>D0[k]?`≥ <span class="qv">${lo}</span>`:'<span class="na">—</span>';
+      for(const v of VR.get(g)||[]){const e=memo.get(v.h);if(!e)continue;const key=g.name+'|v'+v.h.name,opn=EXPL.has(key),ks=KS.filter(k=>!(e.B[k][0]===D0[k]&&e.B[k][1]===Infinity));
+        const cells=e.bad?`<td colspan="${KS.length}" class="bad">הפעולה סותרת את הנתונים</td>`:KS.map(k=>`<td class="fx">${cell(e.B[k],k)}</td>`).join('');
+        tb.push(`<tr><th scope="row">${v.title} <bdi dir="ltr" class="fx nm">${v.h.name}</bdi></th>${cells}<td class="bx">${e.bad?'':`<button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר':'הסבר'}</button>`}</td></tr>`);
+        if(opn&&!e.bad)tb.push(`<tr class="exr"><td colspan="${KS.length+2}"><div class="qex">${ks.map(k=>{const [lo,hi]=e.B[k],one=lo===hi&&(e.W[k][0]===e.W[k][1]||lo===D0[k]);return one?tell(v.h,k,lo===D0[k]?1:0,e,true):(lo>D0[k]?tell(v.h,k,0,e):'')+(hi<Infinity?tell(v.h,k,1,e):'')}).join('')}</div></td></tr>`)}
+      if(tb.length)mv.push(`<div class="qtw"><table class="qtab"><thead><tr><th scope="col">אחרי הפעולה</th>${KS.map(k=>`<th scope="col" class="fx" title="${DEF[k]}">${SYM[k]}</th>`).join('')}<th></th></tr></thead><tbody>${tb.join('')}</tbody></table></div>`)}
     const moves=`<button class="qmv" data-mv="${g.name}" aria-expanded="${oo}">${oo?'▾':'◂'} פעולות על ${g.name} <span class="lab">זוגות צמתים, הסרות, הוספת קשת ומשלים, בלי להגדיר אותן</span></button>${oo?`<div class="qitems one">${mv.join('')}</div>`:''}`;
     return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div>${moves}</div>`}).join('');
   return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, עם הסבר לכל חסם</span></h3>${open?body:''}</section>`}
