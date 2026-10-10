@@ -81,6 +81,10 @@ function factorClosed(s){const top=s.count===Infinity||s.count===1?X(s.e0):s.e0?
 function closedHtml(C){const top=[C.A?X(C.A):''].concat(C.num.map(Lx=>`(${one(Lx)})`)).filter(Boolean).join(' ')||'1',bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');return bot?fr(top,bot):top}
 function sumHtml(C){const T=numTerms(C),bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');if(T.length<2)return null;
   const top=T.map(([e,k],i)=>{const a=k<0n?-k:k,mon=X(C.A+e),body=a===1n?mon:(mon==='1'?String(a):`${a}${mon}`);return (i?(k<0n?' − ':' + '):(k<0n?'−':''))+body}).join('');return bot?fr(top,bot):top}
+/* the sum form with every fraction opened: each power of the numerator, with its sign, in front of the same product of series of the denominator */
+function sumProducts(C){const T=numTerms(C);if(!C.den.length||T.length<2||T.length>12)return null;
+  const prod=C.den.map(([s,m])=>`<span class="gbr">(</span>${sig(0,'∞',xe(s,0))}<span class="gbr">)</span>${m>1?`<sup>${m}</sup>`:''}`).join(' · ');
+  return T.map(([e,k],i)=>{const a=k<0n?-k:k,sh=C.A+e;return (i?(k<0n?' − ':' + '):(k<0n?'−':''))+[a===1n?'':String(a),sh?X(sh):'',prod].filter(Boolean).join(' · ')}).join('')}
 function sumSeries(C){const T=numTerms(C);if(!C.den.length||T.length>12)return null;const pure=C.den.length===1&&C.den[0][0]===1,k=pure?C.den[0][1]:0;
   const coef=pure?(k===1?'':`<span class="gbn"><span>n + ${k-1}</span><span>${k-1}</span></span>`):'b<sub>n</sub>';
   const html=T.map(([e,sg],i)=>{const a=sg<0n?-sg:sg,sh=C.A+e;return (i?(sg<0n?' − ':' + '):(sg<0n?'−':''))+(a===1n?'':a+'·')+`<span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>${coef}x<sup>n${sh?' + '+sh:''}</sup>`}).join('');
@@ -143,7 +147,7 @@ function renderMain(){
   const S=VS.map(spec),ok=S.every(Boolean),N=Math.max(SHOW,TARGET);
   const eq=VS.map((v,i)=>`${int(v.c,1)>1?int(v.c,1):''}${nm(i)}`).join(' + ')+' = n';
   if(!ok){document.getElementById('main').innerHTML=`<div class="gfwrap"><div class="gfeq fx">${eq}</div><div class="qwarn">לאחד המשתנים אין אף ערך מותר, ולכן אין פתרונות לאף n.</div></div>`;document.getElementById('card').innerHTML='';return}
-  const C=closed(S),a1=byProduct(S,N),a2=byClosed(C,N),sum=sumHtml(C),bin=binomHtml(C),R=recurrence(C),rec=recHtml(R),Fm=formula(C),sser=sumSeries(C);
+  const C=closed(S),a1=byProduct(S,N),a2=byClosed(C,N),sum=sumHtml(C),bin=binomHtml(C),R=recurrence(C),rec=recHtml(R),Fm=formula(C),sser=sumSeries(C),sprod=sumProducts(C);
   /* the recurrence and the formula are checked against the coefficients as well */
   let recOk=true,recN=0;if(rec)for(let n=R.from;n<=N;n++){let t=0n;for(const [j,v] of R.terms)t+=v*a1[n-j];recN++;if(t!==a1[n])recOk=false}
   let fmOk=true,fmN=0;if(Fm.cls)for(let n=Fm.n0;n<=N;n++){const c=Fm.cls.length===1?Fm.cls[0]:Fm.cls[n%Fm.M],v=evalPoly(c.cf,n);fmN++;if(v.d!==1n||v.n!==a1[n])fmOk=false}
@@ -162,7 +166,8 @@ function renderMain(){
     ${blk('הצורה הסגורה המפושטת, כמכפלה','',`F(x) = ${closedHtml(C)}`)}
     ${blk('כמכפלת טורים','אותם סוגריים בכתיב סיגמא. כל הסכומים מתחילים מאפס, והחזקה שנובעת מהערכים המינימליים של המשתנים יוצאת כגורם אחד לפני הטורים.',`F(x) = ${sigmaProduct(S)}`)}
     ${sum?blk('אותה פונקציה, כסכום','המונה נפתח לסכום של חזקות.',`F(x) = ${sum}`):''}
-    ${sser?blk('כסכום של טורים',sser.hint,`F(x) = ${sser.html}`):''}
+    ${sprod?blk('כסכום של מכפלות טורים','כל חזקה במונה, עם הסימן שלה, יוצאת לפני אותה מכפלת טורים של המכנה.',`F(x) = ${sprod}`):''}
+    ${sser?blk('המשך: כל מכפלה כטור אחד',sser.hint,`F(x) = ${sser.html}`):''}
     ${bin?blk('המקדם של x<sup>n</sup>, כנוסחה','בינום שהמספר העליון שלו שלילי שווה אפס.',`a<sub>n</sub> = ${bin}`):''}
     ${rec?blk('נוסחת נסיגה לסדרה',`מתקבלת מהכפלת שני האגפים במכנה והשוואת מקדמים. תקפה מ־<bdi dir="ltr" class="fx">n = ${R.from}</bdi> והלאה, עם תנאי ההתחלה שמתחתיה.`,`${rec}<div class="gin">${startVals}</div>${recDerive(C,R)}`):''}
     ${fmHtml?blk('הסדרה בנוסחה מפורשת',(Fm.cls.length===1?'פולינום אחד':`פולינום לכל שארית של n בחלוקה ב־${Fm.M}`)+(Fm.n0>0?`, תקף מ־<bdi dir="ltr" class="fx">n = ${Fm.n0}</bdi> והלאה. האיברים שלפני כן רשומים מתחת.`:', תקף לכל n.'),`${fmHtml}${early?`<div class="gin">${early}</div>`:''}${fmDerive(C,Fm,fmHtml)}`):Fm.skip?`<section class="gfb"><h3>הסדרה בנוסחה מפורשת</h3><p class="hint">לא מוצגת כאן: הנוסחה מתפצלת ליותר מדי מקרים לפי השארית של n.</p></section>`:''}
