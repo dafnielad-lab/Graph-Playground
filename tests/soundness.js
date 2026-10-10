@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const p=await b.newPage();
 p.on('pageerror',e=>console.log('PAGEERR',e.message));
-await p.goto('file:///home/claude/graph-playground/index.html');
+await p.goto('file:///home/claude/graph-playground/index.html#open');
 const MAXN=Number(process.argv[2]||7),STEP=Number(process.argv[3]||1);
 const res=await p.evaluate(({MAXN,STEP})=>{
   const truth=(a,n)=>{const d=degs(a),m=nEdges(a),c=nComps(a,n),al=alpha(a,n),nu=maxMatch(a,n),pl=isPlanar(a,n)?1:0;

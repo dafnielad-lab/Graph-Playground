@@ -56,7 +56,8 @@ const MK=/(?<![A-Za-z])(?:deg|[nmcf])(?![A-Za-z])|[ΔδχανβρωℓΓ]/g;
 const mk=(x,g)=>{const s=sub(g);if(!s||!x)return x;return x.split(/(<[^>]*>)/).map((p,i,A)=>i%2?p:p.replace(MK,(a,o)=>o+a.length===p.length&&A[i+1]==='<sub>'?a:a+s)).join('')};
 /* operation formulas name the graph in brackets: n(H) becomes n with the name beneath */
 const fnSub=x=>{for(const h of O.filter(o=>o.t==='g'))x=x.split(`(${h.name})`).join(`<sub>${h.name}</sub>`);return x};
-const COLG=new Set();
+/* objects start minimized, so that a first look at the sheet is short; COLG holds the ones the user toggled */
+const COLG=new Set(),OPEN_ALL=/[#&]open\b/.test(location.hash);
 /* a vertex degree is exact, or a range with either end optional */
 const dLo=v=>v.dm==='rng'?(v.d1??null):v.d,dHi=v=>v.dm==='rng'?(v.d2??null):v.d,dEx=v=>dLo(v)!==null&&dLo(v)===dHi(v)?dLo(v):null;
 const allV=g=>O.find(o=>o.t==='v'&&o.in===g.name&&o.q==='all'&&(dLo(o)!==null||dHi(o)!==null));
@@ -313,7 +314,7 @@ function sheetFor(g){
   const vis=F.filter(f=>st(f)!=='hide');
   const tps=[...new Set(vis.map(f=>f.tp))];
   const bad=issues(g);
-  const shut=COLG.has(X);
+  const shut=COLG.has(X)?OPEN_ALL:!OPEN_ALL;
   return `<section class="qt"><h3 class="qcap"><button class="qmin" data-min="${X}" aria-expanded="${!shut}" title="${shut?'הצג את כל הסעיפים':'מזער את כל הסעיפים'}">${shut?'◂':'▾'}</button><span class="name">${X}</span> ${title}${shut?` <span class="lab">${vis.length} נוסחאות מוסתרות</span>`:''}</h3>${shut?'':(bad.length?`<div class="qwarn" role="alert"><b>הנתונים של ${X} לא מתיישבים:</b><ul>${bad.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'')+tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
 /* the digest: every formula of the sheet is used as a constraint on the ranges of the quantities, again and again until nothing
    tightens any more. Each bound remembers the formula that gave it. */
