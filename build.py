@@ -22,6 +22,7 @@ app = (
     + (src / "logic.js").read_text(encoding="utf-8") + "\n"
     + (src / "gf.js").read_text(encoding="utf-8") + "\n"
     + (src / "rel.js").read_text(encoding="utf-8") + "\n"
+    + (src / "card.js").read_text(encoding="utf-8") + "\n"
     + (src / "ui.js").read_text(encoding="utf-8") + "\n</script>\n"
 )
 html = (
