@@ -136,6 +136,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qtab tr.exr td{white-space:normal;text-align:start;padding:2px 0 8px}.qtab .qexb{margin:0}
 .qpb{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:4px 8px;margin:5px 0}.qph{display:flex;gap:10px;align-items:baseline;justify-content:space-between;direction:rtl;font-weight:700;font-size:12.5px;color:var(--ink);border-bottom:1px solid var(--track);padding-bottom:3px;margin-bottom:3px}.qph .fx{font-size:13.5px;color:var(--hi)}
 .qtl{margin:6px 0 2px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:2px 16px;font-size:12px;color:var(--muted)}.qtl div{display:flex;gap:8px;align-items:baseline}.qtl dt{flex:none;min-width:34px;color:var(--ink);font-weight:700}.qtl dd{margin:0}
+.qb .cell.wide{display:flex;flex-direction:column;align-items:stretch;gap:2px;flex:1 1 100%}.qb input.tl{width:100%;min-width:0;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
@@ -487,14 +488,14 @@ const SHEET=(()=>{
 const V=x=>`<span class="qv">${x}</span>`;
 /* objects of the question, in order; a derived graph may only use objects defined above it.
    graph properties are tri-state: 'y' given true, 'n' given false, 'u' unknown */
-const newG=(name,o)=>Object.assign({t:'g',name,n:null,m:null,c:null,D:null,dl:null,f:null,chi:null,al:null,nu:null,be:null,rho:null,lv:null,om:null,pl:'u',tr:'u',bp:'u',fo:'u',tf:'u',sc:'u',eu:'u',ha:'u',pm:'u',more:false},o);
+const newG=(name,o)=>Object.assign({t:'g',name,n:null,m:null,c:null,D:null,dl:null,f:null,chi:null,al:null,nu:null,be:null,rho:null,lv:null,om:null,dm:null,gi:null,ds:'',dset:'',cyc:'',pl:'u',tr:'u',bp:'u',fo:'u',tf:'u',sc:'u',eu:'u',ha:'u',pm:'u',more:false},o);
 let O=[newG('G',{n:10,c:1,pl:'y'}),
        {t:'v',name:'v',in:'G',q:'one',d:3,cut:false},
        newG('H',{op:'delv',src:'G',arg:'v',c:2})];
 const NAMES={v:['v','u','w','x','y','z'],e:['e','e₂','e₃','e₄'],s:['S','T','A','B'],g:['H','K','L','M','N']};
 const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הקשת','e'],delS:['הסרת קבוצת הצמתים','s'],adde:['הוספת קשת',null],contr:['כיווץ הקשת','e'],subd:['העדנת הקשת','e'],compl:['המשלים',null],ind:['תת-גרף מושרה על','s'],comp:['רכיב קשירות',null],span:['תת-גרף פורש',null],join:['חיבור הרכיבים במספר קשתות מינימלי',null]};
-const SYM={n:'n',m:'m',c:'c',D:'Δ',dl:'δ',f:'f',chi:'χ',al:'α',nu:'ν',be:'β',rho:'ρ',om:'ω',lv:'ℓ'};
-const DEF={n:'מספר הצמתים',m:'מספר הקשתות',c:'מספר רכיבי הקשירות',D:'הדרגה המקסימלית',dl:'הדרגה המינימלית',f:'מספר הפאות בשיכון מישורי',chi:'מספר הצביעה',al:'גודל קבוצה בלתי תלויה מקסימלית',nu:'גודל זיווג מקסימום',be:'גודל מינימלי של כיסוי בצמתים',rho:'גודל מינימלי של כיסוי בקשתות',om:'גודל קליקה מקסימלית',lv:'מספר העלים'};
+const SYM={n:'n',m:'m',c:'c',D:'Δ',dl:'δ',f:'f',chi:'χ',al:'α',nu:'ν',be:'β',rho:'ρ',om:'ω',lv:'ℓ',dm:'diam',gi:'g'};
+const DEF={n:'מספר הצמתים',m:'מספר הקשתות',c:'מספר רכיבי הקשירות',D:'הדרגה המקסימלית',dl:'הדרגה המינימלית',f:'מספר הפאות בשיכון מישורי',chi:'מספר הצביעה',al:'גודל קבוצה בלתי תלויה מקסימלית',nu:'גודל זיווג מקסימום',be:'גודל מינימלי של כיסוי בצמתים',rho:'גודל מינימלי של כיסוי בקשתות',om:'גודל קליקה מקסימלית',lv:'מספר העלים',dm:'הקוטר: המרחק הגדול ביותר בין שני צמתים',gi:'אורך המעגל הקצר ביותר'};
 const PROPS={pl:'מישורי',tr:'עץ',bp:'דו-צדדי',conn:'קשיר',fo:'יער',tf:'בלי משולשים',sc:'איזומורפי למשלים',eu:'אוילרי',ha:'המילטוני',pm:'יש זיווג מושלם'};
 const COL=new Set(['Σ']);
 const by=n=>O.find(o=>o.name===n),graphs=()=>O.filter(o=>o.t==='g');
@@ -521,6 +522,11 @@ function parseNum(t){t=String(t).trim().replace(/\s+/g,'');let m;
   return{v:null,r:null,bad:true}}
 const rgOf=(o,k)=>(o.rg&&o.rg[k])||null;
 const num=(i,k,val,lab)=>{const o=O[i],tx=o.tx&&o.tx[k]!==undefined?o.tx[k]:(val===null||val===undefined?'':val);return `<label class="cell">${lab}<input type="text" inputmode="numeric" class="rn" dir="ltr" data-i="${i}" data-k="${k}" data-r="1" value="${String(tx).replace(/"/g,'')}" placeholder="?" id="f${i}${k}" autocomplete="off"></label>`};
+const txt=(i,k,val,lab,ph)=>`<label class="cell wide">${lab}<input type="text" class="tl" dir="ltr" data-i="${i}" data-k="${k}" value="${String(val||'').replace(/"/g,'')}" placeholder="${ph}" id="f${i}${k}" autocomplete="off"></label>`;
+/* a list of whole numbers typed with commas or spaces; null when empty, false when it cannot be read */
+const parseList=t=>{t=String(t||'').trim();if(!t)return null;const a=t.split(/[\s,;]+/).filter(Boolean);return a.every(x=>/^\d+$/.test(x))?a.map(Number):false};
+/* "k vertices of degree d": counts as a vertex of that degree only when at least one is promised */
+const cntB=o=>ownB(o,'k')||[null,null],vAct=o=>o.q!=='cnt'||(cntB(o)[0]||0)>=1;
 const tri=(i,k,val,lab)=>`<label class="cell">${lab}<select data-i="${i}" data-k="${k}" id="f${i}${k}">${opt([['u','לא ידוע'],['y','כן'],['n','לא']],val)}</select></label>`;
 const chk=(i,k,val,lab)=>`<label class="cell">${lab}<input type="checkbox" data-i="${i}" data-k="${k}" id="f${i}${k}" ${val?'checked':''}></label>`;
 function renderObjs(){
@@ -528,15 +534,15 @@ function renderObjs(){
     if(o.t==='g')return `<div class="qbox"><div class="qrow"><span class="name">${o.name}</span>${o.op?`<span>=</span><select data-i="${i}" data-k="op" id="f${i}op" aria-label="פעולה">${opt(Object.entries(OPS).map(([k,v])=>[k,v[0]]),o.op)}</select>${o.arg?`<select data-i="${i}" data-k="arg" id="f${i}arg" aria-label="על מה">${opt(O.filter(a=>a.t===OPS[o.op][1]&&a.in===o.src&&O.indexOf(a)<i).map(a=>[a.name,a.name]),o.arg)}</select>`:''}<span>${o.op==='compl'||o.op==='comp'||o.op==='span'?'של':'מתוך'}</span><select data-i="${i}" data-k="src" id="f${i}src" aria-label="גרף מקור">${gs}</select>`:'<span>הגרף הנתון</span>'}${x}</div>
       <div class="qrow">${num(i,'n',o.n,'צמתים')}${num(i,'m',o.m,'קשתות')}${num(i,'c',o.c,'רכיבים')}</div>
       <div class="qrow">${tri(i,'pl',o.pl,'מישורי')}<label class="cell">עץ<select data-i="${i}" data-k="tr" id="f${i}tr">${opt([['u','לא ידוע'],['y','עץ'],['f','יער'],['n','לא']],o.tr)}</select></label>${tri(i,'bp',o.bp,'דו-צדדי')}</div>
-      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}${tri(i,'eu',o.eu,'אוילרי')}${tri(i,'ha',o.ha,'המילטוני')}${tri(i,'pm',o.pm,'זיווג מושלם')}</div>`:''}
+      ${o.more?`<div class="qrow">${['D','dl','f','chi','om','al','nu','be','rho','lv','dm','gi'].map(k=>num(i,k,o[k],`<span class="fx">${SYM[k]}</span>`)).join('')}</div><div class="qrow">${txt(i,'ds',o.ds,'סדרת הדרגות','3,3,2,2,1,1')}${txt(i,'dset',o.dset,'כל הדרגות מתוך','1,3')}${txt(i,'cyc',o.cyc,'יש מעגל פשוט באורך','4,6')}</div><div class="qrow">${tri(i,'tf',o.tf,'בלי משולשים')}${tri(i,'sc',o.sc,'איזומורפי למשלים')}${tri(i,'eu',o.eu,'אוילרי')}${tri(i,'ha',o.ha,'המילטוני')}${tri(i,'pm',o.pm,'זיווג מושלם')}</div>`:''}
       <button class="link" data-more="${i}">${o.more?'הסתר גדלים ותכונות נוספים':'גדלים ותכונות נוספים'}</button></div>`;
-    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow">${num(i,'d',o.d,'דרגה')}${chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
+    if(o.t==='v')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><select data-i="${i}" data-k="q" id="f${i}q" aria-label="כמת">${opt([['one','צומת מסוים'],['all','כל צומת'],['ex','קיים צומת'],['cnt','מספר הצמתים מדרגה נתונה']],o.q)}</select><span>ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div>${o.q==='one'?`<div class="qrow"><span class="cell">איזה צומת</span><select data-i="${i}" data-k="w" id="f${i}w" aria-label="איזה צומת">${opt([['','צומת כלשהו שנבחר'],['max','בעל הדרגה הגבוהה ביותר'],['min','בעל הדרגה הנמוכה ביותר']],o.w||'')}</select></div>`:''}<div class="qrow">${o.q==='cnt'?num(i,'k',o.k,'כמה צמתים'):''}${num(i,'d',o.d,'דרגה')}${o.q==='cnt'?'':chk(i,'cut',o.cut,'צומת מפריד')}</div></div>`;
     if(o.t==='e')return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קשת ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${chk(i,'bridge',o.bridge,'גשר (הסרתה מנתקת)')}</div></div>`;
     return `<div class="qbox"><div class="qrow"><span class="name v">${o.name}</span><span>קבוצת צמתים ב־</span><select data-i="${i}" data-k="in" id="f${i}in" aria-label="בגרף">${gs}</select>${x}</div><div class="qrow">${num(i,'k',o.k,'גודל')}<select data-i="${i}" data-k="prop" id="f${i}prop" aria-label="תכונה">${opt([['','בלי תכונה נוספת'],['indep','בלתי תלויה'],['clique','קליקה'],['cover','כיסוי בצמתים'],['side','צד בגרף דו-צדדי']],o.prop)}</select></div></div>`}).join('')}
 /* symbol of a graph quantity: the given value in colour, otherwise the symbol (with the graph's name unless it is G) */
 /* with several graphs on the sheet every symbol carries the name of its graph */
 const sub=g=>!g.virt&&O.filter(o=>o.t==='g'&&!o.virt).length<2?'':`<sub>${g.name}</sub>`;
-const MK=/(?<![A-Za-z])(?:deg|[nmcf])(?![A-Za-z])|[ΔδχανβρωℓΓ]/g;
+const MK=/(?<![A-Za-z])(?:deg|diam|[nmcfg])(?![A-Za-z])|[ΔδχανβρωℓΓ]/g;
 const mk=(x,g)=>{const s=sub(g);if(!s||!x)return x;return x.split(/(<[^>]*>)/).map((p,i,A)=>i%2?p:p.replace(MK,(a,o)=>o+a.length===p.length&&A[i+1]==='<sub>'?a:a+s)).join('')};
 /* operation formulas name the graph in brackets: n(H) becomes n with the name beneath */
 const fnSub=x=>{for(const h of O.filter(o=>o.t==='g'))x=x.split(`(${h.name})`).join(`<sub>${h.name}</sub>`);return x};
@@ -624,6 +630,8 @@ function issues(g){
   const R=[],b=k=>bounds(g,k)||[null,null],lo=k=>b(k)[0],hi=k=>b(k)[1],F=x=>`<span class="fx">${x}</span>`,X=g.name;
   const gt=(x,y)=>x!==null&&y!==null&&x>y;
   const nL=lo('n'),nH=hi('n'),mL=lo('m'),mH=hi('m'),cL=lo('c'),cH=hi('c'),DL=lo('D'),DH=hi('D'),dL=lo('dl'),dH=hi('dl');
+  for(const [k,nm] of [['ds','סדרת הדרגות'],['dset','רשימת הדרגות המותרות'],['cyc','רשימת אורכי המעגלים']])if(parseList(g[k])===false)R.push(`אי אפשר לקרוא את ${nm}: צריך מספרים שלמים מופרדים בפסיקים.`);
+  { const d=parseList(g.ds);if(d){if(d.reduce((t,x)=>t+x,0)%2)R.push('סכום הדרגות בסדרה אי-זוגי, ולכן אין גרף כזה.');if(Math.max(...d)>d.length-1)R.push('בסדרת הדרגות יש דרגה גדולה ממספר הצמתים פחות אחת.')}}
   if(g.eu==='y'&&cMany(g))R.push('גרף אוילרי הוא קשיר, ולכן יש לו רכיב קשירות אחד.');
   if(g.ha==='y'&&cMany(g))R.push('גרף המילטוני הוא קשיר, ולכן יש לו רכיב קשירות אחד.');
   if(g.ha==='y'&&forestish(g))R.push('בעץ וביער אין מעגלים, ולכן הם אינם המילטוניים.');
@@ -701,6 +709,7 @@ function sheetFor(g){
   for(const S of O.filter(o=>o.t==='s'&&o.in===X&&rgOf(o,'k')))add(`מספר הצמתים בקבוצה ${S.name}`,'נתון',`min ≤ |${S.name}| ≤ max`,rngTxt(rgOf(S,'k')[0],`|${S.name}|`,rgOf(S,'k')[1]));
   tp='דרגות';
   const av=allV(g),aLo=av?dLo(av):null,aHi=av?dHi(av):null;
+  { const d=parseList(g.ds);if(d)add('סדרת הדרגות קובעת את מספר הקשתות','טענה 1.3','d₁ + d₂ + … + dₙ = 2m',`${d.map(V).join(' + ')} = 2·${m}`)}
   add('סכום הדרגות','טענה 1.3','Σ deg(u) = 2m',`${ad!==null?V(ad)+'·'+n:'Σ deg(u)'} = 2·${m}`);
   if(av&&ad===null){add('סכום הדרגות כשכל הדרגות בטווח','טענה 1.3','n·min deg ≤ 2m ≤ n·max deg',`${aLo!==null?n+'·'+V(aLo)+' ≤ ':''}2·${m}${aHi!==null?' ≤ '+n+'·'+V(aHi):''}`);
     add('כל הדרגות בטווח','מההגדרה','min deg ≤ δ ≤ Δ ≤ max deg',rngTxt(aLo,`${dl} ≤ ${D}`,aHi))}
@@ -709,12 +718,17 @@ function sheetFor(g){
   for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q==='one'&&o.w)){const mx=v.w==='max',E=mx?D:dl,S0=mx?'Δ':'δ';
     add(`${v.name} בעל הדרגה ${mx?'הגבוהה':'הנמוכה'} ביותר`,'מההגדרה',`deg(${v.name}) = ${S0}`,`deg(${v.name}) = ${E}`);
     if(dEx(v)===null&&(dLo(v)!==null||dHi(v)!==null))add(`טווח הדרגה של ${v.name}`,'נתון',`min ≤ ${S0} ≤ max`,rngTxt(dLo(v),S0+s,dHi(v)))}
-  for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'&&!(o.q==='one'&&o.w))){add(v.q==='ex'?'קיים צומת בדרגה נתונה':`הדרגה של ${v.name}`,'מההגדרה',`δ ≤ deg(${v.name}) ≤ Δ`,dEx(v)!==null||(dLo(v)===null&&dHi(v)===null)?`${dl} ≤ ${degOf(v)} ≤ ${D}`:[dHi(v)!==null?`${dl} ≤ ${V(dHi(v))}`:'',dLo(v)!==null?`${V(dLo(v))} ≤ ${D}`:''].filter(Boolean).join(',   '));
+  for(const v of O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'&&vAct(o)&&!(o.q==='one'&&o.w))){add(v.q==='ex'||v.q==='cnt'?'קיים צומת בדרגה נתונה':`הדרגה של ${v.name}`,'מההגדרה',`δ ≤ deg(${v.name}) ≤ Δ`,dEx(v)!==null||(dLo(v)===null&&dHi(v)===null)?`${dl} ≤ ${degOf(v)} ≤ ${D}`:[dHi(v)!==null?`${dl} ≤ ${V(dHi(v))}`:'',dLo(v)!==null?`${V(dLo(v))} ≤ ${D}`:''].filter(Boolean).join(',   '));
     if(dEx(v)===null&&(dLo(v)!==null||dHi(v)!==null))add(`טווח הדרגה של ${v.name}`,'נתון',`min ≤ deg(${v.name}) ≤ max`,rngTxt(dLo(v),`deg(${v.name})`,dHi(v)))}
   add('מספר הצמתים מדרגה אי-זוגית הוא זוגי','מסקנה מ־1.3','#{u : deg(u) odd} is even',ad!==null&&ad%2?`${V(ad)} odd ⇒ ${n} even`:'');
   add('יש שני צמתים מאותה דרגה (שני צמתים לפחות)','מסקנה','deg(u) = deg(w) for some u ≠ w','',null,['גרף פשוט',['n',2]]);
   add('דרגה מינימלית גדולה מבטיחה קשירות','מסקנה','δ ≥ (n − 1) / 2 ⇒ connected',`${dl} ≥ (${n} − 1) / 2`);
   add('מסלול ומעגל ארוכים לפי הדרגה המינימלית','פרק 1, שאלה 3','simple path of length ≥ δ,  simple cycle on ≥ δ + 1 vertices (δ ≥ 2)',`path ≥ ${dl},  cycle ≥ ${dl} + 1`);
+  if(val(g,'dm')!==null||rgOf(g,'dm')){tp='מרחקים';add('מסלול קצר ביותר באורך הקוטר','מההגדרה','diam ≤ n − 1',`${q('dm')} ≤ ${n} − 1`);
+    add('חסם על מספר הצמתים לפי הקוטר והדרגה המקסימלית','חסם מור','n ≤ 1 + Δ + Δ(Δ − 1) + … + Δ(Δ − 1)^(diam − 1)',`${n} ≤ 1 + ${D} + ${D}(${D} − 1) + …`);add('קוטר אחת, אם ורק אם הגרף מלא','מההגדרה','diam = 1 ⇔ m = n(n − 1) / 2','')}
+  if(val(g,'gi')!==null||rgOf(g,'gi')){tp='מעגלים';add('מעגל קצר ביותר: צמתים וקשתות','מההגדרה','g ≤ n,  g ≤ m',`${q('gi')} ≤ ${n},  ${q('gi')} ≤ ${m}`);
+    add('מעגל קצר ביותר ודרגה מינימלית','מסקנה','g ≥ 4 ⇒ n ≥ 2δ,   g ≥ 5 ⇒ n ≥ δ² + 1',`${n} ≥ 2·${dl}`);add('מישורי: כל פאה באורך המעגל הקצר ביותר לפחות','מסקנה מ־5.3','m ≤ g(n − 2) / (g − 2)',`${m} ≤ ${q('gi')}·(${n} − 2) / (${q('gi')} − 2)`,[['pl','y']]);
+    add('מעגל קצר ביותר וקוטר','מסקנה','g ≤ 2·diam + 1',`${q('gi')} ≤ 2·${q('dm')} + 1`,[['conn','y']])}
   /* edges, components, trees */
   tp='קשתות, קשירות ועצים';
   add('מספר הקשתות המרבי בגרף פשוט','מההגדרה','m ≤ n(n − 1) / 2',`${m} ≤ ${n}·(${n} − 1) / 2`,null,['גרף פשוט']);
@@ -802,7 +816,7 @@ function sheetFor(g){
   return `<section class="qt"><h3 class="qcap"><button class="qmin" data-min="${X}" aria-expanded="${!shut}" title="${shut?'הצג את כל הסעיפים':'מזער את כל הסעיפים'}">${shut?'◂':'▾'}</button><span class="name">${X}</span> ${title}${shut?` <span class="lab">${vis.length} נוסחאות מוסתרות</span>`:''}</h3>${shut?'':(bad.length?`<div class="qwarn" role="alert"><b>הנתונים של ${X} לא מתיישבים:</b><ul>${bad.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'')+tps.map(t=>{const rows=vis.filter(f=>f.tp===t),open=!COL.has(t);return `<div class="qtp"><button data-tp="${t}" aria-expanded="${open}">${open?'▾':'◂'} ${t} <span class="lab">${rows.length}</span></button>${open?`<div class="qitems">${rows.map(card).join('')}</div>`:''}</div>`}).join('')}</section>`}
 /* the digest: every formula of the sheet is used as a constraint on the ranges of the quantities, again and again until nothing
    tightens any more. Each bound remembers the formula that gave it. */
-const D0={n:1,m:0,c:1,D:0,dl:0,f:1,chi:1,al:1,nu:0,be:0,rho:0,om:1,lv:0};
+const D0={n:1,m:0,c:1,D:0,dl:0,f:1,chi:1,al:1,nu:0,be:0,rho:0,om:1,lv:0,dm:0,gi:3};
 function digest(g,memo){
   let St=memo.get(g);const fresh=!St;if(fresh){St={B:{},W:{},U:{},N:[],bad:false};memo.set(g,St)}
   const B=St.B,W=St.W,U=St.U,X=g.name;let ch=true,bad=St.bad,moved=false;if(bad)return false;
@@ -882,8 +896,11 @@ function digest(g,memo){
         Z();if(full){K();for(const k of ['D','chi','om'])le(k,Math.max(...CS.map(x=>x.B[k][1])),r2);ge('dl',Math.min(...CS.map(x=>x.B.dl[0])),r2);E();};E();};E();}}
   /* a property left unknown is also taken from the numbers once they settle it: m = n − c makes a forest */
   const P=k=>{const v=prop(g,k);Z();if(v!=='u')return v;const f=L('m')===H('m')&&L('n')===H('n')&&L('c')===H('c')&&L('m')===L('n')-L('c');
-    Z();if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';Z();if(k==='tr'&&f&&L('c')===1)return 'y';Z();if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';if((k==='bp'||k==='tf')&&B.chi[1]<=2)return 'y';return v};
-  const ad0=allDeg(g),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
+    Z();if(f&&(k==='fo'||k==='pl'||k==='bp'||k==='tf'))return 'y';Z();if(k==='tr'&&f&&L('c')===1)return 'y';Z();if(k==='conn'&&L('c')===1&&H('c')===1)return 'y';if((k==='bp'||k==='tf')&&B.chi[1]<=2)return 'y';if(k==='tf'&&hasCyc&&B.gi[0]>=4)return 'y';return v};
+  /* typed lists: the whole degree sequence, the set of degrees allowed, lengths of cycles known to exist; counted degrees */
+  const DS=parseList(g.ds),DSET=parseList(g.dset),CY=parseList(g.cyc),CN=O.filter(o=>o.t==='v'&&o.in===X&&o.q==='cnt'&&dEx(o)!==null);
+  const giGiven=val(g,'gi')!==null||!!rgOf(g,'gi'),dmGiven=val(g,'dm')!==null||!!rgOf(g,'dm'),hasCyc=giGiven||!!(CY&&CY.length);
+  const ad0=allDeg(g),av=allV(g),vs=O.filter(o=>o.t==='v'&&o.in===X&&o.q!=='all'&&vAct(o)),ss=O.filter(o=>o.t==='s'&&o.in===X&&o.prop);
   let it=0;
   while(ch&&it++<60){ch=false;
     Z();if(av){K();Z();if(dLo(av)!==null)ge('dl',dLo(av),'כל הדרגות בטווח');Z();if(dHi(av)!==null)le('D',dHi(av),'כל הדרגות בטווח');E();}
@@ -947,6 +964,34 @@ function digest(g,memo){
     le('chi',H('D')+1,'χ ≤ Δ + 1');ge('D',L('chi')-1,'χ ≤ Δ + 1');
     Z();if(H('al')<Infinity)ge('chi',up(L('n')/H('al')),'n ≤ χ·α');Z();if(H('chi')<Infinity)ge('al',up(L('n')/H('chi')),'n ≤ χ·α');Z();if(H('chi')<Infinity&&H('al')<Infinity)le('n',H('chi')*H('al'),'n ≤ χ·α');
     ge('chi',L('om'),'χ ≥ ω');le('om',H('chi'),'χ ≥ ω');le('chi',H('n'),'χ ≤ n');le('al',H('n'),'α ≤ n');
+    /* ---- degree sequence, allowed degrees, counted degrees ---- */
+    Z();if(DS){const sm=DS.reduce((t,x)=>t+x,0),r='סדרת הדרגות';Z();if(sm%2||Math.max(...DS)>DS.length-1){bad=true;ch=false}
+      eq('n',DS.length,r);eq('m',dn(sm/2),r);eq('D',Math.max(...DS),r);eq('dl',Math.min(...DS),r);Z();if(P('fo')==='y')eq('lv',DS.filter(x=>x===1).length,r)}
+    Z();if(DSET&&DSET.length){const r='כל הדרגות מתוך הקבוצה הנתונה',a=Math.min(...DSET),b=Math.max(...DSET);ge('dl',a,r);le('D',b,r);
+      /* a tree whose degrees are only 1 and d: the number of leaves follows from the degree sum */
+      Z();if(P('tr')==='y'&&DSET.length===2&&a===1&&b>=3&&L('n')===H('n')&&L('n')>=3){const x=(L('n')*(b-2)+2)/(b-1);Z();if(Number.isInteger(x))eq('lv',x,'עץ שדרגותיו 1 ו־d: ℓ + d(n − ℓ) = 2(n − 1)');else{bad=true;ch=false}}}
+    Z();if(CN.length){const k0=CN.reduce((t,o)=>t+(cntB(o)[0]||0),0),sd=CN.reduce((t,o)=>t+(cntB(o)[0]||0)*dEx(o),0),r='ספירת צמתים לפי דרגה';ge('n',k0,r);
+      ge('m',up((sd+(L('n')-k0)*L('dl'))/2),r);Z();if(H('n')<Infinity&&H('D')<Infinity)le('m',dn((sd+(H('n')-k0)*H('D'))/2),r);
+      for(const o of CN){const b=cntB(o);Z();if(dEx(o)===1&&P('fo')==='y'){Z();if(b[0]!==null)ge('lv',b[0],r);Z();if(b[1]!==null)le('lv',b[1],r)}Z();if(dEx(o)===0&&b[0]!==null)ge('c',b[0],r)}}
+    /* ---- diameter ---- */
+    Z();if(dmGiven)eq('c',1,'קוטר מוגדר רק בגרף קשיר');
+    Z();if(L('c')===1&&H('c')===1){const r='מסלול קצר ביותר באורך הקוטר: diam + 1 צמתים';le('dm',H('n')-1,r);ge('n',L('dm')+1,r);ge('m',L('dm'),r);Z();if(L('n')>=2)ge('dm',1,'שני צמתים שונים במרחק אחת לפחות');
+      Z();if(H('dm')===1&&L('n')>=2){ge('om',L('n'),'diam = 1: כל שני צמתים שכנים');ge('dl',L('n')-1,'diam = 1: כל שני צמתים שכנים')}
+      Z();if(L('dm')>=2)ge('al',2,'diam ≥ 2: יש שני צמתים לא שכנים');
+      Z();if(L('om')>=L('n')&&L('n')===H('n')&&L('n')>=2)le('dm',1,'גרף מלא');
+      Z();if(H('al')===1&&L('n')>=2)le('dm',1,'גרף מלא');
+      Z();if(H('n')<Infinity&&2*L('dl')>=H('n')-1&&L('n')>=2)le('dm',2,'δ ≥ (n − 1) / 2: לכל שני צמתים לא שכנים יש שכן משותף');
+      Z();if(H('D')<Infinity&&H('dm')<Infinity){const D_=H('D');let t=1,lay=D_;for(let i=0;i<H('dm')&&t<1e6;i++){t+=lay;lay*=Math.max(D_-1,0)}le('n',t,'חסם מור: n ≤ 1 + Δ + Δ(Δ − 1) + …')}
+      Z();if(P('tr')==='y'&&L('n')>=3){ge('dm',2,'עץ עם שלושה צמתים לפחות');le('dm',H('n')-L('lv')+1,'בעץ: מסלול עובר בשני עלים לכל היותר');le('lv',H('n')-L('dm')+1,'בעץ: מסלול עובר בשני עלים לכל היותר')}}
+    /* ---- shortest cycle and cycles known to exist ---- */
+    Z();if(hasCyc){const r='יש מעגל';ge('m',L('n')-H('c')+1,'יש מעגל: m > n − c');ge('D',2,r);ge('n',L('gi'),'מעגל באורך g עובר ב־g צמתים');ge('m',L('gi'),'מעגל באורך g: g קשתות');le('gi',H('n'),'מעגל פשוט עובר בכל צומת פעם אחת');
+      Z();if(g.tf==='n')eq('gi',3,'יש משולש');Z();if(P('tf')==='y')ge('gi',4,'בלי משולשים');
+      Z();if(P('bp')==='y'&&L('gi')%2)ge('gi',L('gi')+1,'דו-צדדי: כל מעגל באורך זוגי');
+      Z();if(L('gi')>=4)ge('n',2*L('dl'),'g ≥ 4: לשני שכנים אין שכן משותף');Z();if(L('gi')>=5)ge('n',L('dl')*L('dl')+1,'g ≥ 5: השכנים של השכנים שונים זה מזה');
+      Z();if(P('pl')==='y'&&L('n')>=3&&H('n')<Infinity){const q=L('gi');le('m',dn(q*(H('n')-2)/(q-2)),'מישורי, כל פאה באורך g לפחות: m ≤ g(n − 2) / (g − 2)')}
+      Z();if(L('c')===1&&H('c')===1){le('gi',2*H('dm')+1,'g ≤ 2·diam + 1');ge('dm',dn(L('gi')/2),'g ≤ 2·diam + 1')}}
+    Z();if(CY&&CY.length){for(const k of CY){const r=`יש מעגל פשוט באורך ${k}`;ge('n',k,r);ge('m',k,r);le('gi',k,r);Z();if(k%2)ge('chi',3,`${r}: מעגל אי-זוגי`);Z();if(k===3)ge('om',3,r);
+        Z();if(L('n')===H('n')&&k===L('n')&&k>=3){eq('c',1,'מעגל שעובר בכל הצמתים');ge('dl',2,'מעגל שעובר בכל הצמתים');ge('nu',dn(k/2),'מעגל שעובר בכל הצמתים')}}}
     Z();if(P('tf')==='y'){le('om',2,'בלי משולשים');Z();if(H('n')<Infinity)le('m',dn(H('n')*H('n')/4),'בלי משולשים: m ≤ n² / 4')}
     for(const S of ss){const b=ownB(S,'k');Z();if(!b)continue;Z();if(S.prop==='indep'&&b[0]!==null)ge('al',b[0],`הקבוצה ${S.name}`);Z();if(S.prop==='clique'&&b[0]!==null)ge('om',b[0],`הקליקה ${S.name}`);Z();if(S.prop==='cover'&&b[1]!==null)le('be',b[1],`הכיסוי ${S.name}`)}
     Z();if(P('sc')==='y'&&L('n')===H('n'))eq('m',L('n')*(L('n')-1)/4,'איזומורפי למשלים');
@@ -969,6 +1014,8 @@ function digest(g,memo){
     Z();if(prop(g,'bp')==='u'&&P('bp')==='u'){K();Z();if(H('n')<Infinity&&L('m')>H('n')*H('n')/4)T('הגרף אינו דו-צדדי','m > n² / 4');else if(L('chi')>=3)T('הגרף אינו דו-צדדי','χ ≥ 3 (1.6)');E();}
     Z();if(P('pl')==='y'&&ex1('m')&&ex1('n')&&L('n')>=3){Z();if(L('m')===3*L('n')-6)T('כל הפאות משולשים, ואי אפשר להוסיף קשת בלי לאבד מישוריות','m = 3n − 6 (5.4)');else if(P('tf')==='y'&&L('m')===2*L('n')-4&&P('fo')!=='y')T('כל הפאות מרובעות','m = 2n − 4')}
     Z();if(ex1('om')&&ex1('n')&&L('om')===L('n')&&L('n')>=2)T('הגרף מלא','ω = n');
+    Z();if(CY&&CY.some(k=>k%2)&&g.bp==='u')T('הגרף אינו דו-צדדי','יש מעגל באורך אי-זוגי (1.6)');
+    Z();if(CY&&g.ha!=='y'&&ex1('n')&&CY.includes(L('n'))&&L('n')>=3)T('הגרף המילטוני','יש מעגל פשוט שעובר בכל הצמתים');
     Z();if(g.pl==='u'&&prop(g,'pl')==='n')T('הגרף אינו מישורי','מכיל תת-גרף לא מישורי, או נוצר מהעדנה של גרף לא מישורי');
     Z();if(g.bp==='u'&&prop(g,'bp')==='n')T('הגרף אינו דו-צדדי','מכיל תת-גרף לא דו-צדדי');
     Z();if(ex1('nu')&&ex1('n')&&2*L('nu')===L('n'))T('יש זיווג מושלם','ν = n / 2');
@@ -1043,7 +1090,15 @@ const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.
 const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
 const EXPL=new Set(),OPN=new Set();
 /* the formal statement behind every rule the solver names in words */
-const FORM={'סכום הדרגות (1.3)':'Σ deg(u) = 2m  ⇒  n·δ ≤ 2m ≤ n·Δ','נוסחת אוילר (5.3)':'planar  ⇒  f = m − n + c + 1','עץ (2.5)':'tree  ⇒  m = n − 1','עלה בעץ (2.3)':'tree, n ≥ 2  ⇒  δ = 1','עץ הוא דו-צדדי':'tree, n ≥ 2  ⇒  χ = 2',
+const FORM={'סדרת הדרגות':'(d₁, …, dₙ) given  ⇒  n = number of terms,  2m = d₁ + … + dₙ,  Δ = max dᵢ,  δ = min dᵢ','כל הדרגות מתוך הקבוצה הנתונה':'deg(u) ∈ S for all u  ⇒  δ ≥ min S,  Δ ≤ max S',
+ 'עץ שדרגותיו 1 ו־d: ℓ + d(n − ℓ) = 2(n − 1)':'tree, deg(u) ∈ {1, d}  ⇒  ℓ + d(n − ℓ) = Σ deg(u) = 2(n − 1)  ⇒  ℓ = (n(d − 2) + 2) / (d − 1)','ספירת צמתים לפי דרגה':'kᵢ vertices of degree dᵢ  ⇒  n ≥ Σ kᵢ,   Σ kᵢdᵢ + (n − Σ kᵢ)·δ ≤ 2m ≤ Σ kᵢdᵢ + (n − Σ kᵢ)·Δ',
+ 'קוטר מוגדר רק בגרף קשיר':'diam < ∞  ⇒  c = 1','מסלול קצר ביותר באורך הקוטר: diam + 1 צמתים':'shortest path of length diam has diam + 1 distinct vertices  ⇒  diam ≤ n − 1,  m ≥ diam','שני צמתים שונים במרחק אחת לפחות':'n ≥ 2  ⇒  diam ≥ 1',
+ 'diam = 1: כל שני צמתים שכנים':'diam = 1  ⇒  ω = n,  δ = n − 1','diam ≥ 2: יש שני צמתים לא שכנים':'diam ≥ 2  ⇒  α ≥ 2','δ ≥ (n − 1) / 2: לכל שני צמתים לא שכנים יש שכן משותף':'uw ∉ E  ⇒  |Γ(u) ∩ Γ(w)| ≥ 2δ − (n − 2) ≥ 1  ⇒  dist(u, w) = 2  ⇒  diam ≤ 2',
+ 'חסם מור: n ≤ 1 + Δ + Δ(Δ − 1) + …':'at most Δ(Δ − 1)^(i − 1) vertices at distance i  ⇒  n ≤ 1 + Δ + Δ(Δ − 1) + … + Δ(Δ − 1)^(diam − 1)','עץ עם שלושה צמתים לפחות':'tree, n ≥ 3  ⇒  diam ≥ 2','בעץ: מסלול עובר בשני עלים לכל היותר':'tree: a path has at most 2 leaves  ⇒  diam + 1 ≤ (n − ℓ) + 2',
+ 'יש מעגל: m > n − c':'cycle  ⇒  not a forest  ⇒  m ≥ n − c + 1','יש מעגל':'cycle  ⇒  Δ ≥ 2','מעגל באורך g עובר ב־g צמתים':'g ≤ n','מעגל באורך g: g קשתות':'g ≤ m','מעגל פשוט עובר בכל צומת פעם אחת':'g ≤ n','יש משולש':'triangle  ⇒  g = 3',
+ 'דו-צדדי: כל מעגל באורך זוגי':'bipartite  ⇒  g even','g ≥ 4: לשני שכנים אין שכן משותף':'g ≥ 4, uw ∈ E  ⇒  Γ(u) ∩ Γ(w) = ∅  ⇒  n ≥ deg(u) + deg(w) ≥ 2δ','g ≥ 5: השכנים של השכנים שונים זה מזה':'g ≥ 5  ⇒  n ≥ 1 + δ + δ(δ − 1) = δ² + 1',
+ 'מישורי, כל פאה באורך g לפחות: m ≤ g(n − 2) / (g − 2)':'planar, every face of length ≥ g  ⇒  g·f ≤ 2m,  f = m − n + c + 1  ⇒  m ≤ g(n − 2) / (g − 2)','g ≤ 2·diam + 1':'connected, cycle  ⇒  g ≤ 2·diam + 1','מעגל שעובר בכל הצמתים':'cycle of length n  ⇒  Hamiltonian  ⇒  c = 1,  δ ≥ 2,  ν = ⌊n / 2⌋',
+ 'יש מעגל באורך אי-זוגי (1.6)':'odd cycle  ⇒  not bipartite','יש מעגל פשוט שעובר בכל הצמתים':'cycle of length n  ⇒  Hamiltonian','סכום הדרגות (1.3)':'Σ deg(u) = 2m  ⇒  n·δ ≤ 2m ≤ n·Δ','נוסחת אוילר (5.3)':'planar  ⇒  f = m − n + c + 1','עץ (2.5)':'tree  ⇒  m = n − 1','עלה בעץ (2.3)':'tree, n ≥ 2  ⇒  δ = 1','עץ הוא דו-צדדי':'tree, n ≥ 2  ⇒  χ = 2',
  'עץ או יער: m = n − c':'forest  ⇒  m = n − c','יער: m = n − c':'forest  ⇒  m = n − c','עץ':'tree  ⇒  c = 1','בעץ: ℓ ≥ 2, ℓ ≥ Δ':'tree, n ≥ 2  ⇒  ℓ ≥ max(2, Δ)','בעץ: ℓ ≥ Δ':'tree  ⇒  Δ ≤ ℓ','בעץ: לא כל הצמתים עלים':'tree, n ≥ 3  ⇒  ℓ ≤ n − 1',
  'בעץ: הצמתים שאינם עלים מכסים את כל הקשתות':'tree, n ≥ 3  ⇒  β ≤ n − ℓ','בעץ: סכום הדרגות קובע כמה עלים אפשריים':'2(n − 1) = Σ deg(u) ≤ ℓ + (n − ℓ)·Δ  ⇒  ℓ ≤ (2 + n(Δ − 2)) / (Δ − 1)','כיסוי בצמתים של עץ: β ≥ m / Δ, קניג':'tree  ⇒  ν = β ≥ m / Δ',
  'ביער יש צומת מדרגה קטנה':'forest  ⇒  δ ≤ 1','רכיב עם קשת ביער הוא עץ: שני עלים':'forest, m ≥ 1  ⇒  ℓ ≥ 2','כל רכיב ביער הוא עץ: שני עלים לרכיב':'forest, δ ≥ 1  ⇒  ℓ ≥ 2c','אין מעגלים: פאה אחת':'forest  ⇒  f = 1',
@@ -1080,7 +1135,49 @@ const OPF={compl:"n′ = n,   m + m′ = n(n − 1) / 2,   Δ′ = n − 1 − �
 const hasHeb=x=>/[֐-׿]/.test(x);
 const symOf=x=>SYM[x.k]+(by(x.g)?sub(by(x.g)):`<sub>${x.g}</sub>`);
 /* premises, the rule in its formal form, and the conclusion */
-function derive(u,r,concl,name){
+/* the arithmetic of a substitution, written out: which bound went where, and the rounding */
+const LIN={'α + β = n (4.14)':[{al:1,be:1,n:-1},0],'ρ = n − ν (4.10)':[{rho:1,nu:1,n:-1},0],'יער: m = n − c':[{m:1,c:1,n:-1},0],'נוסחת אוילר (5.3)':[{f:1,m:-1,n:1,c:-1},1],'עץ (2.5)':[{m:1,n:-1},-1]};
+function chain(r,k,i,v,get){
+  const S=x=>SYM[x],ok=(...a)=>a.every(x=>x!==undefined&&Number.isFinite(x)),rel=i?'≤':'≥',fin=(txt,val)=>val===v?txt:null;
+  if(LIN[r]&&LIN[r][0][k]!==undefined){const [cf,rhs]=LIN[r],ak=cf[k],c0=rhs/ak;let sym='',num='',tot=c0,first=true;
+    for(const j of Object.keys(cf).sort((x,y)=>(-cf[y]/ak)-(-cf[x]/ak))){if(j===k)continue;const q=-cf[j]/ak,val=get(j,(q>0)===(i===0)?0:1);if(!ok(val))return null;tot+=q*val;
+      sym+=`${first?(q<0?'−':''):(q<0?' − ':' + ')}${S(j)}`;num+=`${first?(q<0?'−':''):(q<0?' − ':' + ')}${val}`;first=false}
+    if(c0){sym+=`${c0<0?' − ':' + '}${Math.abs(c0)}`;num+=`${c0<0?' − ':' + '}${Math.abs(c0)}`}
+    return fin(`${S(k)} = ${sym} ${rel} ${num} = ${tot}`,tot)}
+  const n0=get('n',0),n1=get('n',1),m0=get('m',0),m1=get('m',1),d0=get('dl',0),D1=get('D',1),D0_=get('D',0),c1=get('c',1),chi0=get('chi',0),chi1=get('chi',1),al1=get('al',1),be1=get('be',1),nu0=get('nu',0);
+  const up=Math.ceil,dn=Math.floor,cl=(a,b)=>`⌈${a} / ${b}⌉ = ${up(a/b)}`,fl=(a,b)=>`⌊${a} / ${b}⌋ = ${dn(a/b)}`;
+  if(r==='סכום הדרגות (1.3)'){
+    if(k==='m'&&i===0&&ok(n0,d0))return fin(`2m = Σ deg(u) ≥ n·δ ≥ ${n0}·${d0} = ${n0*d0}  ⇒  m ≥ ${cl(n0*d0,2)}`,up(n0*d0/2));
+    if(k==='m'&&i===1&&ok(n1,D1))return fin(`2m = Σ deg(u) ≤ n·Δ ≤ ${n1}·${D1} = ${n1*D1}  ⇒  m ≤ ${fl(n1*D1,2)}`,dn(n1*D1/2));
+    if(k==='dl'&&i===1&&ok(m1,n0))return fin(`n·δ ≤ 2m  ⇒  δ ≤ 2m / n ≤ 2·${m1} / ${n0}  ⇒  δ ≤ ${fl(2*m1,n0)}`,dn(2*m1/n0));
+    if(k==='D'&&i===0&&ok(m0,n1))return fin(`n·Δ ≥ 2m  ⇒  Δ ≥ 2m / n ≥ 2·${m0} / ${n1}  ⇒  Δ ≥ ${cl(2*m0,n1)}`,up(2*m0/n1));
+    if(k==='n'&&i===0&&ok(m0,D1)&&D1>0)return fin(`n·Δ ≥ 2m  ⇒  n ≥ 2m / Δ ≥ 2·${m0} / ${D1}  ⇒  n ≥ ${cl(2*m0,D1)}`,up(2*m0/D1));
+    if(k==='n'&&i===1&&ok(m1,d0)&&d0>0)return fin(`n·δ ≤ 2m  ⇒  n ≤ 2m / δ ≤ 2·${m1} / ${d0}  ⇒  n ≤ ${fl(2*m1,d0)}`,dn(2*m1/d0))}
+  if(r==='m ≤ n(n − 1) / 2'&&k==='m'&&i===1&&ok(n1))return fin(`m ≤ n(n − 1) / 2 ≤ ${n1}·${n1-1} / 2 = ${n1*(n1-1)/2}`,n1*(n1-1)/2);
+  if(r==='m ≥ n − c'){if(k==='m'&&i===0&&ok(n0,c1))return fin(`m ≥ n − c ≥ ${n0} − ${c1} = ${n0-c1}`,n0-c1);if(k==='c'&&i===0&&ok(n0,m1))return fin(`c ≥ n − m ≥ ${n0} − ${m1} = ${n0-m1}`,n0-m1);if(k==='n'&&i===1&&ok(m1,c1))return fin(`n ≤ m + c ≤ ${m1} + ${c1} = ${m1+c1}`,m1+c1)}
+  if(r==='מישורי: m ≤ 3n − 6 (5.4)'){if(k==='m'&&i===1&&ok(n1))return fin(`m ≤ 3n − 6 ≤ 3·${n1} − 6 = ${3*n1-6}`,3*n1-6);if(k==='n'&&i===0&&ok(m0))return fin(`3n ≥ m + 6 ≥ ${m0} + 6  ⇒  n ≥ ${cl(m0+6,3)}`,up((m0+6)/3))}
+  if(r==='χ ≤ Δ + 1'){if(k==='chi'&&i===1&&ok(D1))return fin(`χ ≤ Δ + 1 ≤ ${D1} + 1 = ${D1+1}`,D1+1);if(k==='D'&&i===0&&ok(chi0))return fin(`Δ ≥ χ − 1 ≥ ${chi0} − 1 = ${chi0-1}`,chi0-1)}
+  if(r==='n ≤ χ·α'){if(k==='chi'&&i===0&&ok(n0,al1))return fin(`χ ≥ n / α ≥ ${n0} / ${al1}  ⇒  χ ≥ ${cl(n0,al1)}`,up(n0/al1));if(k==='al'&&i===0&&ok(n0,chi1))return fin(`α ≥ n / χ ≥ ${n0} / ${chi1}  ⇒  α ≥ ${cl(n0,chi1)}`,up(n0/chi1));if(k==='n'&&i===1&&ok(chi1,al1))return fin(`n ≤ χ·α ≤ ${chi1}·${al1} = ${chi1*al1}`,chi1*al1)}
+  if(r==='α ≥ n / (Δ + 1)'&&k==='al'&&i===0&&ok(n0,D1))return fin(`α ≥ n / (Δ + 1) ≥ ${n0} / (${D1} + 1)  ⇒  α ≥ ${cl(n0,D1+1)}`,up(n0/(D1+1)));
+  if(r==='צומת מכסה לכל היותר Δ קשתות'){if(k==='be'&&i===0&&ok(m0,D1)&&D1>0)return fin(`β·Δ ≥ m  ⇒  β ≥ m / Δ ≥ ${m0} / ${D1}  ⇒  β ≥ ${cl(m0,D1)}`,up(m0/D1));if(k==='m'&&i===1&&ok(be1,D1))return fin(`m ≤ β·Δ ≤ ${be1}·${D1} = ${be1*D1}`,be1*D1)}
+  if(r==='קשת בזיווג חוסמת לכל היותר 2Δ − 1 קשתות'&&k==='nu'&&i===0&&ok(m0,D1)&&D1>0)return fin(`ν·(2Δ − 1) ≥ m  ⇒  ν ≥ m / (2Δ − 1) ≥ ${m0} / ${2*D1-1}  ⇒  ν ≥ ${cl(m0,2*D1-1)}`,up(m0/(2*D1-1)));
+  if(r==='ν ≤ n / 2'){if(k==='nu'&&i===1&&ok(n1))return fin(`ν ≤ n / 2 ≤ ${n1} / 2  ⇒  ν ≤ ${fl(n1,2)}`,dn(n1/2));if(k==='n'&&i===0&&ok(nu0))return fin(`n ≥ 2ν ≥ 2·${nu0} = ${2*nu0}`,2*nu0)}
+  if(r==='Δ ≤ n − 1'){if(k==='D'&&i===1&&ok(n1))return fin(`Δ ≤ n − 1 ≤ ${n1} − 1 = ${n1-1}`,n1-1);if(k==='n'&&i===0&&ok(D0_))return fin(`n ≥ Δ + 1 ≥ ${D0_} + 1 = ${D0_+1}`,D0_+1)}
+  return null}
+/* rules whose name is built from the objects of the question */
+function dyn(r){let m;
+  if((m=/^הדרגה של (.+)$/.exec(r))){const v=by(m[1]),w=v&&v.q==='one'?v.w:'';return w==='max'?`${m[1]} of maximum degree  ⇒  Δ = deg(${m[1]})`:w==='min'?`${m[1]} of minimum degree  ⇒  δ = deg(${m[1]})`:`δ ≤ deg(${m[1]}) ≤ Δ`}
+  if((m=/^הקבוצה (.+)$/.exec(r)))return `${m[1]} independent  ⇒  α ≥ |${m[1]}|`;
+  if((m=/^הקליקה (.+)$/.exec(r)))return `${m[1]} clique  ⇒  ω ≥ |${m[1]}|`;
+  if((m=/^הכיסוי (.+)$/.exec(r)))return `${m[1]} vertex cover  ⇒  β ≤ |${m[1]}|`;
+  if((m=/^(.+) צומת מפריד$/.exec(r)))return `${m[1]} cut vertex  ⇒  c(G − ${m[1]}) ≥ c(G) + 1`;
+  if(/^(הסרת|החזרת) הקליקה /.test(r))return 'S clique, |S| = k, G′ = G − S  ⇒  m′ + k(k − 1) / 2 ≤ m ≤ m′ + kΔ − k(k − 1) / 2,   α ≤ α′ + 1,   ν ≥ ν′ + ⌊k / 2⌋,   χ ≥ k';
+  if(/^(הסרת|החזרת) הקבוצה הבלתי תלויה /.test(r))return 'S independent, |S| = k, G′ = G − S  ⇒  m′ + kδ ≤ m ≤ m′ + kΔ,   χ ≤ χ′ + 1,   ω ≤ ω′ + 1,   α ≤ α′ + k';
+  if(/^(הסרת|החזרת) הקבוצה /.test(r))return '|S| = k, G′ = G − S  ⇒  m′ ≤ m ≤ m′ + kΔ,   ω ≤ ω′ + k,   α ≤ α′ + k';
+  if(/^שאר הרכיבים של /.test(r))return 'x(C) = x(G) − Σ x(Cᵢ) over the other components,   x ∈ {n, m, α, ν, β}';
+  if((m=/^יש מעגל פשוט באורך (\d+)(: מעגל אי-זוגי)?$/.exec(r)))return m[2]?`cycle of length ${m[1]}, odd  ⇒  not bipartite  ⇒  χ ≥ 3`:`cycle of length ${m[1]}  ⇒  n ≥ ${m[1]},  m ≥ ${m[1]},  g ≤ ${m[1]}`;
+  return ''}
+function derive(u,r,concl,name,meta){
   const lines=u.map(x=>[`${symOf(x)} ${x.i?'≤':'≥'} ${x.v}`,rz(x.r)]);
   if(r==='נתון')return prf([[concl,'נתון']]);
   if(r==='מהפעולה')return prf([...lines,[concl,`הפעולה שיצרה את ${name}, לפי נתוני גרף המקור`]]);
@@ -1088,12 +1185,16 @@ function derive(u,r,concl,name){
   if(r.startsWith('חיבור הרכיבים של ')||r.startsWith('פירוק החיבור ')){lines.push([OPF.join,`${rz(r)}; הסימן ′ הוא הגודל אחרי החיבור`]);lines.push([`∴  ${concl}`,'הצבה']);return prf(lines)}
   if(r.startsWith('מ־')){const Y=r.slice(2),me=by(name),ot=by(Y),lk=me&&me.op&&me.src===Y?me:ot&&ot.op&&ot.src===name?ot:null;
     if(lk&&OPF[lk.op]){lines.push([OPF[lk.op],`${OPS[lk.op][0]}: ${rz(lk.name)} מתוך ${rz(lk.src)}, והסימן ′ הוא הגודל ב־${rz(lk.name)}`]);lines.push([`∴  ${concl}`,'הצבה']);return prf(lines)}}
-  const f=FORM[r]||(hasHeb(r)?'':r.replace(/\s*\(\d+\.\d+\)$/,'')),ref=(r.match(/\((\d+\.\d+)\)$/)||[])[1];
+  const f=FORM[r]||dyn(r)||(hasHeb(r)?'':r.replace(/\s*\(\d+\.\d+\)$/,'')),ref=(r.match(/\((\d+\.\d+)\)$/)||[])[1];
   if(f)lines.push([f,hasHeb(r)?rz(r):ref?`משפט ${ref}`:'כלל']);
-  lines.push([`∴  ${concl}`,f?'הצבה':rz(r)]);return prf(lines)}
+  /* the substitution itself, with the numbers that went in */
+  let shown=false;
+  if(meta){const get=(k,i)=>{const x=u.find(y=>y.g===name&&y.k===k&&y.i===i);return x?x.v:i===0?D0[k]:undefined};
+    for(const i of meta.sides){const c=chain(r,meta.k,i,meta.v,get);if(c){lines.push([c,'הצבה וחישוב']);shown=true}}}
+  lines.push([`∴  ${concl}`,shown?'':f?'הצבה':rz(r)]);return prf(lines)}
 function tell(g,k,i,d,one){const v=d.B[k][i],r=d.W[k][i],u=one?[...d.U[k][0],...d.U[k][1]].filter((x,n,A)=>A.findIndex(y=>y.g===x.g&&y.k===x.k&&y.i===x.i)===n):d.U[k][i]||[];
   const cl=`${SYM[k]+sub(g)} ${one?'=':i?'≤':'≥'} ${v}`;
-  return `<div class="qpb"><div class="qph"><span>${DEF[k]}: ${one?'הערך':i?'החסם העליון':'החסם התחתון'}</span><bdi dir="ltr" class="fx">${cl}</bdi></div>${derive(u,r,cl,g.name)}</div>`}
+  return `<div class="qpb"><div class="qph"><span>${DEF[k]}: ${one?'הערך':i?'החסם העליון':'החסם התחתון'}</span><bdi dir="ltr" class="fx">${cl}</bdi></div>${derive(u,r,cl,g.name,{k,v,sides:one?[0,1]:[i]})}</div>`}
 function digestHtml(){
   const G=graphs(),open=!COL.has('Σ'),first=solveAll(),VR=new Map();
   for(const g of G){const d=first.get(g);if(d&&!d.bad)VR.set(g,virtFor(g,d))}

@@ -4,9 +4,10 @@ p.on('pageerror',e=>console.log('PAGEERR',e.message));
 await p.goto('file:///home/claude/graph-playground/index.html#open');
 const MAXN=Number(process.argv[2]||7),STEP=Number(process.argv[3]||1);
 const res=await p.evaluate(({MAXN,STEP})=>{
+  const cycLens=(a,n)=>{const S=new Set();for(let s0=0;s0<n;s0++){const go=(v,mask,len)=>{let nb=a[v];while(nb){const u=low(nb);nb&=nb-1;if(u===s0&&len>=3)S.add(len);else if(u>s0&&!(mask>>u&1))go(u,mask|1<<u,len+1)}};go(s0,1<<s0,1)}return[...S].sort((x,y)=>x-y)};
   const truth=(a,n)=>{const d=degs(a),m=nEdges(a),c=nComps(a,n),al=alpha(a,n),nu=maxMatch(a,n),pl=isPlanar(a,n)?1:0;
     return{n,m,c,D:Math.max(...d),dl:Math.min(...d),chi:chi(a,n),al,nu,be:n-al,om:omega(a,n),pl,bp:isBip(a,n)?1:0,fo:m===n-c?1:0,ham:isHam(a,n)?1:0,eu:isEuler(a,n)&&m>0?1:0,
-      f:pl?m-n+c+1:null,rho:Math.min(...d)>=1?n-nu:null,lv:d.filter(x=>x===1).length,reg:Math.max(...d)===Math.min(...d),tf:nTri(a,n)===0?1:0,a,d}};
+      f:pl?m-n+c+1:null,rho:Math.min(...d)>=1?n-nu:null,lv:d.filter(x=>x===1).length,reg:Math.max(...d)===Math.min(...d),tf:nTri(a,n)===0?1:0,a,d,dm:c===1?diam(a,n):null,gi:Number.isFinite(girth(a,n))?girth(a,n):null,cyc:cycLens(a,n)}};
   const G=(name,o)=>Object.assign({t:'g',name},o),bad=[],cnt={};
   const insight={ 'הגרף קשיר':t=>t.c===1,'הגרף המילטוני':t=>t.ham,'הגרף אוילרי':t=>t.eu,'הגרף אינו מישורי':t=>!t.pl,'הגרף אינו דו-צדדי':t=>!t.bp,'הגרף הוא עץ':t=>t.fo&&t.c===1,'הגרף הוא יער':t=>t.fo,
     'יש זיווג מושלם':t=>2*t.nu===t.n,'אין זיווג מושלם':t=>2*t.nu!==t.n,'יש בגרף מעגל אחד בדיוק':t=>t.m===t.n-t.c+1,'הגרף מלא':t=>t.m===t.n*(t.n-1)/2,'יש בגרף מעגל, ולכן הוא אינו יער':t=>!t.fo,
@@ -28,6 +29,13 @@ const res=await p.evaluate(({MAXN,STEP})=>{
     check('S3 n,chi,alpha,omega',id,run([G('G',{n,chi:t.chi,al:t.al,om:t.om})])[0],t);
     check('S4 n,nu,props',id,run([G('G',{n,nu:t.nu,eu:t.eu?'y':'u',ha:t.ham?'y':'u',pm:2*t.nu===n?'y':'u'})])[0],t);
     check('S4b only n,m',id,run([G('G',{n,m:t.m})])[0],t);
+    check('S20 degree sequence',id,run([G('G',{ds:t.d.join(','),pl:yn(t.pl),bp:yn(t.bp),tr})])[0],t);
+    check('S21 allowed degrees',id,run([G('G',{n,c:t.c,dset:[...new Set(t.d)].join(','),tr})])[0],t);
+    { const cnt={};t.d.forEach(x=>cnt[x]=(cnt[x]||0)+1);const vs=Object.entries(cnt).map(([dv,k],j)=>({t:'v',name:'q'+j,in:'G',q:'cnt',d:Number(dv),k,cut:false}));
+      check('S22 degree counts',id,run([G('G',{tr}),...vs])[0],t);check('S22b partial counts',id,run([G('G',{n,tr}),vs[0]])[0],t)}
+    if(t.dm!==null){check('S23 diameter',id,run([G('G',{n,dm:t.dm,D:t.D,tr})])[0],t);check('S23b diameter only',id,run([G('G',{dm:t.dm,D:t.D})])[0],t);check('S23c connected, nothing on diam',id,run([G('G',{n,m:t.m,c:1,D:t.D,dl:t.dl,al:t.al,om:t.om,tr})])[0],t)}
+    if(t.gi!==null){check('S24 girth',id,run([G('G',{n,gi:t.gi,dl:t.dl,pl:yn(t.pl),bp:yn(t.bp),c:t.c})])[0],t);check('S24b girth only',id,run([G('G',{gi:t.gi,dl:t.dl,pl:yn(t.pl)})])[0],t);
+      check('S25 cycle lengths',id,run([G('G',{n,cyc:t.cyc.join(','),bp:t.bp?'y':'u'})])[0],t);check('S25b one cycle length',id,run([G('G',{cyc:String(t.cyc[t.cyc.length-1]),dm:t.dm})])[0],t)}
     { const ca=compl(a,n),tc=truth(ca,n),r=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,al:t.al,om:t.om,pl:yn(t.pl),bp:yn(t.bp)}),G('K',{op:'compl',src:'G'})]);check('S5 G with complement: G',id,r[0],t);check('S5 complement',id,r[1],tc)}
     if(n>=3){const v=i%n,kv=delVertex(a,n,v),tk=truth(kv,n-1),cut=tk.c>t.c;
       const r=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,pl:yn(t.pl),bp:yn(t.bp),tr,ha:t.ham?'y':'u',eu:t.eu?'y':'u'}),{t:'v',name:'v',in:'G',q:'one',d:t.d[v],cut},G('K',{op:'delv',src:'G',arg:'v'})]);
