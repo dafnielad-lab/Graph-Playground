@@ -1,4 +1,9 @@
-# Graph Playground · מגרש גרפים
+# The Discrete Playground
+
+A playground for discrete mathematics: describe a situation without programming and see what follows from it.
+The first part, and the only one built so far, is the **Graph Playground** (מגרש גרפים). Parts for relations, cardinalities, combinatorics, recurrences, generating functions and logic are ideas, not code.
+
+## Graph Playground · מגרש גרפים
 
 An interactive playground for exploring small graphs, built for learning discrete mathematics.
 Stack conditions and watch how many graphs survive each one; when fifty or fewer remain, all of them are drawn (the limit can be raised up to 1000).

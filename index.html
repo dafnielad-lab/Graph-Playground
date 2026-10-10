@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>מגרש גרפים</title>
+<title>The Discrete Playground</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
 <style>
 /* layout: top bar of global choices; three columns — condition funnel, gallery, graph card */
@@ -138,6 +138,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .qtl{margin:6px 0 2px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:2px 16px;font-size:12px;color:var(--muted)}.qtl div{display:flex;gap:8px;align-items:baseline}.qtl dt{flex:none;min-width:34px;color:var(--ink);font-weight:700}.qtl dd{margin:0}
 .qb .cell.wide{display:flex;flex-direction:column;align-items:stretch;gap:2px;flex:1 1 100%}.qb input.tl{width:100%;min-width:0;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 .qnote{margin:2px 0 6px;padding:6px 10px;border-inline-start:3px solid var(--hi);background:var(--hi-soft);border-radius:6px;font-size:13px;line-height:1.55;color:var(--ink)}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.brand2{font-size:.62em;font-weight:500;color:var(--muted)}
 .qmin{border:1px solid var(--line,#ccc);background:var(--bg);border-radius:6px;color:var(--ink);font-size:13px;line-height:1;padding:3px 7px;cursor:pointer}
 .qtp{display:flex;flex-direction:column;gap:2px;min-width:0}
 .qtp>button{border:0;background:var(--bg);border-radius:6px;font-weight:700;font-size:13px;color:var(--ink);padding:3px 8px;display:flex;gap:8px;align-items:baseline;text-align:start}
@@ -1509,7 +1510,7 @@ const seg=(act,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button data-ac
 const nStep=(w,val,lo,hi)=>`<div class="seg step"><button data-act="n" data-w="${w}" data-v="-1" aria-label="הפחת צומת" ${val<=lo?'disabled':''}>−</button><b class="num" aria-live="polite">${val}</b><button data-act="n" data-w="${w}" data-v="1" aria-label="הוסף צומת" ${val>=hi?'disabled':''}>+</button></div>`;
 function renderTop(){
   $('.cols').classList.toggle('sheet',sheetMode());
-  $('#top').innerHTML=`<div class="grp"><div class="brand">מגרש גרפים</div><button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
+  $('#top').innerHTML=`<div class="grp"><div class="brand"><bdi dir="ltr">The Discrete Playground</bdi><span class="brand2">מגרש גרפים</span></div><button class="btn sm" data-act="conds" aria-pressed="${S.condsOpen}" aria-controls="conds">תנאים</button></div>
   ${sheetMode()?'':`<div class="grp"><span class="lab">סוג</span>${seg('type',[['general','גרף כללי'],['tree','עץ'],['bip','דו-צדדי']],S.type)}</div>
   <div class="grp"><span class="lab">ספירה</span>${seg('lab',[['0','לא מתויג'],['1','מתויג']],S.labeled?'1':'0')}</div>
   <div class="grp"><span class="lab">צמתים</span>${nStep('lo',S.n,1,ranged()?S.n2:maxN())}${ranged()?`<span class="lab">עד</span>${nStep('hi',S.n2,S.n,maxN())}`:''}${single()?'':`<button class="btn sm" data-act="rng" aria-pressed="${!!S.rng}">טווח</button>`}<span class="lab">לכל היותר <span class="num">${maxN()}</span></span></div>`}
