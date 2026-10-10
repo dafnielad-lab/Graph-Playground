@@ -153,7 +153,7 @@ figcaption{font-size:13px;font-weight:500}.cc{color:var(--accent)}
 .lgtab.det th.main{font-weight:800;color:var(--accent)}.lgtab.det td.main{font-weight:800;font-size:20px;opacity:1;background:var(--bg)}.lgtab.det th.giv~th{background:var(--surface)}.lgtab.det td.v{background:var(--bg);opacity:1;font-weight:700}
 .lgtab.det tr.out td{opacity:.3}.lgtab.det tr.out td.clash{opacity:1}
 .gfwrap{display:flex;flex-direction:column;gap:10px;min-width:0}.gfeq{direction:ltr;text-align:center;font-size:22px;font-weight:700;background:var(--surface);border-radius:12px;padding:10px}
-.gfd{margin-top:8px;border-top:1px solid var(--track);padding-top:6px;line-height:1.5}.gfdh{direction:rtl;text-align:right;font-size:13px;font-weight:700;color:var(--ink)}.gfd .qpf{gap:8px}.gfd .qpf .fx{font-size:16px;line-height:2.3}.gfd .qpf .pj{font-size:12.5px}.gfbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.gfb h3 .qmin,.gfcard h3 .qmin{margin-inline-end:6px}.gfb.gfh{padding-block:6px}.gfb.gfh h3{margin:0;color:var(--muted)}.gfb{background:var(--surface);border-radius:12px;padding:10px 14px;min-width:0}.gfb h3{margin:0 0 2px;font-size:14px}.gfm{direction:ltr;text-align:left;font-size:19px;line-height:2.5;white-space:normal;overflow-x:auto;padding:4px 0}
+.gfd{margin-top:8px;border-top:1px solid var(--track);padding-top:6px;line-height:1.5}.gfdb{direction:rtl;display:block;margin-inline-start:auto;font-size:13px}.gfm .gfd{text-align:left}.gfm .gfdb{margin-left:auto;margin-right:0}.gfd .qpf{gap:8px}.gfd .qpf .fx{font-size:16px;line-height:2.3}.gfd .qpf .pj{font-size:12.5px}.gfbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.gfb h3 .qmin,.gfcard h3 .qmin{margin-inline-end:6px}.gfb.gfh{padding-block:6px}.gfb.gfh h3{margin:0;color:var(--muted)}.gfb{background:var(--surface);border-radius:12px;padding:10px 14px;min-width:0}.gfb h3{margin:0 0 2px;font-size:14px}.gfm{direction:ltr;text-align:left;font-size:19px;line-height:2.5;white-space:normal;overflow-x:auto;padding:4px 0}
 .gfr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.35;margin:0 4px}.gfr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 6px 2px}.gfr>span:last-child{padding:2px 6px 0}
 .gsg{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 5px 0 2px;font-size:.62em}.gsg .S{font-size:2.5em;line-height:.95;font-weight:300}.gin{font-size:.72em;color:var(--muted);line-height:1.8}.gcs{display:inline-flex;flex-direction:column;vertical-align:middle;gap:2px;border-inline-start:2px solid var(--line);padding-inline-start:10px;line-height:2.1}.gcs>span{display:flex;gap:26px;align-items:center;justify-content:space-between}.gcd{font-size:.68em;color:var(--muted)}.gbr{font-size:1.5em;font-weight:300;vertical-align:-.12em;color:var(--muted)}.gbn{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.25;font-size:.8em;padding:0 9px;margin:0 3px;border-inline:1.5px solid currentColor;border-radius:9px}
 .gfn{font-weight:700}.gfset{direction:ltr;text-align:left;font-size:13px;color:var(--muted);padding-inline:4px}.gfcard{display:flex;flex-direction:column;gap:6px}.gfcard h3{margin:8px 0 0;font-size:14px}
@@ -1508,6 +1508,22 @@ function binomHtml(C){if(!(C.den.length===1&&C.den[0][0]===1))return null;const 
 function polyHtml(cf){let L=1n;for(const c of cf)L=L/gcd(L,c.d)*c.d;const ints=cf.map(c=>c.n*(L/c.d)),parts=[];
   for(let j=ints.length-1;j>=0;j--){const v=ints[j];if(v===0n)continue;const a=v<0n?-v:v,mon=j===0?'':j===1?'n':`n<sup>${j}</sup>`,body=mon?(a===1n?mon:`${a}${mon}`):String(a);parts.push((parts.length?(v<0n?' − ':' + '):(v<0n?'−':''))+body)}
   const top=parts.join('')||'0';return L===1n?top:fr(top,String(L))}
+/* a derivation under an answer: folded until asked for */
+const DOPEN=new Set();
+function howHtml(key,L){const o=DOPEN.has(key);return `<div class="gfd"><button class="qmv gfdb" data-gd="${key}" aria-expanded="${o}">${o?'▾':'◂'} איך היא מתקבלת</button>${o?`<div class="qpf">${L.map(([f,w],i)=>`<div class="ps"><div class="pf"><span class="pn">${i+1}</span><span class="fx">${f}</span></div><div class="pj">${w}</div></div>`).join('')}</div>`:''}</div>`}
+/* every factor of the denominator brought to 1 − x^M: F = N(x) / (1 − x^M)^K. Then a_n is a sum of binomials, one for every term of N in the residue class of n */
+function overM(C){const M=C.den.reduce((t,[s])=>t/Number(gcd(BigInt(t),BigInt(s)))*s,1),K=C.den.reduce((t,[,m])=>t+m,0);let N=[];for(const [e,k] of numTerms(C))N[C.A+e]=k;for(let i=0;i<N.length;i++)if(N[i]===undefined)N[i]=0n;
+  for(const [s2,m] of C.den)for(let t=0;t<m;t++){const o=Array.from({length:N.length+M-s2},()=>0n);N.forEach((v,i)=>{for(let u=0;u<M;u+=s2)o[i+u]+=v});N=o}return{M,K,N}}
+const viaBinomials=(O,n)=>{if(!O.K)return O.N[n]||0n;let t=0n;for(let e=n%O.M;e<=n&&e<O.N.length;e+=O.M)if(O.N[e]!==0n)t+=O.N[e]*binom(BigInt((n-e)/O.M+O.K-1),BigInt(O.K-1));return t};
+function fmDerive(C,Fm,fmHtml){const O=overM(C),{M,K,N}=O,bot=C.den.map(([s,m])=>pw(one(s),m)).join(' '),bn=(a,b)=>`<span class="gbn"><span>${a}</span><span>${b}</span></span>`,nz=N.filter(v=>v!==0n).length,Ns=nz<=12?polyStr(N):'N(x)';
+  const top=polyStr((()=>{const P=[];for(const [e,k] of numTerms(C))P[C.A+e]=k;for(let i=0;i<P.length;i++)if(P[i]===undefined)P[i]=0n;return P})()),den=`${pw(one(M),K)}`,xm=M===1?'x<sup>j</sup>':`x<sup>${M}j</sup>`,L=[];
+  const simple=C.den.length===1&&C.den[0][0]===M;
+  L.push(simple?[`F(x) = ${fr(top,den)}`,'המכנה כבר חזקה של גורם אחד']:[`F(x) = ${fr(top,bot)} = ${fr(Ns,den)}`,`מביאים כל גורם במכנה לצורה 1 − x<sup>${M}</sup>: מכפילים מונה ומכנה ב־1 + x<sup>s</sup> + x<sup>2s</sup> + … עד x<sup>${M} − s</sup>, לכל גורם 1 − x<sup>s</sup>${nz<=12?'':`. N(x) הוא המונה שמתקבל, פולינום ממעלה ${N.length-1}`}`]);
+  L.push([`${fr('1',den)} = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>j = 0</span></span>${K===1?'':bn(`j + ${K-1}`,K-1)}${xm}`,K===1?'טור הנדסי':'הטור של חזקה של טור הנדסי']);
+  L.push([`a<sub>n</sub> = <span class="gsg"><span></span><span class="S">Σ</span><span>e</span></span>N<sub>e</sub>${K===1?'':' · '+bn(M===1?`n − e + ${K-1}`:`(n − e) / ${M} + ${K-1}`,K-1)},   e ≤ n${M===1?'':`,   e ≡ n (mod ${M})`}`,`N<sub>e</sub> הוא המקדם של x<sup>e</sup> במונה. מחובר של המונה תורם ל־x<sup>n</sup> רק כשההפרש n − e ${M===1?'אינו שלילי':`הוא כפולה לא שלילית של ${M}`}`]);
+  if(K>=2)L.push([`${bn(`m + ${K-1}`,K-1)} = ${fr(Array.from({length:K-1},(_,i)=>`(m + ${i+1})`).join(''),K-1>2?`${K-1}!`:String(K-1===2?2:1))}`,`הבינום הוא פולינום ב־m ממעלה ${K-1}. לכן הסכום הוא פולינום ב־n${M===1?'':', אחד לכל שארית של n'}`]);
+  L.push([`${fmHtml}${Fm.n0>0?`,   n ≥ ${Fm.n0}`:''}`,`מציבים ומכנסים${Fm.n0>0?'. הפולינום תקף מהמקום שבו כל מחוברי המונה כבר נכללים בסכום, או מתאפסים בו':''}`]);
+  return howHtml('@dfm',L)}
 /* a polynomial from its coefficients, lowest power first */
 function polyStr(c){const t=[];c.forEach((k,e)=>{if(k===0n)return;const a=k<0n?-k:k,mon=X(e),body=e===0?String(a):(a===1n?mon:`${a}${mon}`);t.push((t.length?(k<0n?' − ':' + '):(k<0n?'−':''))+body)});return t.join('')||'0'}
 /* the recurrence, step by step: multiply by the denominator and compare the coefficients of x^n on both sides */
@@ -1520,7 +1536,7 @@ function recDerive(C,R){const q=denomPoly(C),T=numTerms(C),P=[];for(const [e,k] 
     [`${recHtml(R)},   n ≥ ${R.from}`,`מעבירים אגפים. התנאי על n מבטיח גם שכל האינדקסים אינם שליליים`],
     [`a<sub>0</sub>, …, a<sub>${R.from-1}</sub>`,'תנאי ההתחלה מתקבלים מאותה השוואה לערכי n הקטנים, עם המקדמים של המונה, וכשאיבר בעל אינדקס שלילי נחשב אפס']];
   if(R.from===0)L.pop();
-  return `<div class="gfd"><div class="gfdh">איך היא מתקבלת</div><div class="qpf">${L.map(([f,w],i)=>`<div class="ps"><div class="pf"><span class="pn">${i+1}</span><span class="fx">${f}</span></div><div class="pj">${w}</div></div>`).join('')}</div></div>`}
+  return howHtml('@drec',L)}
 function recHtml(R){if(!R.terms.length)return null;if(R.terms.length>14)return null;
   return 'a<sub>n</sub> = '+R.terms.map(([j,v],i)=>{const a=v<0n?-v:v;return (i?(v<0n?' − ':' + '):(v<0n?'−':''))+(a===1n?'':a)+`a<sub>n − ${j}</sub>`}).join('')}
 const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1558,7 +1574,7 @@ function renderMain(){
     ${sser?blk('כסכום של טורים',sser.hint,`F(x) = ${sser.html}`):''}
     ${bin?blk('המקדם של x<sup>n</sup>, כנוסחה','בינום שהמספר העליון שלו שלילי שווה אפס.',`a<sub>n</sub> = ${bin}`):''}
     ${rec?blk('נוסחת נסיגה לסדרה',`מתקבלת מהכפלת שני האגפים במכנה והשוואת מקדמים. תקפה מ־<bdi dir="ltr" class="fx">n = ${R.from}</bdi> והלאה, עם תנאי ההתחלה שמתחתיה.`,`${rec}<div class="gin">${startVals}</div>${recDerive(C,R)}`):''}
-    ${fmHtml?blk('הסדרה בנוסחה מפורשת',(Fm.cls.length===1?'פולינום אחד':`פולינום לכל שארית של n בחלוקה ב־${Fm.M}`)+(Fm.n0>0?`, תקף מ־<bdi dir="ltr" class="fx">n = ${Fm.n0}</bdi> והלאה. האיברים שלפני כן רשומים מתחת.`:', תקף לכל n.'),`${fmHtml}${early?`<div class="gin">${early}</div>`:''}`):Fm.skip?`<section class="gfb"><h3>הסדרה בנוסחה מפורשת</h3><p class="hint">לא מוצגת כאן: הנוסחה מתפצלת ליותר מדי מקרים לפי השארית של n.</p></section>`:''}
+    ${fmHtml?blk('הסדרה בנוסחה מפורשת',(Fm.cls.length===1?'פולינום אחד':`פולינום לכל שארית של n בחלוקה ב־${Fm.M}`)+(Fm.n0>0?`, תקף מ־<bdi dir="ltr" class="fx">n = ${Fm.n0}</bdi> והלאה. האיברים שלפני כן רשומים מתחת.`:', תקף לכל n.'),`${fmHtml}${early?`<div class="gin">${early}</div>`:''}${fmDerive(C,Fm,fmHtml)}`):Fm.skip?`<section class="gfb"><h3>הסדרה בנוסחה מפורשת</h3><p class="hint">לא מוצגת כאן: הנוסחה מתפצלת ליותר מדי מקרים לפי השארית של n.</p></section>`:''}
     ${blk('כטור אחד','המקדם של כל חזקה הוא מספר הפתרונות.',`F(x) = <span class="gsg"><span>∞</span><span class="S">Σ</span><span>n = 0</span></span>a<sub>n</sub>x<sup>n</sup> = ${seriesForm(a1,N)}`)}
     ${fmHtml?blk('כטור אחד, עם הנוסחה המפורשת',Fm.n0>0?'האיברים הראשונים רשומים בנפרד, ומהם והלאה המקדם הוא הנוסחה.':'המקדם של כל חזקה הוא הנוסחה המפורשת.',`F(x) = ${explicitSeries(Fm,a1)}`):''}
   </div>`;
@@ -1580,7 +1596,8 @@ document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gfn'){TARGET
   const s=spec(VS[i]),el=t.closest('.qbox').querySelector('.gfset');if(el)el.innerHTML=`${nm(i)} ∈ ${describe(VS[i],s)}`;renderMain()});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.closest('.gf')||t.dataset.k!=='type')return;const v=VS[Number(t.dataset.i)];v.type=t.value;
   if(NEED[v.type].includes('lo')&&(v.lo===undefined||v.lo===''))v.lo=v.type==='min'?1:0;if(NEED[v.type].includes('hi')&&v.type!=='gen'&&(v.hi===undefined||v.hi===''))v.hi=5;if(NEED[v.type].includes('d')&&(v.d===undefined||v.d===''))v.d=v.type==='gen'?1:3;if(NEED[v.type].includes('r')&&(v.r===undefined||v.r===''))v.r=v.type==='gen'?0:1;renderAll()});
-document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest)return;const gh=t.closest('[data-gh]'),ga=t.closest('[data-gall]');
+document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest)return;const gh=t.closest('[data-gh]'),ga=t.closest('[data-gall]'),gd=t.closest('[data-gd]');
+  if(gd&&t.closest('.gfwrap')){const k=gd.dataset.gd;if(DOPEN.has(k))DOPEN.delete(k);else DOPEN.add(k);renderMain();return}
   if(gh&&t.closest('.gfwrap,.gfcard')){const k=gh.dataset.gh;if(EXC.has(k))EXC.delete(k);else EXC.add(k);renderMain();return}
   if(ga&&t.closest('.gfwrap')){HALL=ga.dataset.gall==='hide';EXC.clear();renderMain();return}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.gf'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]');
@@ -1591,7 +1608,8 @@ solve(list,N){const S=list.map(spec);if(!S.every(Boolean))return null;const C=cl
   const R=recurrence(C),Fm=formula(C);
   /* the equation of the derivation, for every n: the coefficient of x^n in denominator · F equals the coefficient in the numerator */
   const q=denomPoly(C),Pn=[];for(const [e,k] of numTerms(C))Pn[C.A+e]=k;const eqOk=a.every((_,n)=>{let t=0n;for(let j=0;j<q.length&&j<=n;j++)t+=q[j]*a[n-j];return t===(Pn[n]||0n)});
-  return{eqOk,rec:a.map((_,n)=>{if(n<R.from)return null;let t=0n;for(const [j,v] of R.terms)t+=v*a[n-j];return String(t)}),formula:a.map((_,n)=>{if(!Fm.cls||n<Fm.n0)return null;const c=Fm.cls.length===1?Fm.cls[0]:Fm.cls[n%Fm.M],v=evalPoly(c.cf,n);return v.d===1n?String(v.n):'frac'}),fm:Fm.cls?Fm.cls.length:0,product:a.map(String),closed:b.map(String),binomial:a.map((_,n)=>{const x=byBinomial(C,n);return x===null?null:String(x)}),count:a.map((_,n)=>n<=18?byCount(S,n,400000):null),C}},
+  const OM=overM(C),binOk=a.every((v,n)=>viaBinomials(OM,n)===v);
+  return{eqOk,binOk,rec:a.map((_,n)=>{if(n<R.from)return null;let t=0n;for(const [j,v] of R.terms)t+=v*a[n-j];return String(t)}),formula:a.map((_,n)=>{if(!Fm.cls||n<Fm.n0)return null;const c=Fm.cls.length===1?Fm.cls[0]:Fm.cls[n%Fm.M],v=evalPoly(c.cf,n);return v.d===1n?String(v.n):'frac'}),fm:Fm.cls?Fm.cls.length:0,product:a.map(String),closed:b.map(String),binomial:a.map((_,n)=>{const x=byBinomial(C,n);return x===null?null:String(x)}),count:a.map((_,n)=>n<=18?byCount(S,n,400000):null),C}},
 render(){
   document.getElementById('conds').innerHTML=`<div class="qb gf"><div class="colhead"><h2>המשתנים</h2><span class="lab">תנאי לכל משתנה</span></div><div id="gfobjs" class="qlist"></div>
     <div class="qbox"><div class="addrow"><button class="addb" data-add="1">+ משתנה</button></div><p class="hint">המשתנים הם מספרים טבעיים, כולל אפס. מקדם בסכום גדול מאחת אומר שהמשתנה נספר כמה פעמים, כמו מטבע בשווי המקדם.</p></div></div>`;
