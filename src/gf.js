@@ -2,6 +2,7 @@
 const GF=(()=>{
 /* each variable: c (its coefficient in the sum), and the set of values it may take: lo <= v <= hi (hi null = no bound), v ≡ r (mod d) */
 let VS=[{c:1,type:'any'},{c:1,type:'range',lo:1,hi:6},{c:1,type:'even'}],TARGET=10,SHOW=20;
+const HID=new Set();let ALLT=[];
 const TYPES={any:'כל טבעי, כולל אפס',min:'לפחות',max:'לכל היותר',range:'בין שני ערכים',exact:'ערך קבוע',even:'זוגי',odd:'אי-זוגי',mult:'כפולה של',mod:'שארית נתונה בחלוקה',gen:'צירוף: תחום, קפיצה ושארית'};
 const NEED={any:[],min:['lo'],max:['hi'],range:['lo','hi'],exact:['lo'],even:[],odd:[],mult:['d'],mod:['d','r'],gen:['lo','hi','d','r']};
 const LAB={lo:'מ־',hi:'עד',d:'קפיצה',r:'שארית'};
@@ -119,9 +120,10 @@ function renderMain(){
   /* verification: the ways must agree on every coefficient shown */
   let agree=true,counted=0,cntOk=true,binOk=true,binN=0;for(let n=0;n<=N;n++){if(a1[n]!==a2[n])agree=false;const b=byBinomial(C,n);if(b!==null){binN++;if(b!==a1[n])binOk=false}
     if(n<=Math.min(N,24)){const c=byCount(S,n,300000);if(c!==null){counted++;if(BigInt(c)!==a1[n])cntOk=false}}}
-  const blk=(t,sub,body)=>`<section class="gfb"><h3>${t}</h3>${sub?`<p class="hint">${sub}</p>`:''}<div class="gfm fx">${body}</div></section>`;
+  /* every answer can be folded away, so that one can work it out first and open it to check. What is folded stays folded when the conditions change */
+  const TITLES=[],blk=(t,sub,body)=>{const k=t.replace(/<[^>]+>/g,''),h=HID.has(k);TITLES.push(k);return `<section class="gfb${h?' gfh':''}"><h3><button class="qmin" data-gh="${esc(k)}" aria-expanded="${!h}" aria-label="${h?'הצג':'הסתר'}: ${esc(k)}">${h?'◂':'▾'}</button>${t}</h3>${h?'':`${sub?`<p class="hint">${sub}</p>`:''}<div class="gfm fx">${body}</div>`}</section>`};
   document.getElementById('main').innerHTML=`<div class="gfwrap">
-    <div class="gfeq fx">${eq}</div>
+    <div class="gfeq fx">${eq}</div><div class="gfbar"><button class="btn sm" data-gall="hide">הסתר את כל התשובות</button><button class="btn sm" data-gall="show">הצג הכול</button><span class="lab">לחיצה על החץ שליד כותרת מסתירה או מציגה אותה</span></div>
     ${blk('הצורה הפתוחה','לכל משתנה סוגריים, ובהם חזקה אחת לכל ערך שהוא יכול לתרום לסכום.',`F(x) = ${S.map(openForm).join(' · ')}`)}
     ${blk('הצורה הסגורה, גורם לכל משתנה','כל סוגריים הם טור הנדסי.',`F(x) = ${S.map(factorClosed).join(' · ')}`)}
     ${blk('הצורה הסגורה המפושטת, כמכפלה','',`F(x) = ${closedHtml(C)}`)}
@@ -137,7 +139,7 @@ function renderMain(){
   const row=(lab,st,txt)=>`<div class="gfv ${st}"><b>${st==='ok'?'✓':st==='bad'?'✗':'·'}</b><span>${lab}</span><span class="lab">${txt}</span></div>`;
   document.getElementById('card').innerHTML=`<div class="gfcard"><div class="cardhead"><h2>מספר הפתרונות</h2></div>
     <label class="cell gft">n =<input type="number" min="0" max="200" class="rn" dir="ltr" id="gfn" value="${TARGET}"></label>
-    <div class="gfans fx">a<sub>${TARGET}</sub> = <b>${a1[TARGET]}</b></div>
+    <div class="gfans fx">a<sub>${TARGET}</sub> = ${HID.has('@ans')?`<button class="btn sm" data-gh="@ans">הצג</button>`:`<b>${a1[TARGET]}</b> <button class="qexb" data-gh="@ans">הסתר</button>`}</div>
     <h3>אימות</h3>
     ${row('מכפלת הטורים מול הצורה הסגורה',agree?'ok':'bad',`n = 0 … ${N}`)}
     ${binN?row('הנוסחה עם הבינומים',binOk?'ok':'bad',`n = 0 … ${N}`):row('הנוסחה עם הבינומים','na','לא קיימת כאן: במכנה יש גורם שאינו (1 − x)')}
@@ -145,13 +147,17 @@ function renderMain(){
     ${rec?row('נוסחת הנסיגה',recOk?'ok':'bad',`n = ${R.from} … ${N}`):''}
     ${Fm.cls?row('הנוסחה המפורשת',fmOk?'ok':'bad',`n = ${Fm.n0} … ${N}`):''}
     <p class="hint">כל שורה היא חישוב נפרד של אותם מקדמים. סימן ✓ אומר שהתוצאות זהות בכל הטווח.</p>
-    <h3>המקדמים הראשונים</h3><div class="gfco" dir="ltr">${Array.from({length:SHOW+1},(_,n)=>`<span class="${n===TARGET?'cur':''}"><i>${n}</i><b>${a1[n]}</b></span>`).join('')}</div></div>`}
+    <h3><button class="qmin" data-gh="@coef" aria-expanded="${!HID.has('@coef')}">${HID.has('@coef')?'◂':'▾'}</button>המקדמים הראשונים</h3>${HID.has('@coef')?'':`<div class="gfco" dir="ltr">${Array.from({length:SHOW+1},(_,n)=>`<span class="${n===TARGET?'cur':''}"><i>${n}</i><b>${a1[n]}</b></span>`).join('')}</div>`}</div>`;
+  ALLT=TITLES}
 function renderAll(){renderList();renderMain()}
 document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gfn'){TARGET=Math.max(0,Math.min(200,int(t.value,0)));renderMain();const e=document.getElementById('gfn');if(e){e.focus()}return}
   if(!t.closest||!t.closest('.gf'))return;const i=Number(t.dataset.i),k=t.dataset.k;if(!VS[i]||!k||k==='type')return;VS[i][k]=t.value;
   const s=spec(VS[i]),el=t.closest('.qbox').querySelector('.gfset');if(el)el.innerHTML=`${nm(i)} ∈ ${describe(VS[i],s)}`;renderMain()});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest||!t.closest('.gf')||t.dataset.k!=='type')return;const v=VS[Number(t.dataset.i)];v.type=t.value;
   if(NEED[v.type].includes('lo')&&(v.lo===undefined||v.lo===''))v.lo=v.type==='min'?1:0;if(NEED[v.type].includes('hi')&&v.type!=='gen'&&(v.hi===undefined||v.hi===''))v.hi=5;if(NEED[v.type].includes('d')&&(v.d===undefined||v.d===''))v.d=v.type==='gen'?1:3;if(NEED[v.type].includes('r')&&(v.r===undefined||v.r===''))v.r=v.type==='gen'?0:1;renderAll()});
+document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest)return;const gh=t.closest('[data-gh]'),ga=t.closest('[data-gall]');
+  if(gh&&t.closest('.gfwrap,.gfcard')){const k=gh.dataset.gh;if(HID.has(k))HID.delete(k);else HID.add(k);renderMain();return}
+  if(ga&&t.closest('.gfwrap')){if(ga.dataset.gall==='hide'){for(const k of [...ALLT,'@ans','@coef'])HID.add(k)}else HID.clear();renderMain();return}});
 document.addEventListener('click',ev=>{if(!ev.target.closest||!ev.target.closest('.gf'))return;const a=ev.target.closest('[data-add]'),d=ev.target.closest('[data-del]');
   if(a&&VS.length<12){VS.push({c:1,type:'any'});renderAll()}else if(d&&VS.length>1){VS.splice(Number(d.dataset.del),1);renderAll()}});
 return{
