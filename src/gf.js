@@ -71,7 +71,8 @@ function openForm(s){/* first terms, dots, and the last term when there is one *
 const sig=(from,to,term)=>`<span class="gsg"><span>${to}</span><span class="S">Σ</span><span>i = ${from}</span></span>${term}`;
 const xe=(k,add)=>{const e=(k===1?'i':k+'i')+(add?` + ${add}`:'');return `x<sup>${e}</sup>`};
 function sigmaForm(s){if(s.count===1)return X(s.e0);
-  return s.d===1?sig(s.first,s.count===Infinity?'∞':s.first+s.count-1,xe(s.c,0)):sig(0,s.count===Infinity?'∞':s.count-1,xe(s.step,s.e0))}
+  /* every sum starts at i = 0; a lower bound on the variable becomes a shift in the exponent */
+  return sig(0,s.count===Infinity?'∞':s.count-1,xe(s.step,s.e0))}
 /* the whole function as one series: the first terms that are not zero */
 function seriesForm(a,N){const t=[];for(let n=0;n<=N&&t.length<7;n++)if(a[n]!==0n)t.push((a[n]===1n?'':a[n])+(n===0?(a[n]===1n?'1':''):X(n)));return t.join(' + ')+' + …'}
 function factorClosed(s){const top=s.count===Infinity||s.count===1?X(s.e0):s.e0?`${X(s.e0)}(${one(s.step*s.count)})`:one(s.step*s.count);return s.count===1?top:fr(top,one(s.step))}
@@ -157,7 +158,7 @@ function renderMain(){
     ${blk('הצורה הפתוחה','לכל משתנה סוגריים, ובהם חזקה אחת לכל ערך שהוא יכול לתרום לסכום.',`F(x) = ${S.map(openForm).join(' · ')}`)}
     ${blk('הצורה הסגורה, גורם לכל משתנה','כל סוגריים הם טור הנדסי.',`F(x) = ${S.map(factorClosed).join(' · ')}`)}
     ${blk('הצורה הסגורה המפושטת, כמכפלה','',`F(x) = ${closedHtml(C)}`)}
-    ${blk('כמכפלת טורים','אותם סוגריים בכתיב סיגמא.',`F(x) = ${S.map(s=>`<span class="gbr">(</span>${sigmaForm(s)}<span class="gbr">)</span>`).join(' · ')}`)}
+    ${blk('כמכפלת טורים','אותם סוגריים בכתיב סיגמא. כל הסכומים מתחילים מאפס, והערך המינימלי של משתנה מופיע כתוספת בחזקה.',`F(x) = ${S.map(s=>`<span class="gbr">(</span>${sigmaForm(s)}<span class="gbr">)</span>`).join(' · ')}`)}
     ${sum?blk('אותה פונקציה, כסכום','המונה נפתח לסכום של חזקות.',`F(x) = ${sum}`):''}
     ${sser?blk('כסכום של טורים',sser.hint,`F(x) = ${sser.html}`):''}
     ${bin?blk('המקדם של x<sup>n</sup>, כנוסחה','בינום שהמספר העליון שלו שלילי שווה אפס.',`a<sub>n</sub> = ${bin}`):''}
