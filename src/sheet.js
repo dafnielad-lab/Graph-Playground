@@ -8,7 +8,7 @@ let O=[newG('G',{n:10,c:1,pl:'y'}),
        {t:'v',name:'v',in:'G',q:'one',d:3,cut:false},
        newG('H',{op:'delv',src:'G',arg:'v',c:2})];
 const NAMES={v:['v','u','w','x','y','z'],e:['e','e₂','e₃','e₄'],s:['S','T','A','B'],g:['H','K','L','M','N']};
-const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הקשת','e'],delS:['הסרת קבוצת הצמתים','s'],adde:['הוספת קשת',null],contr:['כיווץ הקשת','e'],subd:['העדנת הקשת','e'],compl:['המשלים',null],ind:['תת-גרף מושרה על','s'],comp:['רכיב קשירות',null],span:['תת-גרף פורש',null]};
+const OPS={delv:['הסרת הצומת','v'],dele:['הסרת הקשת','e'],delS:['הסרת קבוצת הצמתים','s'],adde:['הוספת קשת',null],contr:['כיווץ הקשת','e'],subd:['העדנת הקשת','e'],compl:['המשלים',null],ind:['תת-גרף מושרה על','s'],comp:['רכיב קשירות',null],span:['תת-גרף פורש',null],join:['חיבור הרכיבים במספר קשתות מינימלי',null]};
 const SYM={n:'n',m:'m',c:'c',D:'Δ',dl:'δ',f:'f',chi:'χ',al:'α',nu:'ν',be:'β',rho:'ρ',om:'ω',lv:'ℓ'};
 const DEF={n:'מספר הצמתים',m:'מספר הקשתות',c:'מספר רכיבי הקשירות',D:'הדרגה המקסימלית',dl:'הדרגה המינימלית',f:'מספר הפאות בשיכון מישורי',chi:'מספר הצביעה',al:'גודל קבוצה בלתי תלויה מקסימלית',nu:'גודל זיווג מקסימום',be:'גודל מינימלי של כיסוי בצמתים',rho:'גודל מינימלי של כיסוי בקשתות',om:'גודל קליקה מקסימלית',lv:'מספר העלים'};
 const PROPS={pl:'מישורי',tr:'עץ',bp:'דו-צדדי',conn:'קשיר',fo:'יער',tf:'בלי משולשים',sc:'איזומורפי למשלים',eu:'אוילרי',ha:'המילטוני',pm:'יש זיווג מושלם'};
@@ -83,14 +83,15 @@ function ex(g,k,depth){
     const C=ex(g,'c',(depth||0)+1);return N.num!==null&&C.num!==null?NUM(N.num-C.num):C.num!==null?plus(N,-C.num):EXP(`${OPD(N)} − ${C.html}`)}}
   if(!g.op||(depth||0)>12)return me;
   const src=by(g.src),a=by(g.arg),E=x=>({...ex(src,x,(depth||0)+1),self:false}),op=g.op;
-  if(k==='n'){if(op==='delv'||op==='contr')return plus(E('n'),-1);if(op==='subd')return plus(E('n'),1);if(['dele','adde','compl','span'].includes(op))return E('n');
+  if(k==='n'){if(op==='delv'||op==='contr')return plus(E('n'),-1);if(op==='subd')return plus(E('n'),1);if(['dele','adde','compl','span','join'].includes(op))return E('n');
     if(op==='delS')return a.k!==null?plus(E('n'),-a.k):EXP(`${OPD(E('n'))} − |${a.name}|`);if(op==='ind')return a.k!==null?NUM(a.k):{num:null,html:`|${a.name}|`,atom:true}}
   if(k==='m'){if(op==='delv'){const d=dEx(a);return d!==null?plus(E('m'),-d):EXP(`${OPD(E('m'))} − ${degOf(a)}`)}
     if(op==='dele')return plus(E('m'),-1);if(op==='adde'||op==='subd')return plus(E('m'),1);
+    if(op==='join'){const M=E('m'),C=E('c');return C.num!==null?plus(M,C.num-1):EXP(`${OPD(M)} + ${C.html} − 1`)}
     if(op==='compl'){const N=E('n'),M=E('m');return N.num!==null&&M.num!==null?NUM(N.num*(N.num-1)/2-M.num):EXP(`${OPD(N)}·(${N.html} − 1) / 2 − ${OPD(M)}`)}
     if(op==='ind'){if(a.prop==='indep')return NUM(0);if(a.prop==='clique'&&a.k!==null)return NUM(a.k*(a.k-1)/2)}}
   if(op==='comp'&&(k==='n'||k==='m')){const L=fullComps(src);if(L){const others=L.filter(x=>x!==g);if(others.every(x=>val(x,k)!==null))return plus(E(k),-others.reduce((t,x)=>t+val(x,k),0))}}
-  if(k==='c'){if(op==='dele'&&a.bridge)return plus(E('c'),1);if(op==='contr'||op==='subd')return E('c');if(op==='comp')return NUM(1)}
+  if(k==='c'){if(op==='dele'&&a.bridge)return plus(E('c'),1);if(op==='contr'||op==='subd')return E('c');if(op==='comp'||op==='join')return NUM(1)}
   if((k==='D'||k==='dl')&&op==='compl'){const N=E('n'),d=E(k==='D'?'dl':'D');return N.num!==null&&d.num!==null?NUM(N.num-1-d.num):EXP(`${OPD(N)} − 1 − ${OPD(d)}`)}
   return me}
 /* a range for a quantity: given directly, or carried over from the source graph by the operation */
@@ -101,9 +102,9 @@ function interval(g,k,depth){
   const own=rgOf(g,k);if(own)return own;
   if(!g.op||(depth||0)>12)return null;
   const src=by(g.src),a=by(g.arg),E=x=>bounds(src,x,(depth||0)+1),op=g.op;let r=null;
-  if(k==='n'){if(op==='delv'||op==='contr')r=shift(E('n'),-1);else if(op==='subd')r=shift(E('n'),1);else if(['dele','adde','compl','span'].includes(op))r=E('n');
+  if(k==='n'){if(op==='delv'||op==='contr')r=shift(E('n'),-1);else if(op==='subd')r=shift(E('n'),1);else if(['dele','adde','compl','span','join'].includes(op))r=E('n');
     else if(op==='delS')r=span2(E('n'),a.k!==null?a.k:(rgOf(a,'k')||[null,null])[0],a.k!==null?a.k:(rgOf(a,'k')||[null,null])[1]);else if(op==='ind')r=rgOf(a,'k')}
-  if(k==='m'){if(op==='delv')r=span2(E('m'),dLo(a),dHi(a));else if(op==='dele')r=shift(E('m'),-1);else if(op==='adde'||op==='subd')r=shift(E('m'),1)}
+  if(k==='m'){if(op==='delv')r=span2(E('m'),dLo(a),dHi(a));else if(op==='dele')r=shift(E('m'),-1);else if(op==='adde'||op==='subd')r=shift(E('m'),1);else if(op==='join'){const M=E('m'),C=E('c');r=M&&C&&[M[0]===null||C[0]===null?null:M[0]+C[0]-1,M[1]===null||C[1]===null?null:M[1]+C[1]-1]}}
   if(k==='c'){const C=E('c');if(op==='dele')r=a.bridge?shift(C,1):C&&[C[0],C[1]===null?null:C[1]+1];else if(op==='adde')r=C&&[C[0]===null?null:Math.max(1,C[0]-1),C[1]];else if(op==='contr'||op==='subd')r=C}
   if(op==='comp'&&(k==='n'||k==='m')){const L=fullComps(src),Pb=E(k),fl=k==='n'?1:0;
     if(L&&Pb){const ob=L.filter(x=>x!==g).map(x=>ownB(x,k));
@@ -118,10 +119,10 @@ const sx=(g,k)=>{const e=ex(g,k);return e.num!==null?V(e.num):e.self?e.html:`<sp
 const cMany=g=>(g.c!==null&&g.c>1)||!!(rgOf(g,'c')&&rgOf(g,'c')[0]>1);
 /* the tree field also offers "forest": a forest is a tree exactly when it has one component */
 /* properties pass from a graph to what an operation makes of it: a subgraph of a forest is a forest, of a planar graph is planar, and so on */
-const SUBG=['delv','dele','delS','ind','comp','span'],KEEP={fo:[...SUBG,'contr','subd'],pl:[...SUBG,'contr','subd'],bp:SUBG,tf:SUBG};
+const SUBG=['delv','dele','delS','ind','comp','span'],KEEP={fo:[...SUBG,'contr','subd','join'],pl:[...SUBG,'contr','subd','join'],bp:[...SUBG,'join'],tf:[...SUBG,'join']};
 const from=(g,k,d)=>!!(g.op&&KEEP[k].includes(g.op)&&(d||0)<12&&by(g.src)&&prop(by(g.src),k,(d||0)+1)==='y');
 const forestish=(g,d)=>g.tr==='y'||g.tr==='f'||from(g,'fo',d);
-const connOf=g=>g.c===1||g.tr==='y'||g.op==='comp'||g.eu==='y'||g.ha==='y'?'y':cMany(g)?'n':'u';
+const connOf=g=>g.c===1||g.tr==='y'||g.op==='comp'||g.op==='join'||g.eu==='y'||g.ha==='y'?'y':cMany(g)?'n':'u';
 /* a forest is a tree exactly when it is connected; a component of a forest is therefore a tree */
 const isTree=(g,d)=>g.tr==='y'?'y':g.tr==='n'?'n':forestish(g,d)?connOf(g):'u';
 function prop(g,k,d){
@@ -129,7 +130,8 @@ function prop(g,k,d){
   if(k==='pl'||k==='bp'){if(g[k]!=='u')return g[k];if(forestish(g,d)||from(g,k,d))return 'y';
     /* a graph with a non-planar (non-bipartite) subgraph is itself non-planar (non-bipartite); subdivision keeps planarity both ways */
     if(O.some(h=>h.t==='g'&&h.op&&h.src===g.name&&h[k]==='n'&&(SUBG.includes(h.op)||(k==='pl'&&h.op==='subd'))))return 'n';
-    if(k==='pl'&&g.op==='subd'&&by(g.src)&&by(g.src).pl==='n')return 'n';return 'u'}
+    if(k==='pl'&&g.op==='subd'&&by(g.src)&&by(g.src).pl==='n')return 'n';
+    if((g.op==='join'||g.op==='adde')&&by(g.src)&&by(g.src)[k]==='n')return 'n';return 'u'}
   if(k==='tf')return g.tf!=='u'?g.tf:forestish(g,d)||prop(g,'bp',d)==='y'||from(g,'tf',d)?'y':'u';
   return g[k]}
 /* combinations of data that no graph satisfies; each entry is one sentence shown in red above the graph's formulas */
@@ -199,6 +201,8 @@ function sheetFor(g){
     if(g.op==='ind'){const k=a.k!==null?V(a.k):`|${a.name}|`;rel('צמתים בתת-גרף מושרה',`n(${X}) = |${a.name}|`,`${n} = ${k}`);rel('קשתות בתת-גרף מושרה',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('צביעה של תת-גרף',`χ(${X}) ≤ χ(${P})`,`${q('chi')} ≤ ${Q('chi')}`);
       if(a.prop==='indep')rel('מושרה על קבוצה בלתי תלויה',`m(${X}) = 0`,`${m} = ${V(0)}`);if(a.prop==='clique')rel('מושרה על קליקה',`m(${X}) = |${a.name}|(|${a.name}| − 1) / 2`,`${m} = ${k}·(${k} − 1) / 2`)}
     if(g.op==='comp'){rel('רכיב קשירות הוא קשיר',`c(${X}) = 1`,`${c} = ${V(1)}`);rel('צמתים ברכיב',`n(${X}) ≤ n(${P})`,`${n} ≤ ${N}`);rel('קשתות ברכיב',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`)}
+    if(g.op==='join'){rel('אותם צמתים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשת אחת לכל רכיב נוסף',`m(${X}) = m(${P}) + c(${P}) − 1`,`${m} = ${M} + ${C} − 1`);rel('הגרף שמתקבל קשיר',`c(${X}) = 1`,`${c} = ${V(1)}`);
+      rel('קשת בין רכיבים היא גשר: לא נסגר מעגל',`χ(${X}) = max(χ(${P}), 2),  ω(${X}) = max(ω(${P}), 2)`,`${q('chi')} = max(${Q('chi')}, 2)`);rel('דרגה מקסימלית אחרי החיבור',`Δ(${P}) ≤ Δ(${X}) ≤ Δ(${P}) + c(${P}) − 1`,`${Q('D')} ≤ ${D} ≤ ${Q('D')} + ${C} − 1`)}
     if(g.op==='span'){rel('תת-גרף פורש: אותם צמתים',`n(${X}) = n(${P})`,`${n} = ${N}`);rel('קשתות בתת-גרף פורש',`m(${X}) ≤ m(${P})`,`${m} ≤ ${M}`);rel('רכיבי קשירות בתת-גרף פורש',`c(${X}) ≥ c(${P})`,`${c} ≥ ${C}`);F.push({tp,t:'כל גרף קשיר מכיל עץ פורש',r:'טענה 2.6',g:`${P} connected ⇒ exists spanning tree`,s:'',rel:1,text:1})}}
   /* degrees */
   const CL=compsOf(g);
@@ -336,6 +340,9 @@ function digest(g,memo){
     Z();if(op==='delv'){K();same('n',-1);ge('chi',sl('chi')-1,r);ge('al',sl('al')-1,r);ge('nu',sl('nu')-1,r);ge('dl',sl('dl')-1,r);ge('om',sl('om')-1,r);ge('m',sl('m')-(dHi(a)??sh('D')),r);le('m',sh('m')-(dLo(a)??sl('dl')),r);le('c',sh('c')+(dHi(a)??sh('D'))-1,r);E();}
     Z();if(op==='dele'){K();same('n',0);same('m',-1);ge('chi',sl('chi')-1,r);ge('nu',sl('nu')-1,r);ge('dl',sl('dl')-1,r);le('dl',sh('dl'),r);ge('D',sl('D')-1,r);ge('al',sl('al'),r);le('al',sh('al')+1,r);ge('c',sl('c'),r);le('c',sh('c')+1,r);ge('om',sl('om')-1,r);E();}
     Z();if(op==='adde'){K();same('n',0);same('m',1);ge('chi',sl('chi'),r);le('chi',sh('chi')+1,r);ge('D',sl('D'),r);le('D',sh('D')+1,r);ge('dl',sl('dl'),r);le('dl',sh('dl')+1,r);ge('nu',sl('nu'),r);le('nu',sh('nu')+1,r);le('al',sh('al'),r);ge('al',sl('al')-1,r);le('c',sh('c'),r);ge('c',sl('c')-1,r);ge('om',sl('om'),r);E();}
+    Z();if(op==='join'){K();const two=sl('c')>=2,w=`חיבור הרכיבים של ${src.name}`;same('n',0);ge('m',sl('m')+sl('c')-1,w);le('m',sh('m')+sh('c')-1,w);
+      ge('chi',sl('chi'),w);le('chi',Math.max(sh('chi'),2),w);ge('om',sl('om'),w);le('om',Math.max(sh('om'),2),w);Z();if(two){ge('chi',2,w);ge('om',2,w);ge('dl',1,w)}
+      ge('dl',sl('dl'),w);le('dl',sh('dl')+sh('c')-1,w);ge('D',sl('D'),w);le('D',sh('D')+sh('c')-1,w);ge('nu',sl('nu'),w);le('nu',sh('nu')+sh('c')-1,w);le('al',sh('al'),w);ge('al',sl('al')-(sh('c')-1),w);E();}
     Z();if(op==='span'){K();same('n',0);ge('al',sl('al'),r);ge('c',sl('c'),r);le('dl',sh('dl'),r);E();}
     Z();if(op==='comp'){K();ge('dl',sl('dl'),r);Z();if(S.B.c[0]===1&&S.B.c[1]===1)for(const k in SYM){ge(k,sl(k),r);le(k,sh(k),r)};E();}
     Z();if(op==='ind'||op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(op==='delS'){K();Z();if(b[1]!==null)ge('n',sl('n')-b[1],r);Z();if(b[0]!==null)le('n',sh('n')-b[0],r);Z();if(b[1]!==null){K();ge('chi',sl('chi')-b[1],r);ge('nu',sl('nu')-b[1],r);ge('dl',sl('dl')-b[1],r);E();};E();};E();}
@@ -366,6 +373,9 @@ function digest(g,memo){
     Z();if(op==='delv'){K();back('n',1);le('chi',chh('chi')+1,r);le('al',chh('al')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);le('c',chh('c')+1,r);ge('m',cl('m')+(dLo(a)??0),r);le('m',chh('m')+(dHi(a)??chh('n')),r);le('dl',chh('dl')+1,r);E();}
     Z();if(op==='dele'){K();back('n',0);back('m',1);le('chi',chh('chi')+1,r);le('nu',chh('nu')+1,r);le('om',chh('om')+1,r);Z();if(a&&a.bridge)back('c',-1);else{ge('c',cl('c')-1,r);le('c',chh('c'),r)}le('D',chh('D')+1,r);ge('dl',cl('dl'),r);le('dl',chh('dl')+1,r);ge('al',cl('al')-1,r);le('al',chh('al'),r);E();}
     Z();if(op==='adde'){K();back('n',0);back('m',-1);ge('chi',cl('chi')-1,r);le('chi',chh('chi'),r);ge('D',cl('D')-1,r);le('D',chh('D'),r);ge('dl',cl('dl')-1,r);le('dl',chh('dl'),r);ge('nu',cl('nu')-1,r);le('nu',chh('nu'),r);ge('al',cl('al'),r);le('al',chh('al')+1,r);ge('c',cl('c'),r);le('c',chh('c')+1,r);le('om',chh('om'),r);E();}
+    Z();if(op==='join'){K();const w=`פירוק החיבור ${h.name}`;back('n',0);ge('m',cl('m')-(H('c')-1),w);le('m',chh('m')-(L('c')-1),w);ge('c',cl('m')-H('m')+1,w);le('c',chh('m')-L('m')+1,w);
+      le('chi',chh('chi'),w);Z();if(cl('chi')>=3)ge('chi',cl('chi'),w);le('om',chh('om'),w);Z();if(cl('om')>=3)ge('om',cl('om'),w);
+      le('D',chh('D'),w);ge('D',cl('D')-(H('c')-1),w);le('dl',chh('dl'),w);le('nu',chh('nu'),w);ge('nu',cl('nu')-(H('c')-1),w);ge('al',cl('al'),w);le('al',chh('al')+H('c')-1,w);E();}
     Z();if(op==='span'){K();back('n',0);le('al',chh('al'),r);le('c',chh('c'),r);ge('dl',cl('dl'),r);E();}
     Z();if(op==='delS'){K();const b=ownB(a,'k')||[null,null];Z();if(b[0]!==null)ge('n',cl('n')+b[0],r);Z();if(b[1]!==null){K();le('n',chh('n')+b[1],r);le('chi',chh('chi')+b[1],r);le('nu',chh('nu')+b[1],r);E();};E();}
     Z();if(op==='delv'&&a&&a.cut)le('c',chh('c')-1,`${a.name} צומת מפריד`);
@@ -495,6 +505,7 @@ function virtFor(g,d){
     mk('הסרת שני צמתים שכנים',`${X}−uw`,'delS',{t:'s',name:`שני שכנים ב־${X}`,in:X,k:2,prop:'clique'})}
   if(far&&L('n')>=3){mk('הסרת שני צמתים לא שכנים',`${X}−u,w`,'delS',{t:'s',name:`שני לא שכנים ב־${X}`,in:X,k:2,prop:'indep'});
     mk('הוספת קשת בין שני צמתים לא שכנים',`${X}+e`,'adde',{t:'e',name:`e∉${X}`,in:X,bridge:false})}
+  if(L('c')>=2)mk('חיבור הרכיבים במספר קשתות מינימלי',`${X}+F`,'join',null);
   if(!isBar(X)&&!O.some(o=>o.t==='g'&&o.op==='compl'&&o.src===X))mk('המשלים',barName(X),'compl',null);
   return out}
 /* bounds on the sum of two degrees: for any pair, for two neighbours and for two non-neighbours. A graph and its complement
@@ -542,7 +553,7 @@ function pairRows(g,d,memo){
     const ct=P.adjLo-H('n');if(ct>=1)row('שכנים משותפים לשני צמתים שכנים',`|Γ(u) ∩ Γ(w)| ≥ ${V(ct)}`,prf([[`uw ∈ E  ⇒  (Γ(u) ∖ {w}) ∪ (Γ(w) ∖ {u}) ⊆ V ∖ {u, w}`,''],[`|Γ(u) ∩ Γ(w)| ≥ (${dgf} − 2) − (n − 2)`,'הכלה והפרדה'],[`${dgf} ≥ ${P.adjLo},   n ≤ ${H('n')}`,'מהשורה של שני שכנים'],[`∴  |Γ(u) ∩ Γ(w)| ≥ ${P.adjLo} − ${H('n')} = ${ct}`,'הצבה'],[`∴  every edge lies on a triangle`,'']]))}
   return R}
 
-const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
+const titleOf=g=>g.op?`${OPS[g.op][0]}${g.arg?' '+g.arg:''} ${g.op==='compl'||g.op==='comp'||g.op==='span'||g.op==='join'?'של':'מתוך'} ${g.src}`:'הגרף הנתון';
 /* a reason mixes Hebrew words and formulas: each formula run is set left to right inside the Hebrew line */
 const rz=x=>String(x).replace(/[A-Za-zΑ-ωℓ0-9(][^\u0590-\u05FF]*[A-Za-zΑ-ω0-9ℓ)]|[A-Za-zΑ-ωℓ]/g,a=>/[A-Za-zΑ-ωℓ]/.test(a)?`<bdi dir="ltr" class="fx">${a}</bdi>`:a);
 const EXPL=new Set(),OPN=new Set();
@@ -579,7 +590,8 @@ const OPF={compl:"n′ = n,   m + m′ = n(n − 1) / 2,   Δ′ = n − 1 − �
  adde:"n′ = n,   m′ = m + 1,   c − 1 ≤ c′ ≤ c,   χ ≤ χ′ ≤ χ + 1,   ν ≤ ν′ ≤ ν + 1,   α − 1 ≤ α′ ≤ α",
  delS:"n′ = n − |S|,   x′ ≤ x  for x ∈ {m, Δ, χ, ω, ν, α},   χ′ ≥ χ − |S|,   ν′ ≥ ν − |S|",
  ind:"H ⊆ G  ⇒  x(H) ≤ x(G)  for x ∈ {n, m, Δ, χ, ω, ν, α}",span:"H ⊆ G, V(H) = V(G)  ⇒  n′ = n,   m′ ≤ m,   c′ ≥ c,   α′ ≥ α,   χ′ ≤ χ",
- comp:"C component of G  ⇒  c(C) = 1,   δ(C) ≥ δ(G),   x(C) ≤ x(G)  for x ∈ {n, m, Δ, χ, ω, ν, α}",subd:"n′ = n + 1,   m′ = m + 1,   c′ = c",contr:"n′ = n − 1,   c′ = c,   m′ ≤ m − 1"};
+ comp:"C component of G  ⇒  c(C) = 1,   δ(C) ≥ δ(G),   x(C) ≤ x(G)  for x ∈ {n, m, Δ, χ, ω, ν, α}",subd:"n′ = n + 1,   m′ = m + 1,   c′ = c",contr:"n′ = n − 1,   c′ = c,   m′ ≤ m − 1",
+ join:"F joins the components, |F| = c − 1, every edge of F a bridge  ⇒  n′ = n,  m′ = m + c − 1,  c′ = 1,  χ′ = max(χ, 2),  ω′ = max(ω, 2),  Δ ≤ Δ′ ≤ Δ + c − 1,  ν ≤ ν′ ≤ ν + c − 1,  α − (c − 1) ≤ α′ ≤ α"};
 const hasHeb=x=>/[֐-׿]/.test(x);
 const symOf=x=>SYM[x.k]+(by(x.g)?sub(by(x.g)):`<sub>${x.g}</sub>`);
 /* premises, the rule in its formal form, and the conclusion */
@@ -588,6 +600,7 @@ function derive(u,r,concl,name){
   if(r==='נתון')return prf([[concl,'נתון']]);
   if(r==='מהפעולה')return prf([...lines,[concl,`הפעולה שיצרה את ${name}, לפי נתוני גרף המקור`]]);
   if(r==='מהנתונים')return prf([...lines,[concl,'ישירות מהנתונים']]);
+  if(r.startsWith('חיבור הרכיבים של ')||r.startsWith('פירוק החיבור ')){lines.push([OPF.join,`${rz(r)}; הסימן ′ הוא הגודל אחרי החיבור`]);lines.push([`∴  ${concl}`,'הצבה']);return prf(lines)}
   if(r.startsWith('מ־')){const Y=r.slice(2),me=by(name),ot=by(Y),lk=me&&me.op&&me.src===Y?me:ot&&ot.op&&ot.src===name?ot:null;
     if(lk&&OPF[lk.op]){lines.push([OPF[lk.op],`${OPS[lk.op][0]}: ${rz(lk.name)} מתוך ${rz(lk.src)}, והסימן ′ הוא הגודל ב־${rz(lk.name)}`]);lines.push([`∴  ${concl}`,'הצבה']);return prf(lines)}}
   const f=FORM[r]||(hasHeb(r)?'':r.replace(/\s*\(\d+\.\d+\)$/,'')),ref=(r.match(/\((\d+\.\d+)\)$/)||[])[1];
@@ -622,7 +635,7 @@ function digestHtml(){
         const cells=e.bad?`<td colspan="${KS.length}" class="bad">הפעולה סותרת את הנתונים</td>`:KS.map(k=>`<td class="fx"><bdi dir="ltr">${cell(e.B[k],k)}</bdi></td>`).join('');
         tb.push(`<tr><th scope="row">${v.title} <bdi dir="ltr" class="fx nm">${v.h.name}</bdi></th>${cells}<td class="bx">${e.bad?'':`<button class="qexb" data-ex="${key}" aria-expanded="${opn}">${opn?'הסתר':'הסבר'}</button>`}</td></tr>`);
         if(opn&&!e.bad)tb.push(`<tr class="exr"><td colspan="${KS.length+2}"><div class="qex">${ks.map(k=>{const [lo,hi]=e.B[k],one=lo===hi&&(e.W[k][0]===e.W[k][1]||lo===D0[k]);return one?tell(v.h,k,lo===D0[k]?1:0,e,true):(lo>D0[k]?tell(v.h,k,0,e):'')+(hi<Infinity?tell(v.h,k,1,e):'')}).join('')}</div></td></tr>`)}
-      if(tb.length)mv.push(`<div class="qtw"><table class="qtab"><thead><tr><th scope="col">אחרי הפעולה, הגרף <bdi dir="ltr" class="fx">${g.name}′</bdi></th>${KS.map(k=>`<th scope="col" class="fx" title="${DEF[k]}"><bdi dir="ltr">${SYM[k]}<sub>${g.name}′</sub></bdi></th>`).join('')}<th></th></tr></thead><tbody>${tb.join('')}</tbody></table></div>`)}
+      if(tb.length)mv.push(`<div class="qtw"><table class="qtab"><thead><tr><th scope="col">אחרי הפעולה, הגרף <bdi dir="ltr" class="fx">${g.name}′</bdi></th>${KS.map(k=>`<th scope="col" class="fx" title="${DEF[k]}"><bdi dir="ltr">${SYM[k]}<sub>${g.name}′</sub></bdi></th>`).join('')}<th></th></tr></thead><tbody>${tb.join('')}</tbody></table></div><dl class="qtl">${[['−v','הסרת צומת אחד, כלשהו'],['−e','הסרת קשת אחת, כלשהי'],['−uw','הסרת שני צמתים שכנים: uw היא קשת'],['−u,w','הסרת שני צמתים שאינם שכנים'],['+e','הוספת קשת אחת בין שני צמתים שאינם שכנים'],['+F','הוספת קבוצת קשתות F שמחברת את כל הרכיבים: כל קשת בין שני רכיבים שונים, ומספר הקשתות הוא מספר הרכיבים פחות אחת'],['′','בכותרות: הגודל בגרף שמתקבל אחרי הפעולה']].map(([a,b])=>`<div><dt><bdi dir="ltr" class="fx">${a}</bdi></dt><dd>${b}</dd></div>`).join('')}</dl>`)}
     const moves=`<button class="qmv" data-mv="${g.name}" aria-expanded="${oo}">${oo?'▾':'◂'} פעולות על ${g.name} <span class="lab">זוגות צמתים, הסרות, הוספת קשת ומשלים, בלי להגדיר אותן</span></button>${oo?`<div class="qitems one">${mv.join('')}</div>`:''}`;
     return `<div class="qtp"><div class="qsg"><span class="name">${g.name}</span><b>${titleOf(g)}</b><span class="lab">${rows.length}</span></div><div class="qitems">${rows.join('')||'<div class="hint">אין עדיין נתונים שמצמצמים משהו.</div>'}</div>${moves}</div>`}).join('');
   return `<section class="qt qsum"><h3 class="qcap"><button class="qmin" data-tp="Σ" aria-expanded="${open}">${open?'▾':'◂'}</button>תמצית <span class="lab">מה נובע מכל הנוסחאות יחד: הערך או הטווח של כל גודל, עם הסבר לכל חסם</span></h3>${open?body:''}</section>`}

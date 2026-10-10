@@ -52,7 +52,12 @@ const res=await p.evaluate(({MAXN,STEP})=>{
       const sub=S=>{const idx=[];for(let x=0;x<n;x++)if(S>>x&1)idx.push(x);return idx.map(x=>idx.reduce((acc,y,j)=>acc|((a[x]>>y&1)<<j),0))};
       const ts=comps.map(S=>{const g=sub(S);return truth(g,g.length)});
       const r=run([G('G',{n,c:t.c,tr:t.fo?'f':'u'}),...ts.slice(0,-1).map((x,j)=>G('C'+j,{op:'comp',src:'G',n:x.n,m:x.m}))]);check('S14 components: G',id,r[0],t);ts.slice(0,-1).forEach((x,j)=>check('S14 component',id,r[j+1],x));
-      const r2=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om}),...ts.map((x,j)=>G('C'+j,{op:'comp',src:'G'}))]);ts.forEach((x,j)=>check('S15 component from G',id,r2[j+1],x))}
+      const r2=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om}),...ts.map((x,j)=>G('C'+j,{op:'comp',src:'G'}))]);ts.forEach((x,j)=>check('S15 component from G',id,r2[j+1],x))
+      /* join the components: once as a chain, once with every new edge at one vertex */
+      const reps=comps.map(S=>low(S));for(const star of [0,1]){const aj=a.slice();for(let j=1;j<reps.length;j++){const x=star?reps[0]:reps[j-1],y=reps[j];aj[x]|=1<<y;aj[y]|=1<<x}const tj=truth(aj,n);
+        const r3=run([G('G',{n,m:t.m,c:t.c,D:t.D,dl:t.dl,chi:t.chi,al:t.al,nu:t.nu,om:t.om,pl:yn(t.pl),bp:yn(t.bp),tr:t.fo?'f':'n',tf:yn(t.tf)}),G('K',{op:'join',src:'G'})]);check('S16 join: G',id,r3[0],t);check('S16 join: result',id,r3[1],tj);
+        const r4=run([G('G',{n}),G('K',{op:'join',src:'G',m:tj.m,D:tj.D,dl:tj.dl,chi:tj.chi,al:tj.al,nu:tj.nu,om:tj.om,pl:yn(tj.pl),bp:yn(tj.bp)})]);check('S17 back from join',id,r4[0],Object.assign({},t,{c:null}));
+        const r5=run([G('G',{n,c:t.c}),G('K',{op:'join',src:'G',m:tj.m,D:tj.D,dl:tj.dl,chi:tj.chi,al:tj.al,nu:tj.nu,om:tj.om})]);check('S18 back from join, c known',id,r5[0],t)}}
   }}
   return{bad:bad.slice(0,60),cnt}},{MAXN,STEP});
 console.log(res.cnt);console.log(res.bad.length?res.bad.map(x=>x.join(' | ')).join('\n'):'NO VIOLATIONS');
