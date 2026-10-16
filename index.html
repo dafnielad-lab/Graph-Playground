@@ -1426,25 +1426,37 @@ function spec(v){let lo=0,hi=Infinity,d=1,r=0;const t=v.type;
   else if(t==='even')d=2;else if(t==='odd'){d=2;r=1}else if(t==='mult')d=Math.max(1,int(v.d,2));else if(t==='mod'){d=Math.max(1,int(v.d,2));r=int(v.r,0)}
   else if(t==='gen'){lo=int(v.lo,0);hi=v.hi===''||v.hi===undefined||v.hi===null?Infinity:int(v.hi,Infinity);d=Math.max(1,int(v.d,1));r=int(v.r,0)}
   lo=Math.max(0,lo);r=((r%d)+d)%d;const first=lo+((r-lo)%d+d)%d;if(first>hi)return null;
-  const c=Math.max(1,int(v.c,1));return{first,d,count:hi===Infinity?Infinity:Math.floor((hi-first)/d)+1,c,e0:c*first,step:c*d}}
+  const c=Math.max(1,int(v.c,1)),count=hi===Infinity?Infinity:Math.floor((hi-first)/d)+1;
+  /* values ruled out: only those the condition allows matter; they are kept as exponents (times c) above e0 */
+  const inProg=x=>x>=first&&(x-first)%d===0&&(count===Infinity||x<=first+(count-1)*d);
+  const ex=[...new Set(String(v.ex||'').split(/[\s,;]+/).filter(t=>/^\d+$/.test(t)).map(Number).filter(inProg))].sort((a,b)=>a-b);
+  if(count!==Infinity&&ex.length>=count)return null;
+  return{first,d,count,c,e0:c*first,step:c*d,ex,exE:ex.map(x=>c*x),left:count===Infinity?Infinity:count-ex.length}}
+/* the allowed exponents of a variable, in order, up to a bound */
+function* expOf(s,N){const X=new Set(s.exE);for(let j=0;j<s.count;j++){const e=s.e0+j*s.step;if(e>N)return;if(!X.has(e))yield e}}
 /* ---- exact arithmetic on truncated series, with BigInt ---- */
 const zero=N=>Array.from({length:N+1},()=>0n);
 const mul=(a,b,N)=>{const o=zero(N);for(let i=0;i<=N;i++)if(a[i])for(let j=0;i+j<=N;j++)if(b[j])o[i+j]+=a[i]*b[j];return o};
 /* way 1: the definition. Each factor is the series of its allowed exponents; multiply them. */
-function byProduct(S,N){let p=zero(N);p[0]=1n;for(const s of S){const f=zero(N);for(let j=0;j<s.count&&s.e0+j*s.step<=N;j++)f[s.e0+j*s.step]=1n;p=mul(p,f,N)}return p}
+function byProduct(S,N){let p=zero(N);p[0]=1n;for(const s of S){const f=zero(N);for(const e of expOf(s,N))f[e]=1n;p=mul(p,f,N)}return p}
 /* way 2: the closed form. x^A * prod(1 - x^L) / prod(1 - x^s): expand the numerator, then divide by each (1 - x^s) as a running sum. */
-function closed(S){let A=0;const num=[],den=new Map();
-  for(const s of S){A+=s.e0;if(s.count===1)continue;den.set(s.step,(den.get(s.step)||0)+1);if(s.count!==Infinity)num.push(s.step*s.count)}
+function closed(S){let A=0;const num=[],den=new Map(),polys=[];
+  for(const s of S){A+=s.e0;if(s.count===1)continue;den.set(s.step,(den.get(s.step)||0)+1);
+    if(s.exE.length){/* x^e0 · [ (1 − x^L) − (Σ x^(k − e0)) (1 − x^step) ] / (1 − x^step), with no (1 − x^L) when the values are unbounded */
+      const L=s.count===Infinity?0:s.step*s.count,P=[];const add=(e,v)=>{while(P.length<=e)P.push(0n);P[e]+=v};add(0,1n);if(L)add(L,-1n);for(const k of s.exE){add(k-s.e0,-1n);add(k-s.e0+s.step,1n)}
+      while(P.length>1&&P[P.length-1]===0n)P.pop();polys.push(P);continue}
+    if(s.count!==Infinity)num.push(s.step*s.count)}
   /* cancel (1 - x^L) against (1 - x^s) when L = s */
   for(let i=num.length-1;i>=0;i--)if(den.get(num[i])){den.set(num[i],den.get(num[i])-1);if(!den.get(num[i]))den.delete(num[i]);num.splice(i,1)}
-  return{A,num:num.sort((a,b)=>a-b),den:[...den.entries()].sort((a,b)=>a[0]-b[0])}}
+  return{A,num:num.sort((a,b)=>a-b),den:[...den.entries()].sort((a,b)=>a[0]-b[0]),polys}}
 function numTerms(C){/* prod(1 - x^L) as a list of signed monomials */
   let T=new Map([[0,1n]]);for(const Lx of C.num){const U=new Map(T);for(const [e,k] of T)U.set(e+Lx,(U.get(e+Lx)||0n)-k);T=U}
+  for(const P of (C.polys||[])){const U=new Map();for(const [e,k] of T)P.forEach((v,j)=>{if(v!==0n)U.set(e+j,(U.get(e+j)||0n)+k*v)});T=U}
   return[...T.entries()].filter(([,k])=>k!==0n).sort((a,b)=>a[0]-b[0])}
 function byClosed(C,N){const p=zero(N);for(const [e,k] of numTerms(C))if(C.A+e<=N)p[C.A+e]+=k;for(const [s,mult] of C.den)for(let t=0;t<mult;t++)for(let i=s;i<=N;i++)p[i]+=p[i-s];return p}
 /* way 3: count the solutions themselves, one by one (only while there are few enough) */
 function byCount(S,n,cap){let cnt=0,steps=0;const go=(i,rest)=>{if(steps>cap)return;if(i===S.length){if(rest===0)cnt++;return}const s=S[i];
-    for(let j=0;j<s.count;j++){const e=s.e0+j*s.step;if(e>rest)break;steps++;go(i+1,rest-e)}};go(0,n);return steps>cap?null:cnt}
+    for(const e of expOf(s,rest)){steps++;go(i+1,rest-e)}};go(0,n);return steps>cap?null:cnt}
 const binom=(n,k)=>{if(k<0n||n<k)return 0n;let r=1n;for(let i=1n;i<=k;i++)r=r*(n-k+i)/i;return r};
 /* way 4: when every denominator is (1 - x), the coefficient is a signed sum of binomials */
 function byBinomial(C,n){if(!(C.den.length===1&&C.den[0][0]===1)&&C.den.length!==0)return null;const k=C.den.length?C.den[0][1]:0;let t=0n;
@@ -1478,19 +1490,22 @@ function formula(C){const k=C.den.reduce((t,[,m])=>t+m,0),T=numTerms(C);if(!k)re
 const X=e=>e===0?'1':e===1?'x':`x<sup>${e}</sup>`,fr=(a,b)=>`<span class="gfr"><span>${a}</span><span>${b}</span></span>`;
 const one=e=>`1 − ${X(e)}`,pw=(base,k)=>k===1?`(${base})`:`(${base})<sup>${k}</sup>`;
 function openForm(s){/* first terms, dots, and the last term when there is one */
-  const t=[];for(let j=0;j<Math.min(s.count,4);j++)t.push(X(s.e0+j*s.step));if(s.count===Infinity)t.push('…');else if(s.count>4){if(s.count>5)t.push('…');t.push(X(s.e0+(s.count-1)*s.step))}return `<span class="gbr">(</span>${t.join(' + ')}<span class="gbr">)</span>`}
+  const t=[],ex=new Set(s.exE);if(ex.size){const all=[];for(const e of expOf(s,s.count===Infinity?s.e0+(4+ex.size)*s.step:Infinity))all.push(e);const show=all.slice(0,4);for(const e of show)t.push(X(e));
+    if(s.count===Infinity)t.push('…');else{const last=s.e0+(s.count-1)*s.step;let r=[];for(const e of expOf(s,Infinity))r.push(e);r=r.slice(4);if(r.length>1)t.push('…');if(r.length)t.push(X(r[r.length-1]))}}
+  else{for(let j=0;j<Math.min(s.count,4);j++)t.push(X(s.e0+j*s.step));if(s.count===Infinity)t.push('…');else if(s.count>4){if(s.count>5)t.push('…');t.push(X(s.e0+(s.count-1)*s.step))}}return `<span class="gbr">(</span>${t.join(' + ')}<span class="gbr">)</span>`}
 /* a factor as a series in sigma notation: the index runs over the values of the variable when they are consecutive */
 const sig=(from,to,term)=>`<span class="gsg"><span>${to}</span><span class="S">Σ</span><span>i = ${from}</span></span>${term}`;
 const xe=(k,add)=>{const e=(k===1?'i':k+'i')+(add?` + ${add}`:'');return `x<sup>${e}</sup>`};
+const minusEx=(s,shift)=>s.exE.map(k=>` − ${X(k-shift)}`).join('');
 function sigmaForm(s){if(s.count===1)return '1';
   /* every sum starts at i = 0; a lower bound on the variable becomes a shift in the exponent */
-  return sig(0,s.count===Infinity?'∞':s.count-1,xe(s.step,0))}
+  return sig(0,s.count===Infinity?'∞':s.count-1,xe(s.step,0))+minusEx(s,s.e0)}
 /* the product of the series: the powers of x that come from the least values stand in front, as one factor */
 function sigmaProduct(S){const sh=S.reduce((t,s)=>t+s.e0,0),fs=S.filter(s=>s.count!==1).map(s=>`<span class="gbr">(</span>${sigmaForm(s)}<span class="gbr">)</span>`);return [sh?X(sh):'',...fs].filter(Boolean).join(' · ')||'1'}
 /* the whole function as one series: the first terms that are not zero */
 function seriesForm(a,N){const t=[];for(let n=0;n<=N&&t.length<7;n++)if(a[n]!==0n)t.push((a[n]===1n?'':a[n])+(n===0?(a[n]===1n?'1':''):X(n)));return t.join(' + ')+' + …'}
-function factorClosed(s){const top=s.count===Infinity||s.count===1?X(s.e0):s.e0?`${X(s.e0)}(${one(s.step*s.count)})`:one(s.step*s.count);return s.count===1?top:fr(top,one(s.step))}
-function closedHtml(C){const top=[C.A?X(C.A):''].concat(C.num.map(Lx=>`(${one(Lx)})`)).filter(Boolean).join(' ')||'1',bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');return bot?fr(top,bot):top}
+function factorClosed(s){const top=s.count===Infinity||s.count===1?X(s.e0):s.e0?`${X(s.e0)}(${one(s.step*s.count)})`:one(s.step*s.count),f=s.count===1?top:fr(top,one(s.step));return s.exE.length?`<span class="gbr">(</span>${f}${minusEx(s,0)}<span class="gbr">)</span>`:f}
+function closedHtml(C){const top=[C.A?X(C.A):''].concat(C.num.map(Lx=>`(${one(Lx)})`),(C.polys||[]).map(P=>`(${polyStr(P)})`)).filter(Boolean).join(' ')||'1',bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');return bot?fr(top,bot):top}
 function sumHtml(C){const T=numTerms(C),bot=C.den.map(([s,m])=>pw(one(s),m)).join(' ');if(T.length<2)return null;
   const top=T.map(([e,k],i)=>{const a=k<0n?-k:k,mon=X(C.A+e),body=a===1n?mon:(mon==='1'?String(a):`${a}${mon}`);return (i?(k<0n?' − ':' + '):(k<0n?'−':''))+body}).join('');return bot?fr(top,bot):top}
 /* the sum form with every fraction opened: each power of the numerator, with its sign, in front of the same product of series of the denominator */
@@ -1549,11 +1564,12 @@ function recHtml(R){if(!R.terms.length)return null;if(R.terms.length>14)return n
 const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const opt=(list,cur)=>list.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
 const nm=i=>`x<sub>${i+1}</sub>`;
-function describe(v,s){if(!s)return 'אין ערך מותר';const set=s.count===Infinity?`${s.first}, ${s.first+s.d}, ${s.first+2*s.d}, …`:s.count<=5?Array.from({length:s.count},(_,j)=>s.first+j*s.d).join(', '):`${s.first}, ${s.first+s.d}, …, ${s.first+(s.count-1)*s.d}`;return `{${set}}`}
+function describe(v,s){if(!s)return 'אין ערך מותר';const set=s.count===Infinity?`${s.first}, ${s.first+s.d}, ${s.first+2*s.d}, …`:s.count<=5?Array.from({length:s.count},(_,j)=>s.first+j*s.d).join(', '):`${s.first}, ${s.first+s.d}, …, ${s.first+(s.count-1)*s.d}`;return `{${set}}`+(s.ex.length?` ∖ {${s.ex.join(', ')}}`:'')}
 function renderList(){
   document.getElementById('gfobjs').innerHTML=VS.map((v,i)=>{const s=spec(v);
     return `<div class="qbox"><div class="qrow"><span class="name v gfn">${nm(i)}</span><select data-i="${i}" data-k="type" aria-label="תנאי">${opt(Object.entries(TYPES),v.type)}</select><button class="x" data-del="${i}" aria-label="הסר משתנה" ${VS.length>1?'':'disabled'}>×</button></div>
       <div class="qrow">${NEED[v.type].map(k=>`<label class="cell">${LAB[k]}<input type="number" min="0" class="rn" dir="ltr" data-i="${i}" data-k="${k}" value="${esc(v[k])}" placeholder="${k==='hi'?'∞':'0'}"></label>`).join('')}<label class="cell">מקדם בסכום<input type="number" min="1" class="rn" dir="ltr" data-i="${i}" data-k="c" value="${esc(v.c)}"></label></div>
+      <div class="qrow"><label class="cell gfex">ערכים שנשללים<input type="text" class="rlt" dir="ltr" data-i="${i}" data-k="ex" value="${esc(v.ex||'')}" placeholder="למשל 2, 6" aria-label="ערכים שנשללים, מופרדים בפסיקים"></label></div>
       <div class="gfset fx">${nm(i)} ∈ ${describe(v,s)}</div></div>`}).join('')}
 function renderMain(){
   const S=VS.map(spec),ok=S.every(Boolean),N=Math.max(SHOW,TARGET);
@@ -1574,8 +1590,8 @@ function renderMain(){
   document.getElementById('main').innerHTML=`<div class="gfwrap">
     <div class="gfeq fx">${eq}</div><div class="gfbar"><button class="btn sm" data-gall="hide">הסתר את כל התשובות</button><button class="btn sm" data-gall="show">הצג הכול</button><span class="lab">לחיצה על החץ שליד כותרת מסתירה או מציגה אותה</span></div>
     ${blk('הצורה הפתוחה','לכל משתנה סוגריים, ובהם חזקה אחת לכל ערך שהוא יכול לתרום לסכום.',`F(x) = ${S.map(openForm).join(' · ')}`)}
-    ${blk('הצורה הסגורה, גורם לכל משתנה','כל סוגריים הם טור הנדסי.',`F(x) = ${S.map(factorClosed).join(' · ')}`)}
-    ${blk('הצורה הסגורה המפושטת, כמכפלה','',`F(x) = ${closedHtml(C)}`)}
+    ${blk('הצורה הסגורה, גורם לכל משתנה',S.some(s=>s.exE.length)?'כל סוגריים הם טור הנדסי, פחות החזקות של הערכים שנשללו.':'כל סוגריים הם טור הנדסי.',`F(x) = ${S.map(factorClosed).join(' · ')}`)}
+    ${blk('הצורה הסגורה המפושטת, כמכפלה',S.some(s=>s.exE.length)?'משתנה עם ערכים שנשללים נותן פולינום במונה: מביאים את ההפרש למכנה משותף.':'',`F(x) = ${closedHtml(C)}`)}
     ${blk('כמכפלת טורים','אותם סוגריים בכתיב סיגמא. כל הסכומים מתחילים מאפס, והחזקה שנובעת מהערכים המינימליים של המשתנים יוצאת כגורם אחד לפני הטורים.',`F(x) = ${sigmaProduct(S)}`)}
     ${sum?blk('אותה פונקציה, כסכום','המונה נפתח לסכום של חזקות.',`F(x) = ${sum}`):''}
     ${sprod?blk('כסכום של מכפלות טורים','כל חזקה במונה, עם הסימן שלה, יוצאת לפני אותה מכפלת טורים של המכנה.',`F(x) = ${sprod}`):''}
